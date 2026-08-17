@@ -25,35 +25,35 @@ const phases = [
     title: 'Fundamentos & Lógica',
     desc: 'Algoritmos, estruturas de decisão, loops, vetores e pensamento computacional.',
     color: 'border-violet-500/40 text-violet-300',
-    glow: 'from-violet-500/20',
+    accent: 'bg-violet-600',
   },
   {
     phase: 'FASE 2',
     title: 'Frontend & TypeScript',
     desc: 'HTML5 semântico, CSS moderno, JavaScript ES6+, React, Hooks e consumo de APIs.',
     color: 'border-purple-500/40 text-purple-300',
-    glow: 'from-purple-500/20',
+    accent: 'bg-purple-600',
   },
   {
     phase: 'FASE 3',
     title: 'Backend & Bancos de Dados',
     desc: 'Node.js, Express, PostgreSQL, Prisma ORM, autenticação JWT e regras de negócio.',
     color: 'border-indigo-500/40 text-indigo-300',
-    glow: 'from-indigo-500/20',
+    accent: 'bg-indigo-600',
   },
   {
     phase: 'FASE 4',
     title: 'Full Stack & DevOps',
     desc: 'Integração ponta a ponta, Docker, CI/CD, testes unitários e deploy em nuvem.',
     color: 'border-blue-500/40 text-blue-300',
-    glow: 'from-blue-500/20',
+    accent: 'bg-blue-600',
   },
   {
     phase: 'FASE 5',
     title: 'Projetos & Carreira',
     desc: 'Aplicações completas no GitHub, portfólio profissional e simulação de entrevistas.',
     color: 'border-emerald-500/40 text-emerald-300',
-    glow: 'from-emerald-500/20',
+    accent: 'bg-emerald-600',
   },
 ]
 
@@ -112,10 +112,13 @@ export function PersonalizedPathSection() {
     damping: 30,
   })
 
+  // Dynamic SVG path drawing progress linked to scroll
+  const pathFill = useTransform(smoothProgress, [0.1, 0.55], [0, 1])
+
   return (
-    <section ref={sectionRef} id="recursos" className="py-24 sm:py-32 relative overflow-hidden">
+    <section ref={sectionRef} id="trilhas" className="py-24 sm:py-32 relative overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 space-y-20">
-        {/* Top: Visual Roadmap representation with Scroll-linked illumination */}
+        {/* Top: Visual Roadmap representation with SVG Connector */}
         <div className="space-y-12">
           <div className="mx-auto flex max-w-3xl flex-col items-center gap-3.5 text-center">
             <Badge className="bg-violet-950/60 border border-violet-500/30 text-violet-300 text-xs font-bold gap-1.5 px-3 py-1">
@@ -127,9 +130,17 @@ export function PersonalizedPathSection() {
             <p className="text-pretty text-base sm:text-lg text-zinc-400 font-medium leading-relaxed max-w-2xl">
               Cada fase desbloqueia as competências necessárias para a etapa seguinte, garantindo que você nunca avance com lacunas conceituais.
             </p>
+
+            {/* Scroll-linked progress bar between stages */}
+            <div className="w-full max-w-lg h-1.5 bg-white/5 rounded-full overflow-hidden mt-4">
+              <motion.div
+                style={{ scaleX: pathFill }}
+                className="h-full origin-left bg-gradient-to-r from-violet-500 via-purple-500 to-emerald-400 rounded-full"
+              />
+            </div>
           </div>
 
-          <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-5 relative">
             {phases.map((p, i) => {
               const start = 0.12 + (i * 0.08)
               const end = start + 0.2
@@ -211,3 +222,5 @@ export function PersonalizedPathSection() {
     </section>
   )
 }
+
+export default PersonalizedPathSection
