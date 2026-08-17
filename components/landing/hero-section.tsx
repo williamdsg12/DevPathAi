@@ -20,6 +20,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ContainerScroll } from '@/components/ui/container-scroll-animation'
+import { GradientBarsBackground } from '@/components/ui/gradient-bars-background'
 import { Progress } from '@/components/ui/progress'
 
 const mockJourney = [
@@ -33,6 +34,9 @@ const mockJourney = [
 export function HeroSection() {
   return (
     <section className="relative overflow-hidden pt-20 pb-12 sm:pt-28 sm:pb-20">
+      {/* 21st.dev inspired Gradient Bars Background Layer */}
+      <GradientBarsBackground />
+
       {/* Background Radial Glow & Ambient Lighting */}
       <div
         aria-hidden
