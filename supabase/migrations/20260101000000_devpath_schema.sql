@@ -506,39 +506,71 @@ alter table public.external_courses enable row level security;
 alter table public.external_lessons enable row level security;
 
 -- Public content read policy
+drop policy if exists "Public content is viewable by authenticated users" on public.learning_paths;
 create policy "Public content is viewable by authenticated users" on public.learning_paths for select using (true);
+
+drop policy if exists "Public modules are viewable by all" on public.modules;
 create policy "Public modules are viewable by all" on public.modules for select using (true);
+
+drop policy if exists "Public path modules are viewable by all" on public.learning_path_modules;
 create policy "Public path modules are viewable by all" on public.learning_path_modules for select using (true);
+
+drop policy if exists "Public module prerequisites are viewable by all" on public.module_prerequisites;
 create policy "Public module prerequisites are viewable by all" on public.module_prerequisites for select using (true);
+
+drop policy if exists "Public lessons are viewable by all" on public.lessons;
 create policy "Public lessons are viewable by all" on public.lessons for select using (true);
+
+drop policy if exists "Public exercises are viewable by all" on public.exercises;
 create policy "Public exercises are viewable by all" on public.exercises for select using (true);
+
+drop policy if exists "Public module projects are viewable by all" on public.module_projects;
 create policy "Public module projects are viewable by all" on public.module_projects for select using (true);
+
+drop policy if exists "Public assessments are viewable by all" on public.assessments;
 create policy "Public assessments are viewable by all" on public.assessments for select using (true);
+
+drop policy if exists "Public assessment questions are viewable by all" on public.assessment_questions;
 create policy "Public assessment questions are viewable by all" on public.assessment_questions for select using (true);
+
+drop policy if exists "Public skills are viewable by all" on public.skills;
 create policy "Public skills are viewable by all" on public.skills for select using (true);
+
+drop policy if exists "Public achievements are viewable by all" on public.achievements;
 create policy "Public achievements are viewable by all" on public.achievements for select using (true);
+
+drop policy if exists "Public external courses are viewable by all" on public.external_courses;
 create policy "Public external courses are viewable by all" on public.external_courses for select using (true);
+
+drop policy if exists "Public external lessons are viewable by all" on public.external_lessons;
 create policy "Public external lessons are viewable by all" on public.external_lessons for select using (true);
 
 -- User-specific Isolation Policies
+drop policy if exists "Users can view and update own profile" on public.profiles;
 create policy "Users can view and update own profile" on public.profiles
   for all using (auth.uid() = id);
 
+drop policy if exists "Users can view and manage own onboarding" on public.onboarding_profiles;
 create policy "Users can view and manage own onboarding" on public.onboarding_profiles
   for all using (auth.uid() = user_id);
 
+drop policy if exists "Users can view and manage own lesson progress" on public.lesson_progress;
 create policy "Users can view and manage own lesson progress" on public.lesson_progress
   for all using (auth.uid() = user_id);
 
+drop policy if exists "Users can view and manage own exercise attempts" on public.exercise_attempts;
 create policy "Users can view and manage own exercise attempts" on public.exercise_attempts
   for all using (auth.uid() = user_id);
 
+drop policy if exists "Users can view and manage own project submissions" on public.project_submissions;
 create policy "Users can view and manage own project submissions" on public.project_submissions
   for all using (auth.uid() = user_id);
 
+drop policy if exists "Users can view and manage own assessment attempts" on public.assessment_attempts;
 create policy "Users can view and manage own assessment attempts" on public.assessment_attempts
   for all using (auth.uid() = user_id);
 
+drop policy if exists "Users can view own assessment answers" on public.assessment_answers;
 create policy "Users can view own assessment answers" on public.assessment_answers
   for all using (
     exists (
@@ -548,33 +580,43 @@ create policy "Users can view own assessment answers" on public.assessment_answe
     )
   );
 
+drop policy if exists "Users can view and manage own skills" on public.user_skills;
 create policy "Users can view and manage own skills" on public.user_skills
   for all using (auth.uid() = user_id);
 
+drop policy if exists "Users can view and manage own difficulties" on public.user_difficulties;
 create policy "Users can view and manage own difficulties" on public.user_difficulties
   for all using (auth.uid() = user_id);
 
+drop policy if exists "Users can view and manage own study sessions" on public.study_sessions;
 create policy "Users can view and manage own study sessions" on public.study_sessions
   for all using (auth.uid() = user_id);
 
+drop policy if exists "Users can view and manage own study plans" on public.study_plans;
 create policy "Users can view and manage own study plans" on public.study_plans
   for all using (auth.uid() = user_id);
 
+drop policy if exists "Users can view and manage own study reviews" on public.study_reviews;
 create policy "Users can view and manage own study reviews" on public.study_reviews
   for all using (auth.uid() = user_id);
 
+drop policy if exists "Users can view and manage own achievements" on public.user_achievements;
 create policy "Users can view and manage own achievements" on public.user_achievements
   for all using (auth.uid() = user_id);
 
+drop policy if exists "Users can view and manage own projects" on public.user_projects;
 create policy "Users can view and manage own projects" on public.user_projects
   for all using (auth.uid() = user_id);
 
+drop policy if exists "Users can view own certificates" on public.certificates;
 create policy "Users can view own certificates" on public.certificates
   for select using (auth.uid() = user_id or is_revoked = false);
 
+drop policy if exists "Users can manage own AI conversations" on public.ai_conversations;
 create policy "Users can manage own AI conversations" on public.ai_conversations
   for all using (auth.uid() = user_id);
 
+drop policy if exists "Users can manage own AI messages" on public.ai_messages;
 create policy "Users can manage own AI messages" on public.ai_messages
   for all using (
     exists (
@@ -584,18 +626,23 @@ create policy "Users can manage own AI messages" on public.ai_messages
     )
   );
 
+drop policy if exists "Users can view and manage own daily goals" on public.daily_goals;
 create policy "Users can view and manage own daily goals" on public.daily_goals
   for all using (auth.uid() = user_id);
 
+drop policy if exists "Users can view and manage own notifications" on public.notifications;
 create policy "Users can view and manage own notifications" on public.notifications
   for all using (auth.uid() = user_id);
 
+drop policy if exists "Users can view and manage own settings" on public.user_settings;
 create policy "Users can view and manage own settings" on public.user_settings
   for all using (auth.uid() = user_id);
 
+drop policy if exists "Users can view and manage own interview sessions" on public.interview_sessions;
 create policy "Users can view and manage own interview sessions" on public.interview_sessions
   for all using (auth.uid() = user_id);
 
+drop policy if exists "Users can view and manage own interview answers" on public.interview_answers;
 create policy "Users can view and manage own interview answers" on public.interview_answers
   for all using (
     exists (
@@ -615,12 +662,15 @@ begin
     coalesce(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
     new.email,
     new.raw_user_meta_data->>'avatar_url'
-  );
-  insert into public.user_settings (user_id) values (new.id);
+  )
+  on conflict (id) do nothing;
+  insert into public.user_settings (user_id) values (new.id)
+  on conflict (user_id) do nothing;
   return new;
 end;
 $$ language plpgsql security definer;
 
-create or replace trigger on_auth_user_created
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();

@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   Sparkles,
   Target,
+  Trophy,
   User,
 } from 'lucide-react'
 import { Logo } from '@/components/logo'
@@ -38,44 +39,27 @@ interface NavItem {
 
 const navSections: { title: string; items: NavItem[] }[] = [
   {
-    title: 'Principal',
+    title: 'APRENDIZADO',
     items: [
       { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
       { href: '/trilha', label: 'Minha Trilha', icon: Map },
-      { href: '/cursos', label: 'Cursos & Aulas', icon: BookOpen },
-      { href: '/estudo', label: 'Estudo de Hoje', icon: Target, badge: 'Foco' },
-    ],
-  },
-  {
-    title: 'Prática & Validação',
-    items: [
-      { href: '/exercicios', label: 'Exercícios', icon: CheckCircle2 },
-      { href: '/code-lab', label: 'Code Lab', icon: Code2, badge: 'IDE' },
+      { href: '/cursos', label: 'Cursos', icon: BookOpen },
       { href: '/projetos', label: 'Projetos', icon: FolderGit2 },
-      { href: '/revisoes', label: 'Revisões', icon: Repeat },
+      { href: '/exercicios', label: 'Atividades', icon: CheckCircle2 },
+      { href: '/avaliacoes/mod-logica', label: 'Avaliações', icon: Target },
+      { href: '/estudo', label: 'Meu Progresso', icon: GraduationCap },
+      { href: '/certificados', label: 'Conquistas', icon: Trophy },
     ],
   },
   {
-    title: 'IA & Mentoria',
+    title: 'MENTORIA & CONTA',
     items: [
       { href: '/mentor', label: 'DevMentor AI', icon: Bot, badge: 'AI' },
-      { href: '/carreira/entrevista', label: 'Entrevista IA', icon: Sparkles },
-    ],
-  },
-  {
-    title: 'Carreira & Conquistas',
-    items: [
-      { href: '/carreira', label: 'Carreira Dev', icon: Briefcase },
-      { href: '/certificados', label: 'Certificados', icon: Award },
-      { href: '/perfil', label: 'Meu Perfil', icon: User },
-    ],
-  },
-  {
-    title: 'Sistema',
-    items: [
-      { href: '/cursos/importar', label: 'Importar YouTube', icon: YoutubeIcon },
-      { href: '/admin', label: 'Painel Admin', icon: ShieldCheck, adminOnly: true },
+      { href: '/code-lab', label: 'Code Lab', icon: Code2, badge: 'IDE' },
+      { href: '/perfil', label: 'Perfil', icon: User },
       { href: '/configuracoes', label: 'Configurações', icon: Settings },
+      { href: '/cursos/importar', label: 'Importar YouTube', icon: YoutubeIcon, adminOnly: true },
+      { href: '/admin', label: 'Painel Admin', icon: ShieldCheck, adminOnly: true },
     ],
   },
 ]
@@ -83,7 +67,7 @@ const navSections: { title: string; items: NavItem[] }[] = [
 export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
   const router = useRouter()
-  const { profile, signOut, xp, level, streak } = useAppStore()
+  const { profile, signOut, xp, level, streak, isSuperAdmin } = useAppStore()
 
   async function handleSignOut() {
     await signOut()
@@ -91,24 +75,27 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
   }
 
   return (
-    <aside className="flex h-full w-64 flex-col border-r border-border bg-card/60 backdrop-blur-xl">
+    <aside className="flex h-full w-64 flex-col border-r border-white/5 bg-[#0d0c14]/95 backdrop-blur-2xl text-foreground">
       {/* Brand Header */}
-      <div className="flex h-16 items-center border-b border-border px-5">
+      <div className="flex h-16 items-center border-b border-white/5 px-5">
         <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-2">
           <Logo />
         </Link>
       </div>
 
-      {/* User Progress Mini Badge */}
-      <div className="border-b border-border/60 p-4">
-        <div className="flex items-center justify-between gap-2 rounded-xl border border-primary/20 bg-primary/5 p-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Nível {level}
-            </p>
-            <p className="text-sm font-bold text-foreground">{xp.toLocaleString('pt-BR')} XP</p>
+      {/* User Progress Mini Card */}
+      <div className="p-3.5 border-b border-white/5">
+        <div className="flex items-center justify-between gap-2 rounded-2xl border border-violet-500/20 bg-gradient-to-r from-violet-950/40 via-purple-950/20 to-transparent p-3 shadow-inner">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-violet-400 animate-pulse" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-violet-300">
+                Nível {level}
+              </span>
+            </div>
+            <p className="text-sm font-black text-white">{xp.toLocaleString('pt-BR')} <span className="text-xs font-semibold text-violet-400/80">XP</span></p>
           </div>
-          <div className="flex items-center gap-1.5 rounded-lg bg-warning/15 px-2.5 py-1 text-xs font-bold text-warning">
+          <div className="flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-400">
             <span>🔥</span>
             <span>{streak}d</span>
           </div>
@@ -116,10 +103,16 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       {/* Navigation Sections */}
-      <nav className="flex-1 space-y-6 overflow-y-auto p-4 scrollbar-thin">
-        {navSections.map((section) => (
-          <div key={section.title}>
-            <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80">
+      <nav className="flex-1 space-y-6 overflow-y-auto p-3.5 scrollbar-thin">
+        {navSections
+          .map((section) => ({
+            ...section,
+            items: section.items.filter((item) => (!item.adminOnly ? true : isSuperAdmin)),
+          }))
+          .filter((section) => section.items.length > 0)
+          .map((section) => (
+          <div key={section.title} className="space-y-1.5">
+            <p className="px-3 pb-1 text-[10px] font-extrabold uppercase tracking-widest text-zinc-500">
               {section.title}
             </p>
             <ul className="space-y-1">
@@ -133,22 +126,22 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
                       href={item.href}
                       onClick={onNavigate}
                       className={cn(
-                        'group flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-all',
+                        'group flex items-center justify-between rounded-xl px-3 py-2.5 text-xs sm:text-sm font-semibold transition-all duration-200',
                         isActive
-                          ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/25'
-                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                          ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-purple-600/25 border border-violet-400/30 font-bold'
+                          : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-100'
                       )}
                     >
                       <div className="flex items-center gap-3">
-                        <Icon className={cn('size-4 shrink-0 transition-transform group-hover:scale-110', isActive ? 'text-primary-foreground' : 'text-muted-foreground group-hover:text-foreground')} />
+                        <Icon className={cn('size-4 shrink-0 transition-transform duration-200 group-hover:scale-110', isActive ? 'text-white' : 'text-zinc-400 group-hover:text-violet-400')} />
                         <span>{item.label}</span>
                       </div>
                       {item.badge ? (
                         <Badge
                           variant={isActive ? 'outline' : 'secondary'}
                           className={cn(
-                            'text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5',
-                            isActive ? 'border-primary-foreground/30 text-primary-foreground' : 'bg-primary/10 text-primary'
+                            'text-[9px] uppercase font-black tracking-wider px-1.5 py-0.5 rounded-md',
+                            isActive ? 'border-white/30 text-white bg-white/10' : 'bg-violet-950/60 border border-violet-500/30 text-violet-300'
                           )}
                         >
                           {item.badge}
@@ -164,22 +157,22 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
       </nav>
 
       {/* Footer User Info & Logout */}
-      <div className="border-t border-border p-3">
-        <div className="flex items-center justify-between gap-2 rounded-xl p-2 hover:bg-muted/60 transition-colors">
+      <div className="border-t border-white/5 p-3">
+        <div className="flex items-center justify-between gap-2 rounded-2xl p-2 bg-white/[0.02] border border-white/5 hover:border-violet-500/30 transition-colors">
           <Link href="/perfil" onClick={onNavigate} className="flex items-center gap-2.5 min-w-0 flex-1">
-            <div className="grid size-8 shrink-0 place-items-center rounded-full bg-primary/20 text-xs font-bold text-primary">
+            <div className="grid size-8 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 text-xs font-black text-white shadow-sm">
               {profile?.name ? profile.name.slice(0, 2).toUpperCase() : 'DV'}
             </div>
             <div className="min-w-0 flex-1 truncate">
-              <p className="truncate text-xs font-semibold text-foreground">{profile?.name || 'Desenvolvedor'}</p>
-              <p className="truncate text-[11px] text-muted-foreground">{profile?.email || 'aluno@devpath.ai'}</p>
+              <p className="truncate text-xs font-bold text-zinc-100">{profile?.name || 'Desenvolvedor'}</p>
+              <p className="truncate text-[10px] text-zinc-400">{profile?.email || 'aluno@devpath.ai'}</p>
             </div>
           </Link>
           <button
             type="button"
             onClick={handleSignOut}
             title="Sair da conta"
-            className="grid size-8 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+            className="grid size-8 shrink-0 place-items-center rounded-xl text-zinc-400 hover:bg-rose-500/10 hover:text-rose-400 transition-colors"
           >
             <LogOut className="size-4" />
           </button>

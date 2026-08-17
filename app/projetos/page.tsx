@@ -78,121 +78,114 @@ export default function ProjectsPage() {
 
   function handleDelete(id: string) {
     deleteProject(id)
-    toast.success('Projeto removido.')
+    toast.success('Projeto removido do portfólio.')
   }
 
   return (
     <AppShell
-      title="Meus Projetos & Portfólio"
-      subtitle="Construa aplicações reais, conecte seu GitHub e monte seu portfólio profissional"
+      title="Meus Projetos"
+      subtitle="Construa seu portfólio enquanto aprende."
     >
-      <div className="space-y-6">
-        {/* Header Bar with Action */}
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border/80 bg-card p-4">
-          <div className="flex flex-wrap items-center gap-2">
-            {[
-              { id: 'all', label: 'Todos' },
-              { id: 'publicado', label: 'Publicados' },
-              { id: 'concluido', label: 'Concluídos' },
-              { id: 'em-desenvolvimento', label: 'Em Desenvolvimento' },
-            ].map((tab) => (
-              <Button
-                key={tab.id}
-                variant={filter === tab.id ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setFilter(tab.id)}
-                className="text-xs font-semibold"
-              >
-                {tab.label}
-              </Button>
-            ))}
+      <div className="space-y-8 pb-12">
+        {/* Header Hero Banner */}
+        <div className="rounded-3xl border border-white/5 bg-[#12111a] p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-xl">
+          <div className="space-y-2 max-w-2xl">
+            <Badge className="bg-violet-950 border border-violet-500/30 text-violet-300 font-bold text-xs">
+              Portfólio Profissional
+            </Badge>
+            <h1 className="text-2xl sm:text-3xl font-black text-white">
+              Meus Projetos
+            </h1>
+            <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-medium">
+              Construa seu portfólio enquanto aprende. Conecte seus repositórios do GitHub e publique demonstrações online.
+            </p>
           </div>
 
           <Dialog open={openModal} onOpenChange={setOpenModal}>
             <DialogTrigger
               render={
-                <Button className="gap-2 text-xs font-bold shadow-md shadow-primary/20">
+                <Button className="gap-2 font-black text-xs px-6 py-5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white shadow-lg shadow-purple-600/30">
                   <Plus className="size-4" /> Novo Projeto
                 </Button>
               }
             />
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-md bg-[#12111a] border-white/10 text-white rounded-3xl">
               <DialogHeader>
-                <DialogTitle>Adicionar Projeto ao Portfólio</DialogTitle>
-                <DialogDescription>
-                  Documente um projeto que você desenvolveu durante seus estudos.
+                <DialogTitle className="text-lg font-black text-white">Adicionar Novo Projeto</DialogTitle>
+                <DialogDescription className="text-xs text-zinc-400">
+                  Documente uma aplicação que você desenvolveu durante seus estudos.
                 </DialogDescription>
               </DialogHeader>
 
               <form onSubmit={handleCreate} className="space-y-4 py-2">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">Título do Projeto</label>
+                  <label className="text-xs font-bold text-zinc-300">Título do Projeto</label>
                   <Input
-                    placeholder="Ex: E-commerce com React & Node"
+                    placeholder="Ex: Sistema de Gestão com React & Node"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
+                    className="bg-black/40 border-white/10 text-xs rounded-xl text-white"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">Descrição</label>
+                  <label className="text-xs font-bold text-zinc-300">Descrição</label>
                   <Textarea
                     rows={3}
-                    placeholder="Explique o que a aplicação faz, os desafios superados..."
+                    placeholder="Explique o que a aplicação faz e os desafios técnicos resolvidos..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
+                    className="bg-black/40 border-white/10 text-xs rounded-xl text-white"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">Tecnologias (separadas por vírgula)</label>
+                  <label className="text-xs font-bold text-zinc-300">Tecnologias (separadas por vírgula)</label>
                   <Input
-                    placeholder="React, TypeScript, Tailwind, Supabase"
+                    placeholder="Ex: React, TypeScript, Tailwind, Node.js"
                     value={techInput}
                     onChange={(e) => setTechInput(e.target.value)}
+                    className="bg-black/40 border-white/10 text-xs rounded-xl text-white"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-foreground">Link do GitHub</label>
+                    <label className="text-xs font-bold text-zinc-300">Link do GitHub</label>
                     <Input
                       placeholder="https://github.com/..."
                       value={github}
                       onChange={(e) => setGithub(e.target.value)}
+                      className="bg-black/40 border-white/10 text-xs rounded-xl text-white"
                     />
                   </div>
-
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-foreground">Link de Deploy</label>
+                    <label className="text-xs font-bold text-zinc-300">Link do Deploy / Demo</label>
                     <Input
                       placeholder="https://meu-app.vercel.app"
                       value={deploy}
                       onChange={(e) => setDeploy(e.target.value)}
+                      className="bg-black/40 border-white/10 text-xs rounded-xl text-white"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">Status Atual</label>
+                  <label className="text-xs font-bold text-zinc-300">Status</label>
                   <select
                     value={status}
-                    onChange={(e) => setStatus(e.target.value as any)}
-                    className="w-full rounded-lg border border-border bg-background p-2.5 text-xs font-semibold"
+                    onChange={(e) => setStatus(e.target.value as UserProject['status'])}
+                    className="w-full h-10 px-3 rounded-xl bg-black/40 border border-white/10 text-xs text-white"
                   >
                     <option value="em-desenvolvimento">Em desenvolvimento</option>
                     <option value="concluido">Concluído</option>
-                    <option value="publicado">Publicado online</option>
-                    <option value="ideia">Ideia / Planejamento</option>
+                    <option value="publicado">Publicado</option>
                   </select>
                 </div>
 
                 <DialogFooter className="pt-3">
-                  <Button type="button" variant="outline" onClick={() => setOpenModal(false)}>
-                    Cancelar
-                  </Button>
-                  <Button type="submit" className="font-bold">
-                    Salvar Projeto
+                  <Button type="submit" className="w-full font-bold bg-violet-600 hover:bg-violet-500 text-white rounded-xl">
+                    Salvar Projeto (+150 XP)
                   </Button>
                 </DialogFooter>
               </form>
@@ -200,96 +193,131 @@ export default function ProjectsPage() {
           </Dialog>
         </div>
 
-        {/* Projects Grid */}
+        {/* Filtros */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          {[
+            { id: 'all', label: 'Todos os Projetos' },
+            { id: 'publicado', label: 'Publicados' },
+            { id: 'concluido', label: 'Concluídos' },
+            { id: 'em-desenvolvimento', label: 'Em Desenvolvimento' },
+          ].map((tab) => (
+            <Button
+              key={tab.id}
+              variant={filter === tab.id ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setFilter(tab.id)}
+              className={`text-xs font-bold rounded-xl shrink-0 transition-colors ${
+                filter === tab.id
+                  ? 'bg-violet-600 text-white'
+                  : 'bg-white/[0.02] text-zinc-400 hover:text-white border border-white/5'
+              }`}
+            >
+              {tab.label}
+            </Button>
+          ))}
+        </div>
+
+        {/* Grid de Projetos */}
         {filteredProjects.length === 0 ? (
-          <Card className="border-dashed border-border/80 p-12 text-center">
-            <div className="grid size-14 place-items-center rounded-2xl bg-muted text-muted-foreground mx-auto mb-3">
-              <FolderGit2 className="size-7" />
+          <Card className="flex flex-col items-center justify-center p-12 text-center border-dashed border-white/10 rounded-3xl bg-[#12111a] space-y-4">
+            <div className="size-16 rounded-full bg-violet-950/60 border border-violet-500/30 flex items-center justify-center text-violet-400">
+              <FolderGit2 className="size-8" />
             </div>
-            <h3 className="text-base font-bold">Nenhum projeto encontrado</h3>
-            <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-              Adicione projetos desenvolvidos por você ou entregue os projetos obrigatórios de cada módulo.
-            </p>
+            <div className="space-y-1 max-w-md">
+              <h3 className="text-lg font-bold text-white">Nenhum projeto cadastrado ainda</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Comece seu primeiro projeto prático para comprovar suas habilidades e construir um portfólio admirado por recrutadores.
+              </p>
+            </div>
+            <Button
+              onClick={() => setOpenModal(true)}
+              className="font-bold text-xs gap-2 bg-violet-600 hover:bg-violet-500 text-white rounded-xl"
+            >
+              <Plus className="size-4" /> Criar Primeiro Projeto
+            </Button>
           </Card>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredProjects.map((project) => (
-              <Card key={project.id} className="flex flex-col justify-between border-border/80 hover:border-primary/40 transition-all shadow-md">
-                <CardHeader className="space-y-3 pb-3">
+            {filteredProjects.map((p) => (
+              <div
+                key={p.id}
+                className="group flex flex-col justify-between rounded-3xl border border-white/5 bg-[#12111a] hover:border-violet-500/40 p-6 transition-all duration-300 shadow-xl space-y-4"
+              >
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Badge
-                      variant="secondary"
-                      className={`text-[10px] uppercase font-bold tracking-wider ${
-                        project.status === 'publicado'
-                          ? 'bg-success/15 text-success'
-                          : project.status === 'concluido'
-                          ? 'bg-primary/15 text-primary'
-                          : 'bg-muted text-muted-foreground'
+                      className={`text-[10px] font-black uppercase tracking-wider ${
+                        p.status === 'publicado'
+                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                          : p.status === 'concluido'
+                          ? 'bg-violet-600/20 text-violet-300 border border-violet-500/30'
+                          : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                       }`}
                     >
-                      {project.status}
+                      {p.status}
                     </Badge>
                     <button
                       type="button"
-                      onClick={() => handleDelete(project.id)}
-                      className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                      onClick={() => handleDelete(p.id)}
                       title="Excluir projeto"
+                      className="text-zinc-600 hover:text-rose-400 transition-colors p-1"
                     >
                       <Trash2 className="size-4" />
                     </button>
                   </div>
 
-                  <div>
-                    <CardTitle className="text-base font-bold line-clamp-1">{project.title}</CardTitle>
-                    <CardDescription className="text-xs line-clamp-2 mt-1 leading-relaxed">
-                      {project.description}
-                    </CardDescription>
-                  </div>
-                </CardHeader>
+                  <h3 className="text-base font-black text-white group-hover:text-violet-300 transition-colors">
+                    {p.title}
+                  </h3>
 
-                <CardContent className="space-y-4 pt-0">
-                  {/* Tech Tags */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {project.tech.map((t) => (
+                  <p className="text-xs text-zinc-400 line-clamp-3 leading-relaxed font-medium">
+                    {p.description}
+                  </p>
+
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {p.tech.map((t) => (
                       <span
                         key={t}
-                        className="rounded-md border border-border bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground"
+                        className="rounded-md border border-white/5 bg-white/[0.03] px-2 py-0.5 text-[10px] font-semibold text-zinc-300"
                       >
                         {t}
                       </span>
                     ))}
                   </div>
+                </div>
 
-                  {/* Actions Links */}
-                  <div className="flex items-center gap-2 pt-2 border-t border-border/60">
-                    {project.github ? (
-                      <a
-                        href={project.github}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex-1"
-                      >
-                        <Button variant="outline" size="sm" className="w-full text-xs gap-1.5">
-                          <GithubIcon className="size-3.5" /> Código
-                        </Button>
-                      </a>
-                    ) : null}
+                {/* External links and details */}
+                <div className="pt-4 border-t border-white/5 flex items-center justify-between">
+                  <span className="text-[10px] text-zinc-500 font-mono">
+                    {new Date(p.createdAt).toLocaleDateString('pt-BR')}
+                  </span>
 
-                    {project.deploy ? (
+                  <div className="flex items-center gap-2">
+                    {p.github && (
                       <a
-                        href={project.deploy}
+                        href={p.github}
                         target="_blank"
-                        rel="noreferrer"
-                        className="flex-1"
+                        rel="noopener noreferrer"
+                        className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white transition-colors"
+                        title="Ver Repositório GitHub"
                       >
-                        <Button size="sm" className="w-full text-xs gap-1.5">
-                          <ExternalLink className="size-3.5" /> Ver Deploy
-                        </Button>
+                        <GithubIcon className="size-4" />
                       </a>
-                    ) : null}
+                    )}
+                    {p.deploy && (
+                      <a
+                        href={p.deploy}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 rounded-lg bg-violet-600/20 hover:bg-violet-600 text-violet-300 hover:text-white transition-colors"
+                        title="Acessar Demonstração Online"
+                      >
+                        <ExternalLink className="size-4" />
+                      </a>
+                    )}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
         )}

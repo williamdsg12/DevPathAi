@@ -26,15 +26,16 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { mockAssessment, mockModules } from '@/lib/mock-data'
 import { useAppStore } from '@/lib/store'
-import { aiService } from '@/lib/ai/provider'
-import type { Assessment, AssessmentQuestion, RecoveryPlan } from '@/lib/types'
+import { moduleCompletionEngine } from '@/lib/pedagogy/module-completion-engine'
+import type { Assessment, AssessmentQuestion, ModuleReflection, RecoveryPlan } from '@/lib/types'
+import { Textarea } from '@/components/ui/textarea'
 
 export default function ModuleAssessmentPage({ params }: { params: Promise<{ moduleId: string }> }) {
   const router = useRouter()
   const resolvedParams = use(params)
   const moduleId = resolvedParams.moduleId
 
-  const { allModules, submitAssessment, recordDifficulty } = useAppStore()
+  const { allModules, submitAssessment, recordDifficulty, submitModuleReflection, moduleReflections } = useAppStore()
   const currentModule = allModules.find((m) => m.id === moduleId) || allModules[0]
 
   // Use the assessment questions for the module or fallback to mock
@@ -52,6 +53,14 @@ export default function ModuleAssessmentPage({ params }: { params: Promise<{ mod
   const [passed, setPassed] = useState<boolean | null>(null)
   const [recoveryPlan, setRecoveryPlan] = useState<RecoveryPlan | null>(null)
   const [loadingRecovery, setLoadingRecovery] = useState(false)
+
+  // Pedagogical Reflection Form State
+  const existingReflection = moduleReflections[currentModule.id]
+  const [reflectionKeyLearnings, setReflectionKeyLearnings] = useState(existingReflection?.keyLearnings || '')
+  const [reflectionHardestTopic, setReflectionHardestTopic] = useState(existingReflection?.hardestTopic || '')
+  const [reflectionConfidence, setReflectionConfidence] = useState<number>(existingReflection?.confidenceRating || 5)
+  const [reflectionPrepared, setReflectionPrepared] = useState<boolean>(existingReflection?.preparedToAdvance ?? true)
+  const [reflectionSaved, setReflectionSaved] = useState<boolean>(Boolean(existingReflection))
 
   // Timer countdown
   useEffect(() => {
@@ -108,10 +117,28 @@ export default function ModuleAssessmentPage({ params }: { params: Promise<{ mod
     } else {
       toast.error(`Nota obtida: ${finalScore}%. Nota mínima necessária: ${assessment.minScore}%. Gerando plano de recuperação...`)
       setLoadingRecovery(true)
-      const plan = await aiService.generateRecoveryPlan(weakTopics, currentModule.id)
+      const plan = moduleCompletionEngine.generateRecoveryPlan(weakTopics, currentModule.id, currentModule.title)
       setRecoveryPlan(plan)
       setLoadingRecovery(false)
     }
+  }
+
+  function handleSaveReflection() {
+    if (!reflectionKeyLearnings.trim()) {
+      toast.error('Preencha o que você mais aprendeu no módulo.')
+      return
+    }
+
+    submitModuleReflection(currentModule.id, {
+      moduleId: currentModule.id,
+      keyLearnings: reflectionKeyLearnings,
+      hardestTopic: reflectionHardestTopic,
+      confidenceRating: reflectionConfidence,
+      preparedToAdvance: reflectionPrepared,
+    })
+
+    setReflectionSaved(true)
+    toast.success('Reflexão pedagógica salva com sucesso! Requisito de conclusão atingido.')
   }
 
   function handleRetake() {
@@ -271,22 +298,90 @@ export default function ModuleAssessmentPage({ params }: { params: Promise<{ mod
               <CardContent className="p-6 space-y-6">
                 {/* Result Breakdown */}
                 {passed ? (
-                  <div className="space-y-4">
-                    <div className="rounded-xl border border-success/30 bg-success/5 p-4">
-                      <h4 className="font-bold text-success text-xs uppercase tracking-wider mb-1">
-                        Domínio Comprovado
+                  <div className="space-y-6">
+                    <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-4">
+                      <h4 className="font-bold text-emerald-400 text-xs uppercase tracking-wider mb-1">
+                        Domínio Comprovado na Avaliação
                       </h4>
-                      <p className="text-xs text-foreground/90 leading-relaxed">
-                        Você demonstrou excelente compreensão de todos os conceitos avaliados neste módulo. O próximo módulo da sua trilha já está liberado no Dashboard.
+                      <p className="text-xs text-zinc-300 leading-relaxed font-medium">
+                        Você demonstrou excelente compreensão de todos os conceitos avaliados neste módulo. Para concluir 100% dos 5 critérios pedagógicos do módulo, preencha sua breve reflexão de aprendizado abaixo.
                       </p>
                     </div>
 
+                    {/* Pedagogical Reflection Section */}
+                    <div className="rounded-2xl border border-white/10 bg-[#12111a] p-5 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Brain className="size-4 text-violet-400" />
+                          <h4 className="text-sm font-bold text-white">Reflexão Pedagógica de Conclusão</h4>
+                        </div>
+                        {reflectionSaved && (
+                          <Badge className="bg-emerald-950 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold gap-1">
+                            <CheckCircle2 className="size-3" /> Reflexão Registrada
+                          </Badge>
+                        )}
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-zinc-300">
+                            1. O que você mais aprendeu de importante neste módulo? *
+                          </label>
+                          <Textarea
+                            rows={3}
+                            placeholder="Ex: Aprendi a encadear estruturas condicionais e manipular arrays com map/filter..."
+                            value={reflectionKeyLearnings}
+                            onChange={(e) => setReflectionKeyLearnings(e.target.value)}
+                            className="text-xs bg-black/40 border-white/10 text-zinc-200"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-zinc-300">
+                            2. Qual conceito você achou mais desafiador ou gostaria de reforçar?
+                          </label>
+                          <Input
+                            placeholder="Ex: Escopo de variáveis, depuração de erros em loops..."
+                            value={reflectionHardestTopic}
+                            onChange={(e) => setReflectionHardestTopic(e.target.value)}
+                            className="text-xs bg-black/40 border-white/10 text-zinc-200"
+                          />
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                          <div className="flex items-center gap-2">
+                            <label className="text-xs font-bold text-zinc-400">Nível de Confiança:</label>
+                            <div className="flex items-center gap-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <button
+                                  key={star}
+                                  type="button"
+                                  onClick={() => setReflectionConfidence(star)}
+                                  className={`text-sm ${star <= reflectionConfidence ? 'text-amber-400' : 'text-zinc-600'}`}
+                                >
+                                  ★
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <Button
+                            size="sm"
+                            onClick={handleSaveReflection}
+                            className="rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold shadow-md shadow-violet-600/30"
+                          >
+                            Salvar Reflexão do Módulo
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="flex items-center justify-between pt-2">
-                      <Button variant="outline" onClick={handleRetake} className="gap-2 text-xs">
-                        <RotateCcw className="size-3.5" /> Refazer para Treinar
+                      <Button variant="outline" onClick={handleRetake} className="gap-2 text-xs rounded-xl border-white/10 text-zinc-300">
+                        <RotateCcw className="size-3.5" /> Refazer Avaliação para Treinar
                       </Button>
                       <Link href="/trilha">
-                        <Button className="gap-2 font-bold shadow-lg shadow-primary/20">
+                        <Button className="gap-2 font-bold shadow-lg shadow-violet-600/30 bg-violet-600 hover:bg-violet-500 text-white rounded-xl">
                           Avançar na Minha Trilha <ArrowRight className="size-4" />
                         </Button>
                       </Link>

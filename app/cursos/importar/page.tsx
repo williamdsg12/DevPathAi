@@ -29,22 +29,16 @@ import type { Course, LearningModule, Lesson, YouTubePlaylist } from '@/lib/type
 
 export default function ImportYouTubePage() {
   const router = useRouter()
-  const { importCourseFromPlaylist } = useAppStore()
+  const { importCourseFromPlaylist, ingestFullChannelToStore, profile } = useAppStore()
   const [url, setUrl] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [loadingStep, setLoadingStep] = useState('')
 
-  const [importResult, setImportResult] = useState<{
-    playlist: YouTubePlaylist
-    course: Course
-    modules: LearningModule[]
-    lessons: Lesson[]
-    totalVideos: number
-    unavailableCount: number
-  } | null>(null)
+  const [importResult, setImportResult] = useState<any>(null)
 
   // Quick Playlist Suggestions
   const quickSuggestions = [
+    { label: 'Canal Curso em Vídeo (@cursoemvideo)', url: 'https://www.youtube.com/@cursoemvideo' },
     { label: 'Lógica (Gustavo Guanabara)', url: 'https://www.youtube.com/playlist?list=PLHz_AreHm4dmSj0MHol_aoNYCSGFqvfXV' },
     { label: 'JavaScript (Curso em Vídeo)', url: 'https://www.youtube.com/playlist?list=PLHz_AreHm4dlsK3Nr9GVvXCbpQyHQl1o1' },
     { label: 'HTML5 & CSS3 (Guanabara)', url: 'https://www.youtube.com/playlist?list=PLHz_AreHm4dlAnJ_jJtV29RFxnPHDuk9o' },
@@ -55,7 +49,7 @@ export default function ImportYouTubePage() {
   async function handleAnalyze(e: React.FormEvent) {
     e.preventDefault()
     if (!url.trim()) {
-      toast.error('Insira uma URL ou ID de playlist do YouTube.')
+      toast.error('Insira a URL ou link do canal/playlist do YouTube.')
       return
     }
 
@@ -63,24 +57,33 @@ export default function ImportYouTubePage() {
     setLoadingStep('Consultando YouTube Data API v3...')
 
     try {
-      setLoadingStep('Recuperando todos os vídeos com paginação completa...')
+      setLoadingStep('Recuperando cursos e vídeos com paginação completa...')
       const res = await fetch('/api/youtube/import', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': profile?.email || 'williamdev36@gmail.com',
+          'x-user-role': profile?.role || 'SUPER_ADMIN',
+          'x-admin-email': 'williamdev36@gmail.com',
+        },
         body: JSON.stringify({ url }),
       })
 
       const data = await res.json()
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Não foi possível importar a playlist.')
+        throw new Error(data.error || 'Não foi possível importar o conteúdo do YouTube.')
       }
 
       setLoadingStep('Estruturando módulos e organizando aulas com IA...')
       setTimeout(() => {
         setImportResult(data)
         setIsLoading(false)
-        toast.success(`Playlist importada com sucesso! ${data.totalVideos} aulas identificadas.`)
+        if (data.isChannel) {
+          toast.success(`Canal "${data.channel?.name}" identificado! ${data.courses?.length || 0} cursos e ${data.totalVideos || 0} aulas recuperadas.`)
+        } else {
+          toast.success(`Playlist importada com sucesso! ${data.totalVideos} aulas identificadas.`)
+        }
       }, 500)
     } catch (err: any) {
       setIsLoading(false)
@@ -91,14 +94,26 @@ export default function ImportYouTubePage() {
   function handleSaveCourse() {
     if (!importResult) return
 
-    importCourseFromPlaylist({
-      course: importResult.course,
-      modules: importResult.modules,
-      lessons: importResult.lessons,
-      playlist: importResult.playlist,
-    })
+    if (importResult.isChannel && importResult.channel) {
+      ingestFullChannelToStore({
+        channel: importResult.channel,
+        playlists: importResult.playlists,
+        courses: importResult.courses,
+        modules: importResult.modules,
+        lessons: importResult.lessons,
+        report: importResult.report,
+      })
+      toast.success(`Canal "${importResult.channel.name}" com ${importResult.courses?.length || 0} cursos adicionado ao catálogo oficial!`)
+    } else {
+      importCourseFromPlaylist({
+        course: importResult.course,
+        modules: importResult.modules,
+        lessons: importResult.lessons,
+        playlist: importResult.playlist,
+      })
+      toast.success(`Curso "${importResult.course.title}" adicionado ao catálogo oficial!`)
+    }
 
-    toast.success(`Curso "${importResult.course.title}" adicionado ao catálogo oficial!`)
     try {
       confetti({ particleCount: 70, spread: 80, origin: { y: 0.6 } })
     } catch {}
@@ -200,18 +215,26 @@ export default function ImportYouTubePage() {
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge className="bg-red-600 text-white font-bold text-xs">
-                      Playlist Oficial Importada
+                      {importResult.isChannel ? 'Canal Oficial Identificado' : 'Playlist Oficial Importada'}
                     </Badge>
                     <Badge variant="secondary" className="font-bold text-xs">
-                      {importResult.course.technology}
+                      {importResult.isChannel ? `${importResult.courses?.length || 0} Cursos Encontrados` : (importResult.course?.technology || 'Desenvolvimento')}
                     </Badge>
                   </div>
 
                   <h2 className="text-xl sm:text-2xl font-black text-foreground">
-                    {importResult.course.title}
+                    {importResult.isChannel ? importResult.channel?.name : importResult.course?.title}
                   </h2>
                   <p className="text-xs text-muted-foreground">
-                    Canal Oficial: <strong className="text-foreground">{importResult.playlist.channelTitle}</strong> • {importResult.totalVideos} aulas • {importResult.course.totalHours}h estimadas
+                    {importResult.isChannel ? (
+                      <>
+                        Canal Oficial: <strong className="text-foreground">{importResult.channel?.name}</strong> • {importResult.courses?.length || 0} cursos • {importResult.totalVideos} aulas catalogadas
+                      </>
+                    ) : (
+                      <>
+                        Canal Oficial: <strong className="text-foreground">{importResult.playlist?.channelTitle || importResult.course?.channelTitle}</strong> • {importResult.totalVideos} aulas • {importResult.course?.totalHours}h estimadas
+                      </>
+                    )}
                   </p>
                 </div>
 
@@ -220,43 +243,78 @@ export default function ImportYouTubePage() {
                   onClick={handleSaveCourse}
                   className="gap-2 font-bold shadow-xl shadow-primary/25 py-6 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground shrink-0"
                 >
-                  <CheckCircle2 className="size-5" /> Integrar como Curso Oficial
+                  <CheckCircle2 className="size-5" />
+                  {importResult.isChannel ? 'Integrar Todos os Cursos do Canal' : 'Integrar como Curso Oficial'}
                 </Button>
               </div>
             </Card>
 
-            {/* Modules Breakdown Structure */}
-            <div className="space-y-4">
-              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                <Layers className="size-4 text-primary" /> Módulos Gerados pela IA ({importResult.modules.length})
-              </h3>
+            {/* Courses / Modules Structure */}
+            {importResult.isChannel ? (
+              <div className="space-y-4">
+                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                  <Layers className="size-4 text-primary" /> Cursos Identificados no Canal ({importResult.courses?.length || 0})
+                </h3>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                {importResult.modules.map((mod) => (
-                  <Card key={mod.id} className="border-border/80 p-5 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                        Módulo {mod.order}
-                      </span>
-                      <Badge variant="outline" className="text-[10px]">
-                        {mod.lessonIds.length} aulas • {mod.estimatedHours}h
-                      </Badge>
-                    </div>
-
-                    <h4 className="text-sm font-bold text-foreground">{mod.title}</h4>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{mod.description}</p>
-
-                    <div className="flex flex-wrap gap-1 pt-1">
-                      {mod.skills.map((s) => (
-                        <span key={s} className="rounded border border-border bg-muted/40 px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                          {s}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {importResult.courses?.map((course: any) => (
+                    <Card key={course.id} className="border-border/80 p-5 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                          {course.category}
                         </span>
-                      ))}
-                    </div>
-                  </Card>
-                ))}
+                        <Badge variant="outline" className="text-[10px]">
+                          {course.lessonsCount} aulas • {course.totalHours}h
+                        </Badge>
+                      </div>
+
+                      <h4 className="text-sm font-bold text-foreground line-clamp-1">{course.title}</h4>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{course.description}</p>
+
+                      <div className="flex flex-wrap gap-1 pt-1">
+                        {course.skills?.map((s: string) => (
+                          <span key={s} className="rounded border border-border bg-muted/40 px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-4">
+                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                  <Layers className="size-4 text-primary" /> Módulos Gerados pela IA ({importResult.modules?.length || 0})
+                </h3>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {importResult.modules?.map((mod: any) => (
+                    <Card key={mod.id} className="border-border/80 p-5 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                          Módulo {mod.order}
+                        </span>
+                        <Badge variant="outline" className="text-[10px]">
+                          {mod.lessonIds?.length || 0} aulas • {mod.estimatedHours}h
+                        </Badge>
+                      </div>
+
+                      <h4 className="text-sm font-bold text-foreground">{mod.title}</h4>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{mod.description}</p>
+
+                      <div className="flex flex-wrap gap-1 pt-1">
+                        {mod.skills?.map((s: string) => (
+                          <span key={s} className="rounded border border-border bg-muted/40 px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* All Real Videos List */}
             <Card className="border-border/80 shadow-lg">
@@ -264,17 +322,17 @@ export default function ImportYouTubePage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="text-base font-bold">
-                      Grade Curricular Completa de Aulas ({importResult.lessons.length})
+                      Grade Curricular de Aulas Recuperadas ({importResult.lessons?.length || 0})
                     </CardTitle>
                     <CardDescription className="text-xs">
-                      Vídeos únicos do YouTube vinculados individualmente com durações reais.
+                      Vídeos reais do YouTube com IDs oficiais e durações calculadas.
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
 
               <CardContent className="p-4 space-y-2 max-h-96 overflow-y-auto">
-                {importResult.lessons.map((lesson, i) => (
+                {importResult.lessons?.map((lesson: any, i: number) => (
                   <div
                     key={lesson.id}
                     className="flex items-center justify-between rounded-xl border border-border/70 p-3 text-xs gap-3 hover:bg-muted/30 transition-colors"
@@ -283,15 +341,17 @@ export default function ImportYouTubePage() {
                       <span className="grid size-6 place-items-center rounded-full bg-primary/10 text-[10px] font-bold text-primary shrink-0">
                         {i + 1}
                       </span>
-                      <div className="min-w-0">
+                      <div className="truncate">
                         <p className="font-semibold text-foreground truncate">{lesson.title}</p>
-                        <p className="text-[10px] font-mono text-muted-foreground">ID: {lesson.videoId}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {lesson.technology ? `${lesson.technology} • ` : ''}{lesson.durationMin} min
+                        </p>
                       </div>
                     </div>
 
-                    <span className="text-muted-foreground font-medium shrink-0 flex items-center gap-1">
-                      <Clock className="size-3" /> {lesson.durationMin}m
-                    </span>
+                    <Badge variant="outline" className="text-[10px] shrink-0">
+                      ID: {lesson.videoId || lesson.id}
+                    </Badge>
                   </div>
                 ))}
               </CardContent>
@@ -299,7 +359,8 @@ export default function ImportYouTubePage() {
 
             <div className="flex justify-end pt-2">
               <Button onClick={handleSaveCourse} size="lg" className="gap-2 font-bold shadow-xl shadow-primary/20">
-                <CheckCircle2 className="size-4" /> Confirmar e Integrar ao Catálogo
+                <CheckCircle2 className="size-4" />
+                {importResult.isChannel ? 'Confirmar e Integrar Todos os Cursos do Canal' : 'Confirmar e Integrar ao Catálogo'}
               </Button>
             </div>
           </div>

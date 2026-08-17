@@ -21,17 +21,27 @@ import {
 import { getSupabaseClient, isSupabaseConfigured } from './supabase/client'
 import {
   defaultContentSources,
+  defaultLearningActivities,
   defaultOfficialCourses,
   defaultOfficialLessons,
   defaultOfficialModules,
   defaultTechnologySources,
   mockAchievements,
+  mockAssessments,
   mockPath,
+  mockProjects,
 } from './mock-data'
 import { learningPathEngine } from './ai/learning-path-engine'
+import { activityEngine } from './ai/activity-engine'
+import { moduleCompletionEngine } from './pedagogy/module-completion-engine'
 import { validateContentMapping } from './youtube/service'
+import { isSuperAdmin } from './auth/rbac'
 import type {
   Achievement,
+  ActivityAttempt,
+  Assessment,
+  AssessmentQuestion,
+  AssessmentResult,
   CertificateData,
   ContentConsistencyReport,
   ContentSource,
@@ -43,17 +53,23 @@ import type {
   IngestionReport,
   InterviewReport,
   KnowledgeGap,
+  LearningActivity,
   LearningModule,
   LearningPath,
   LearningProfile,
   Lesson,
   LessonProgress,
+  ModuleCompletionStatus,
   ModuleMasteryScore,
   ModuleProgress,
+  ModuleProject,
+  ModuleReflection,
   ModuleStatus,
   NotificationItem,
   OnboardingData,
   PlacementResult,
+  ProjectSubmission,
+  RecoveryPlan,
   SpacedReviewItem,
   TechnologySource,
   TrailAdaptationNotice,
@@ -77,6 +93,16 @@ interface PersistedState {
   completedLessons: string[]
   lessonNotes: Record<string, string>
   completedExercises: string[]
+  // Pedagogical Activity Engine State
+  activities: LearningActivity[]
+  activityAttempts: Record<string, ActivityAttempt[]>
+  completedActivities: string[]
+  moduleProjects: Record<string, ModuleProject>
+  projectSubmissions: Record<string, ProjectSubmission>
+  assessments: Record<string, Assessment>
+  assessmentAttempts: Record<string, AssessmentResult[]>
+  moduleReflections: Record<string, ModuleReflection>
+  skillMasteryMap: Record<string, { skillName: string; score: number; attemptsCount: number }>
   projects: UserProject[]
   achievements: Achievement[]
   difficulties: Difficulty[]
@@ -114,27 +140,63 @@ function createInitialWeeklyStudy(): DailyStudyRecord[] {
   }))
 }
 
+function createInitialModuleProgress(modules: LearningModule[]): Record<string, ModuleProgress> {
+  const progress: Record<string, ModuleProgress> = {}
+  for (const m of modules) {
+    progress[m.id] = {
+      moduleId: m.id,
+      lessonsCompleted: 0,
+      exercisesCompleted: 0,
+      projectSubmitted: false,
+      assessmentScore: null,
+      masteryScore: 0,
+      status: m.order === 1 ? 'available' : 'locked',
+    }
+  }
+  return progress
+}
+
 function createCleanInitialState(): PersistedState {
+  const initialAdaptive = learningPathEngine.generateAdaptiveTrail(
+    null,
+    null,
+    null,
+    defaultOfficialCourses,
+    defaultOfficialModules,
+    defaultOfficialLessons,
+  )
+
+  const initialProjectsMap: Record<string, ModuleProject> = {}
+  mockProjects.forEach((p) => {
+    initialProjectsMap[p.moduleId] = p
+  })
+
+  const initialAssessmentsMap: Record<string, Assessment> = {}
+  mockAssessments.forEach((a) => {
+    initialAssessmentsMap[a.moduleId] = a
+  })
+
   return {
     profile: null,
     authed: false,
     learningProfile: null,
     onboarding: null,
     placement: null,
-    activePath: {
-      id: 'path-init',
-      title: 'Trilha Personalizada',
-      goal: 'primeiro-emprego',
-      area: 'fullstack',
-      description: 'Sua formação estruturada a partir dos cursos e módulos reais do catálogo.',
-      moduleIds: [],
-      items: [],
-    },
-    moduleProgress: {},
+    activePath: initialAdaptive.path,
+    moduleProgress: createInitialModuleProgress(defaultOfficialModules),
     lessonProgressMap: {},
     completedLessons: [],
     lessonNotes: {},
     completedExercises: [],
+    activities: defaultLearningActivities,
+    activityAttempts: {},
+    completedActivities: [],
+    moduleProjects: initialProjectsMap,
+    projectSubmissions: {},
+    assessments: initialAssessmentsMap,
+    assessmentAttempts: {},
+    moduleReflections: {},
+    skillMasteryMap: {},
     projects: [],
     achievements: createInitialAchievements(),
     difficulties: [],
@@ -149,17 +211,17 @@ function createCleanInitialState(): PersistedState {
       {
         id: 'notif-welcome',
         title: 'Bem-vindo ao DevPath AI! 🚀',
-        message: 'Importe canais ou playlists do YouTube para alimentar seu catálogo educacional em tempo real.',
+        message: 'Explore seus cursos oficiais do YouTube ou importe novas playlists para personalizar seus estudos.',
         type: 'info',
         read: false,
         createdAt: new Date().toISOString(),
       },
     ],
     contentSources: defaultContentSources,
-    courses: [],
+    courses: defaultOfficialCourses,
     importedPlaylists: [],
-    customModules: [],
-    customLessons: [],
+    customModules: defaultOfficialModules,
+    customLessons: defaultOfficialLessons,
     technologySources: defaultTechnologySources,
     importLogs: [],
   }
@@ -176,12 +238,30 @@ export interface AppStoreValue extends PersistedState {
   signIn: (email: string, password?: string) => Promise<{ success: boolean; error?: string }>
   signUp: (name: string, email: string, password?: string) => Promise<{ success: boolean; error?: string }>
   signOut: () => Promise<void>
+  isSuperAdmin: boolean
   // Onboarding & Nivelamento
   completeOnboarding: (data: OnboardingData) => void
   completePlacement: (result: PlacementResult) => void
-  generateCustomPath: (customTitle?: string, customDesc?: string) => void
+  generateCustomPath: (title?: string, description?: string) => void
+  recalculateLearningPath: (reason?: string) => void
   resetActivePathToAdaptive: () => void
-  // Educational Content Layer Management
+  // Course & Module Updates
+  updateCourse: (course: Course) => void
+  deleteCourse: (courseId: string) => void
+  updateModule: (module: LearningModule) => void
+  deleteModule: (moduleId: string) => void
+  addLessonToModule: (moduleId: string, lesson: Partial<Lesson>) => void
+  updateLesson: (lesson: Lesson) => void
+  deleteLesson: (lessonId: string) => void
+  // Content Catalog & Ingestion
+  addContentSource: (source: ContentSource) => void
+  updateContentSource: (source: ContentSource) => void
+  deleteContentSource: (sourceId: string) => void
+  updateTechnologySource: (source: TechnologySource) => void
+  deleteTechnologySource: (id: string) => void
+  syncOfficialTrustedChannels: () => Promise<boolean>
+  resetEducationalCatalog: () => Promise<{ success: boolean; deletedCounts: { courses: number; modules: number; lessons: number } }>
+  revalidateModuleVideos: (moduleId: string) => Promise<{ availableCount: number; unavailableCount: number }>
   ingestFullChannelToStore: (payload: {
     channel: ContentSource
     playlists: YouTubePlaylist[]
@@ -192,45 +272,69 @@ export interface AppStoreValue extends PersistedState {
   }) => void
   importCourseFromPlaylist: (payload: {
     course: Course
-    modules: LearningModule[]
-    lessons: Lesson[]
-    playlist: YouTubePlaylist
+    modules?: LearningModule[]
+    lessons?: Lesson[]
+    playlist?: YouTubePlaylist
   }) => void
-  importChannelPlaylists: (channel: ContentSource, playlists: YouTubePlaylist[]) => void
-  syncPlaylistInStore: (playlistId: string, updatedVideos: YouTubeVideo[]) => void
-  updateTechnologySource: (source: TechnologySource) => void
-  updatePlaylistClassification: (playlistId: string, patch: Partial<YouTubePlaylist>) => void
-  validateCatalogIntegrity: () => ContentConsistencyReport
-  resetEducationalCatalog: () => Promise<{
-    success: boolean
-    deletedCounts: {
-      courses: number
-      modules: number
-      lessons: number
-      playlists: number
-      sources: number
-    }
+  importChannelPlaylists: (playlists: YouTubePlaylist[]) => void
+  syncPlaylistInStore: (playlistId: string, videos: YouTubeVideo[]) => void
+  checkContentConsistency: () => ContentConsistencyReport
+  // Pedagogical Activity Engine Actions
+  submitActivityAnswer: (
+    activityId: string,
+    answer: string | number,
+    timeSpentSeconds?: number,
+  ) => {
+    isCorrect: boolean
+    score: number
+    feedback: string
+    hint?: string
+    xpEarned: number
+    attemptNumber: number
+  }
+  generateActivitiesForLesson: (lessonId: string) => Promise<LearningActivity[]>
+  generateActivitiesForModule: (moduleId: string) => Promise<LearningActivity[]>
+  generateModuleProject: (moduleId: string) => Promise<ModuleProject>
+  generateModuleAssessment: (moduleId: string) => Promise<Assessment>
+  submitModuleReflection: (
+    moduleId: string,
+    reflection: Omit<ModuleReflection, 'id' | 'userId' | 'submittedAt'>,
+  ) => void
+  reviewProjectSubmission: (
+    moduleId: string,
+    submission: { githubUrl: string; deployUrl?: string; description?: string; codeContent?: string },
+  ) => Promise<{
+    grade: number
+    passed: boolean
+    feedback: string
+    strengths: string[]
+    improvements: string[]
   }>
-  syncOfficialTrustedChannels: () => Promise<boolean>
-  // Lessons & Exercises
+  checkModuleCompletion: (moduleId: string) => ModuleCompletionStatus
+  adminApproveActivity: (activityId: string) => void
+  adminUpdateActivity: (activityId: string, patch: Partial<LearningActivity>) => void
+  adminDeleteActivity: (activityId: string) => void
+  // Progression & Learning Actions
   completeLesson: (lessonId: string) => void
-  recordVideoProgress: (lessonId: string, watchPercentage: number, lastPositionSeconds: number) => void
+  recordVideoProgress: (lessonId: string, watchedPercentage: number, lastPositionSeconds?: number) => void
   saveLessonNote: (lessonId: string, note: string) => void
   completeExercise: (exerciseId: string) => void
-  recordDifficulty: (topic: string) => void
-  // Assessments & Projects
+  submitProject: (project: UserProject) => void
+  submitModuleProject: (
+    moduleId: string,
+    submission: { githubUrl: string; deployUrl?: string; description?: string },
+  ) => void
   submitAssessment: (moduleId: string, score: number) => void
-  submitModuleProject: (moduleId: string, submission: { githubUrl: string; deployUrl?: string; description?: string }) => void
+  recordDifficulty: (topic: string) => void
   addProject: (p: Omit<UserProject, 'id' | 'createdAt'>) => void
   updateProject: (id: string, patch: Partial<UserProject>) => void
   deleteProject: (id: string) => void
-  // Reviews & Study Sessions
-  completeSpacedReview: (reviewId: string) => void
-  recordStudySession: (minutes: number, type?: string) => void
+  recordDailyStudy: (minutes: number) => void
+  addSpacedReview: (item: SpacedReviewItem) => void
+  completeSpacedReview: (id: string) => void
   addInterviewReport: (report: InterviewReport) => void
   generateCertificate: (pathTitle?: string) => CertificateData
-  // Profile & Settings
-  updateProfile: (patch: Partial<UserProfile>) => void
+  issueCertificate: (certificate: CertificateData) => void
   markNotificationAsRead: (id: string) => void
   clearAllNotifications: () => void
   // Derived state & progression engine
@@ -257,13 +361,39 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       const raw = localStorage.getItem(STORAGE_KEY)
       if (raw) {
         const parsed = JSON.parse(raw)
+        const loadedProfile = parsed.profile
+          ? {
+              ...parsed.profile,
+              role: isSuperAdmin({ email: parsed.profile.email }) ? 'SUPER_ADMIN' : parsed.profile.role || 'STUDENT',
+              isAdmin: isSuperAdmin({ email: parsed.profile.email }),
+            }
+          : null
+
+        const loadedCourses = Array.isArray(parsed.courses) && parsed.courses.length ? parsed.courses : defaultOfficialCourses
+        const loadedModules = Array.isArray(parsed.customModules) && parsed.customModules.length ? parsed.customModules : defaultOfficialModules
+        const loadedLessons = Array.isArray(parsed.customLessons) && parsed.customLessons.length ? parsed.customLessons : defaultOfficialLessons
+        const loadedActivities = Array.isArray(parsed.activities) && parsed.activities.length ? parsed.activities : defaultLearningActivities
+        const loadedProjects = parsed.moduleProjects && Object.keys(parsed.moduleProjects).length ? parsed.moduleProjects : createCleanInitialState().moduleProjects
+        const loadedAssessments = parsed.assessments && Object.keys(parsed.assessments).length ? parsed.assessments : createCleanInitialState().assessments
+
         setState((prev) => ({
           ...prev,
           ...parsed,
+          profile: loadedProfile,
           contentSources: parsed.contentSources?.length ? parsed.contentSources : defaultContentSources,
-          courses: Array.isArray(parsed.courses) ? parsed.courses : [],
-          customModules: Array.isArray(parsed.customModules) ? parsed.customModules : [],
-          customLessons: Array.isArray(parsed.customLessons) ? parsed.customLessons : [],
+          courses: loadedCourses,
+          customModules: loadedModules,
+          customLessons: loadedLessons,
+          activities: loadedActivities,
+          activityAttempts: parsed.activityAttempts || {},
+          completedActivities: Array.isArray(parsed.completedActivities) ? parsed.completedActivities : parsed.completedExercises || [],
+          moduleProjects: loadedProjects,
+          projectSubmissions: parsed.projectSubmissions || {},
+          assessments: loadedAssessments,
+          assessmentAttempts: parsed.assessmentAttempts || {},
+          moduleReflections: parsed.moduleReflections || {},
+          skillMasteryMap: parsed.skillMasteryMap || {},
+          activePath: parsed.activePath?.items?.length ? parsed.activePath : prev.activePath,
           technologySources: parsed.technologySources?.length ? parsed.technologySources : defaultTechnologySources,
         }))
       }
@@ -274,37 +404,59 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     const client = getSupabaseClient()
     if (client && isSupabaseConfigured()) {
       setIsSupabaseOnline(true)
-      client.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) {
-          setState((s) => ({
-            ...s,
-            authed: true,
-            profile: {
-              id: session.user.id,
-              name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Desenvolvedor',
-              email: session.user.email || '',
-              avatarUrl: session.user.user_metadata?.avatar_url,
-              createdAt: session.user.created_at,
-              onboarded: s.profile?.onboarded ?? false,
-              placementDone: s.profile?.placementDone ?? false,
-            },
-          }))
-        }
-      }).catch((err) => {
-        console.warn('Supabase auth session notice:', err)
-      })
+      client.auth
+        .getSession()
+        .then(({ data: { session } }) => {
+          if (session?.user) {
+            const userEmail = session.user.email || ''
+            const isUserSuperAdmin = isSuperAdmin({ email: userEmail })
+            setState((s) => ({
+              ...s,
+              authed: true,
+              profile: {
+                id: session.user.id,
+                name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Desenvolvedor',
+                email: userEmail,
+                role: isUserSuperAdmin ? 'SUPER_ADMIN' : 'STUDENT',
+                isAdmin: isUserSuperAdmin,
+                avatarUrl: session.user.user_metadata?.avatar_url,
+                createdAt: session.user.created_at,
+                onboarded: s.profile?.onboarded ?? false,
+                placementDone: s.profile?.placementDone ?? false,
+              },
+            }))
+          }
+        })
+        .catch((err) => {
+          console.warn('Supabase auth session notice:', err)
+        })
+        .finally(() => {
+          setReady(true)
+        })
 
-      const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
+      const {
+        data: { subscription },
+      } = client.auth.onAuthStateChange((_event, session) => {
         if (session?.user) {
+          const userEmail = session.user.email || ''
+          const isUserSuperAdmin = isSuperAdmin({ email: userEmail })
           setState((s) => ({
             ...s,
             authed: true,
             profile: s.profile
-              ? { ...s.profile, id: session.user.id, email: session.user.email || s.profile.email }
+              ? {
+                  ...s.profile,
+                  id: session.user.id,
+                  email: userEmail || s.profile.email,
+                  role: isUserSuperAdmin ? 'SUPER_ADMIN' : 'STUDENT',
+                  isAdmin: isUserSuperAdmin,
+                }
               : {
                   id: session.user.id,
                   name: session.user.user_metadata?.name || 'Desenvolvedor',
-                  email: session.user.email || '',
+                  email: userEmail,
+                  role: isUserSuperAdmin ? 'SUPER_ADMIN' : 'STUDENT',
+                  isAdmin: isUserSuperAdmin,
                   createdAt: session.user.created_at,
                   onboarded: false,
                   placementDone: false,
@@ -316,9 +468,9 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       return () => {
         subscription.unsubscribe()
       }
+    } else {
+      setReady(true)
     }
-
-    setReady(true)
   }, [])
 
   // Persist state
@@ -346,6 +498,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
 
   // --- Auth Handlers ---
   const signIn = useCallback(async (email: string, password?: string) => {
+    const adminCheck = isSuperAdmin({ email })
     const client = getSupabaseClient()
     if (client && isSupabaseConfigured() && password) {
       const { data, error } = await client.auth.signInWithPassword({ email, password })
@@ -353,6 +506,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         return { success: false, error: error.message }
       }
       if (data.user) {
+        const isUserSuperAdmin = isSuperAdmin({ email: data.user.email || email })
         setState((s) => ({
           ...s,
           authed: true,
@@ -360,6 +514,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
             id: data.user.id,
             name: data.user.user_metadata?.name || email.split('@')[0],
             email: data.user.email || email,
+            role: isUserSuperAdmin ? 'SUPER_ADMIN' : 'STUDENT',
+            isAdmin: isUserSuperAdmin,
             createdAt: data.user.created_at,
             onboarded: s.profile?.onboarded ?? false,
             placementDone: s.profile?.placementDone ?? false,
@@ -376,6 +532,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         id: `user-${Date.now()}`,
         name: email.split('@')[0] || 'Desenvolvedor',
         email,
+        role: adminCheck ? 'SUPER_ADMIN' : 'STUDENT',
+        isAdmin: adminCheck,
         createdAt: new Date().toISOString(),
         onboarded: false,
         placementDone: false,
@@ -385,6 +543,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signUp = useCallback(async (name: string, email: string, password?: string) => {
+    const adminCheck = isSuperAdmin({ email })
     const client = getSupabaseClient()
     if (client && isSupabaseConfigured() && password) {
       const { data, error } = await client.auth.signUp({
@@ -396,6 +555,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         return { success: false, error: error.message }
       }
       if (data.user) {
+        const isUserSuperAdmin = isSuperAdmin({ email: data.user.email || email })
         const cleanState = createCleanInitialState()
         setState({
           ...cleanState,
@@ -404,6 +564,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
             id: data.user.id,
             name,
             email,
+            role: isUserSuperAdmin ? 'SUPER_ADMIN' : 'STUDENT',
+            isAdmin: isUserSuperAdmin,
             createdAt: new Date().toISOString(),
             onboarded: false,
             placementDone: false,
@@ -421,6 +583,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         id: `user-${Date.now()}`,
         name,
         email,
+        role: adminCheck ? 'SUPER_ADMIN' : 'STUDENT',
+        isAdmin: adminCheck,
         createdAt: new Date().toISOString(),
         onboarded: false,
         placementDone: false,
@@ -539,9 +703,74 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  const recalculateLearningPath = useCallback((reason?: string) => {
+    setState((s) => {
+      const generated = learningPathEngine.generateAdaptiveTrail(
+        s.profile,
+        s.onboarding,
+        s.placement,
+        s.courses,
+        s.customModules,
+        s.customLessons,
+      )
+
+      const moduleProgress = { ...s.moduleProgress }
+      if (generated.path.items) {
+        for (const item of generated.path.items) {
+          if (!moduleProgress[item.moduleId]) {
+            moduleProgress[item.moduleId] = {
+              moduleId: item.moduleId,
+              lessonsCompleted: 0,
+              exercisesCompleted: 0,
+              projectSubmitted: false,
+              assessmentScore: null,
+              masteryScore: 0,
+              status: item.locked ? 'locked' : item.status === 'concluido' ? 'completed' : 'available',
+            }
+          }
+        }
+      }
+
+      const updatedPath: LearningPath = {
+        ...generated.path,
+        recalculatedAt: new Date().toISOString(),
+        adaptations: [
+          ...(generated.path.adaptations || []),
+          ...(reason
+            ? [
+                {
+                  id: `adapt-recalc-${Date.now()}`,
+                  date: new Date().toLocaleDateString('pt-BR'),
+                  reason: reason || 'Recalculação de trilha solicitada.',
+                  changesMade: 'Ajuste adaptativo da sequência de estudos e validação de pré-requisitos.',
+                },
+              ]
+            : []),
+        ],
+      }
+
+      return {
+        ...s,
+        activePath: updatedPath,
+        moduleProgress,
+        notifications: [
+          ...s.notifications,
+          {
+            id: `notif-recalc-${Date.now()}`,
+            title: 'Trilha Atualizada!',
+            message: reason ? `Motivo: ${reason}` : 'Sua trilha individual foi recalculada com base no catálogo atual.',
+            type: 'info',
+            read: false,
+            createdAt: new Date().toISOString(),
+          },
+        ],
+      }
+    })
+  }, [])
+
   const resetActivePathToAdaptive = useCallback(() => {
-    generateCustomPath()
-  }, [generateCustomPath])
+    recalculateLearningPath('Reinicialização manual da trilha adaptativa.')
+  }, [recalculateLearningPath])
 
   // --- Educational Catalog Ingestion & Sincronização ---
   const ingestFullChannelToStore = useCallback((payload: {
@@ -583,12 +812,12 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         playlistId: payload.channel.channelId || payload.channel.id,
         playlistTitle: `Catálogo de ${payload.channel.name}`,
         channelTitle: payload.channel.name,
-        status: 'sucesso',
-        videosFound: payload.report.totalVideosFound,
-        videosImported: payload.report.totalVideosImported,
-        videosUnavailable: payload.report.totalUnavailable,
+        status: payload.report.playlistsFailed && payload.report.playlistsFailed > 0 ? 'parcial' : 'sucesso',
+        videosFound: payload.report.videosFound || payload.lessons.length,
+        videosImported: payload.report.videosImported || payload.lessons.length,
+        videosUnavailable: payload.report.unavailableCount || 0,
         duplicatesIgnored: 0,
-        message: `Canal ${payload.channel.name} ingerido com sucesso: ${payload.courses.length} cursos e ${payload.lessons.length} aulas reais catalogadas.`,
+        message: `Canal ${payload.channel.name} ingerido: ${payload.courses.length} cursos e ${payload.lessons.length} aulas reais catalogadas.`,
         createdAt: new Date().toISOString(),
       }
 
@@ -596,15 +825,21 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       const updatedModules = [...payload.modules, ...remainingModules]
       const updatedLessons = [...payload.lessons, ...remainingLessons]
 
-      // Auto-refresh trail if currently empty
-      const generated = learningPathEngine.generateAdaptiveTrail(
-        s.profile,
-        s.onboarding,
-        s.placement,
-        updatedCourses,
-        updatedModules,
-        updatedLessons,
-      )
+      // REGRA ARQUITETURAL: Catalog Update DOES NOT mutate active student paths unless empty
+      const hasExistingActiveItems = (s.activePath?.items?.length || 0) > 0
+      let activePathToSet = s.activePath
+
+      if (!hasExistingActiveItems) {
+        const generated = learningPathEngine.generateAdaptiveTrail(
+          s.profile,
+          s.onboarding,
+          s.placement,
+          updatedCourses,
+          updatedModules,
+          updatedLessons,
+        )
+        activePathToSet = generated.path
+      }
 
       return {
         ...s,
@@ -614,14 +849,14 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         customModules: updatedModules,
         customLessons: updatedLessons,
         moduleProgress,
-        activePath: generated.path,
+        activePath: activePathToSet,
         importLogs: [log, ...s.importLogs],
         notifications: [
           ...s.notifications,
           {
             id: `notif-ingest-${Date.now()}`,
             title: `Canal "${payload.channel.name}" ingerido!`,
-            message: `${payload.courses.length} cursos e ${payload.lessons.length} aulas integradas à plataforma.`,
+            message: `${payload.courses.length} cursos adicionados ao Catálogo Geral (sua trilha individual permanece preservada).`,
             type: 'success',
             read: false,
             createdAt: new Date().toISOString(),
@@ -633,20 +868,32 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
 
   const importCourseFromPlaylist = useCallback((payload: {
     course: Course
-    modules: LearningModule[]
-    lessons: Lesson[]
-    playlist: YouTubePlaylist
+    modules?: LearningModule[]
+    lessons?: Lesson[]
+    playlist?: YouTubePlaylist
   }) => {
+    if (!payload || !payload.course) return
+
     setState((s) => {
-      const filteredCourses = s.courses.filter((c) => c.id !== payload.course.id && c.playlistId !== payload.playlist.youtubePlaylistId)
-      const filteredPlaylists = s.importedPlaylists.filter((p) => p.youtubePlaylistId !== payload.playlist.youtubePlaylistId)
-      const existingLessonIds = new Set(payload.lessons.map((l) => l.id))
+      const courseId = payload.course.id
+      const plId = payload.playlist?.youtubePlaylistId || payload.course.playlistId || ''
+      const incomingModules = payload.modules || []
+      const incomingLessons = payload.lessons || []
+
+      const filteredCourses = s.courses.filter(
+        (c) => c.id !== courseId && (plId ? c.playlistId !== plId : true),
+      )
+      const filteredPlaylists = plId
+        ? s.importedPlaylists.filter((p) => p.youtubePlaylistId !== plId)
+        : s.importedPlaylists
+
+      const existingLessonIds = new Set(incomingLessons.map((l) => l.id))
       const filteredCustomLessons = s.customLessons.filter((l) => !existingLessonIds.has(l.id))
-      const existingModIds = new Set(payload.modules.map((m) => m.id))
+      const existingModIds = new Set(incomingModules.map((m) => m.id))
       const filteredCustomModules = s.customModules.filter((m) => !existingModIds.has(m.id))
 
       const moduleProgress = { ...s.moduleProgress }
-      for (const m of payload.modules) {
+      for (const m of incomingModules) {
         if (!moduleProgress[m.id]) {
           moduleProgress[m.id] = {
             moduleId: m.id,
@@ -662,46 +909,53 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
 
       const newLog: ImportLog = {
         id: `log-${Date.now()}`,
-        playlistId: payload.playlist.youtubePlaylistId,
-        playlistTitle: payload.playlist.title,
-        channelTitle: payload.playlist.channelTitle,
+        playlistId: plId,
+        playlistTitle: payload.playlist?.title || payload.course.title,
+        channelTitle: payload.playlist?.channelTitle || payload.course.channelTitle || 'YouTube',
         status: 'sucesso',
-        videosFound: payload.playlist.itemCount,
-        videosImported: payload.lessons.length,
+        videosFound: payload.playlist?.itemCount || incomingLessons.length,
+        videosImported: incomingLessons.length,
         videosUnavailable: 0,
         duplicatesIgnored: 0,
-        message: `Curso "${payload.course.title}" importado com sucesso com ${payload.lessons.length} aulas reais.`,
+        message: `Curso "${payload.course.title}" importado com sucesso com ${incomingLessons.length} aulas reais.`,
         createdAt: new Date().toISOString(),
       }
 
       const updatedCourses = [payload.course, ...filteredCourses]
-      const updatedModules = [...payload.modules, ...filteredCustomModules]
-      const updatedLessons = [...payload.lessons, ...filteredCustomLessons]
+      const updatedModules = [...incomingModules, ...filteredCustomModules]
+      const updatedLessons = [...incomingLessons, ...filteredCustomLessons]
 
-      const generated = learningPathEngine.generateAdaptiveTrail(
-        s.profile,
-        s.onboarding,
-        s.placement,
-        updatedCourses,
-        updatedModules,
-        updatedLessons,
-      )
+      // REGRA ARQUITETURAL: Course addition to catalog DOES NOT automatically alter active student trails
+      const hasExistingActiveItems = (s.activePath?.items?.length || 0) > 0
+      let activePathToSet = s.activePath
+
+      if (!hasExistingActiveItems) {
+        const generated = learningPathEngine.generateAdaptiveTrail(
+          s.profile,
+          s.onboarding,
+          s.placement,
+          updatedCourses,
+          updatedModules,
+          updatedLessons,
+        )
+        activePathToSet = generated.path
+      }
 
       return {
         ...s,
         courses: updatedCourses,
-        importedPlaylists: [payload.playlist, ...filteredPlaylists],
+        importedPlaylists: payload.playlist ? [payload.playlist, ...filteredPlaylists] : filteredPlaylists,
         customModules: updatedModules,
         customLessons: updatedLessons,
         moduleProgress,
-        activePath: generated.path,
+        activePath: activePathToSet,
         importLogs: [newLog, ...s.importLogs],
         notifications: [
           ...s.notifications,
           {
             id: `notif-import-${Date.now()}`,
-            title: `Novo curso importado: ${payload.course.title}`,
-            message: `${payload.lessons.length} aulas integradas e organizadas pela IA.`,
+            title: `Novo curso no Catálogo: ${payload.course.title}`,
+            message: `Curso adicionado ao catálogo geral da plataforma.`,
             type: 'success',
             read: false,
             createdAt: new Date().toISOString(),
@@ -740,22 +994,23 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
-  const syncPlaylistInStore = useCallback((playlistId: string, updatedVideos: YouTubeVideo[]) => {
+  const syncPlaylistInStore = useCallback((playlistId: string, updatedVideos?: YouTubeVideo[]) => {
     setState((s) => {
+      const safeVideos = Array.isArray(updatedVideos) ? updatedVideos : []
       const pl = s.importedPlaylists.find((p) => p.youtubePlaylistId === playlistId)
       const updatedPlaylists = s.importedPlaylists.map((p) =>
-        p.youtubePlaylistId === playlistId ? { ...p, lastSyncedAt: new Date().toISOString(), itemCount: updatedVideos.length } : p
+        p.youtubePlaylistId === playlistId ? { ...p, lastSyncedAt: new Date().toISOString(), itemCount: safeVideos.length } : p
       )
 
       const targetCourse = s.courses.find((c) => c.playlistId === playlistId || c.id === `crs-${playlistId}`)
-      const totalSeconds = updatedVideos.reduce((acc, v) => acc + (v.durationSeconds || 0), 0)
+      const totalSeconds = safeVideos.reduce((acc, v) => acc + (v?.durationSeconds || 0), 0)
       const totalHours = Math.max(1, Math.round(totalSeconds / 3600))
 
       const updatedCourses = s.courses.map((c) =>
         c.playlistId === playlistId || c.id === `crs-${playlistId}`
           ? {
               ...c,
-              lessonsCount: updatedVideos.length,
+              lessonsCount: safeVideos.length,
               totalHours,
               updatedAt: new Date().toISOString(),
             }
@@ -764,13 +1019,13 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
 
       // Map new / updated lessons strictly ordered by position ASC
       const modId = `mod-${playlistId}`
-      const syncedLessons: Lesson[] = updatedVideos.map((vid, idx) => ({
+      const syncedLessons: Lesson[] = safeVideos.map((vid, idx) => ({
         id: `l-${playlistId}-${vid.youtubeVideoId}`,
         moduleId: modId,
         order: idx + 1,
         title: vid.title,
         type: 'video',
-        durationMin: Math.max(5, Math.round(vid.durationSeconds / 60)),
+        durationMin: Math.max(5, Math.round((vid.durationSeconds || 1200) / 60)),
         description: vid.description ? vid.description.slice(0, 200) + '...' : `Aula ${idx + 1} do curso ${pl?.title || targetCourse?.title || ''}.`,
         videoId: vid.youtubeVideoId,
         externalVideoId: vid.youtubeVideoId,
@@ -808,11 +1063,11 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         playlistTitle: pl?.title || targetCourse?.title || playlistId,
         channelTitle: pl?.channelTitle || targetCourse?.channelTitle || 'YouTube',
         status: 'sucesso',
-        videosFound: updatedVideos.length,
-        videosImported: updatedVideos.length,
+        videosFound: safeVideos.length,
+        videosImported: safeVideos.length,
         videosUnavailable: 0,
         duplicatesIgnored: 0,
-        message: `Sincronização executada com sucesso. ${updatedVideos.length} vídeos ordenados e sincronizados de 1 a ${updatedVideos.length}.`,
+        message: `Sincronização executada com sucesso. ${safeVideos.length} vídeos ordenados e sincronizados de 1 a ${safeVideos.length}.`,
         createdAt: new Date().toISOString(),
       }
 
@@ -854,6 +1109,178 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       ),
     }))
   }, [])
+
+  const addCustomCourse = useCallback((course: Course, modules: LearningModule[] = [], lessons: Lesson[] = []) => {
+    setState((s) => {
+      const filteredCourses = s.courses.filter((c) => c.id !== course.id && c.slug !== course.slug)
+      const existingModIds = new Set(modules.map((m) => m.id))
+      const filteredModules = s.customModules.filter((m) => !existingModIds.has(m.id))
+      const existingLessonIds = new Set(lessons.map((l) => l.id))
+      const filteredLessons = s.customLessons.filter((l) => !existingLessonIds.has(l.id))
+
+      const moduleProgress = { ...s.moduleProgress }
+      for (const m of modules) {
+        if (!moduleProgress[m.id]) {
+          moduleProgress[m.id] = {
+            moduleId: m.id,
+            lessonsCompleted: 0,
+            exercisesCompleted: 0,
+            projectSubmitted: false,
+            assessmentScore: null,
+            masteryScore: 0,
+            status: 'available',
+          }
+        }
+      }
+
+      const client = getSupabaseClient()
+      if (client && isSupabaseConfigured()) {
+        client.from('courses').upsert({
+          id: course.id,
+          title: course.title,
+          slug: course.slug,
+          description: course.description,
+          level: course.level,
+          technology: course.technology,
+          category: course.category,
+          thumbnail_url: course.thumbnailUrl,
+          status: course.status,
+          channel_title: course.channelTitle,
+          playlist_id: course.playlistId,
+          playlist_url: course.playlistUrl,
+          modules_count: course.modulesCount,
+          lessons_count: course.lessonsCount,
+          total_hours: course.totalHours,
+          prerequisites: course.prerequisites || [],
+          skills: course.skills || [],
+        }).catch((err) => console.warn('Supabase course upsert notice:', err))
+      }
+
+      return {
+        ...s,
+        courses: [course, ...filteredCourses],
+        customModules: [...modules, ...filteredModules],
+        customLessons: [...lessons, ...filteredLessons],
+        moduleProgress,
+      }
+    })
+  }, [])
+
+  const updateCourse = useCallback((courseId: string, patch: Partial<Course>) => {
+    setState((s) => {
+      const updatedCourses = s.courses.map((c) =>
+        c.id === courseId || c.playlistId === courseId
+          ? { ...c, ...patch, updatedAt: new Date().toISOString() }
+          : c
+      )
+
+      // Also update matching customModules
+      const updatedModules = s.customModules.map((m) =>
+        m.courseId === courseId || m.courseId === `crs-${courseId}`
+          ? {
+              ...m,
+              title: patch.title ? `${patch.title} — Módulo Principal` : m.title,
+              technology: patch.technology || m.technology,
+              phase: patch.category || m.phase,
+              skills: patch.skills || m.skills,
+            }
+          : m
+      )
+
+      // Also update importedPlaylists if linked
+      const updatedPlaylists = s.importedPlaylists.map((p) =>
+        p.youtubePlaylistId === courseId || `crs-${p.youtubePlaylistId}` === courseId
+          ? {
+              ...p,
+              title: patch.title || p.title,
+              category: patch.category || p.category,
+              technology: patch.technology || p.technology,
+              level: patch.level || p.level,
+              status: (patch.status as any) || p.status,
+              updatedAt: new Date().toISOString(),
+            }
+          : p
+      )
+
+      const client = getSupabaseClient()
+      if (client && isSupabaseConfigured()) {
+        const payload: Record<string, any> = { updated_at: new Date().toISOString() }
+        if (patch.title) payload.title = patch.title
+        if (patch.description) payload.description = patch.description
+        if (patch.category) payload.category = patch.category
+        if (patch.technology) payload.technology = patch.technology
+        if (patch.level) payload.level = patch.level
+        if (patch.status) payload.status = patch.status
+        if (patch.thumbnailUrl) payload.thumbnail_url = patch.thumbnailUrl
+
+        client.from('courses').update(payload).eq('id', courseId).catch((err) => console.warn('Supabase course update notice:', err))
+      }
+
+      return {
+        ...s,
+        courses: updatedCourses,
+        customModules: updatedModules,
+        importedPlaylists: updatedPlaylists,
+      }
+    })
+  }, [])
+
+  const deleteCourse = useCallback((courseId: string) => {
+    setState((s) => {
+      const targetCourse = s.courses.find((c) => c.id === courseId || c.playlistId === courseId)
+      const plId = targetCourse?.playlistId || courseId
+
+      const filteredCourses = s.courses.filter((c) => c.id !== courseId && c.playlistId !== plId)
+      const matchingModuleIds = new Set(
+        s.customModules
+          .filter((m) => m.courseId === courseId || m.courseId === `crs-${plId}` || m.id === `mod-${plId}`)
+          .map((m) => m.id)
+      )
+      const filteredModules = s.customModules.filter((m) => !matchingModuleIds.has(m.id))
+      const filteredLessons = s.customLessons.filter((l) => !matchingModuleIds.has(l.moduleId) && l.playlistId !== plId)
+      const filteredPlaylists = s.importedPlaylists.filter((p) => p.youtubePlaylistId !== plId && p.id !== courseId)
+
+      const moduleProgress = { ...s.moduleProgress }
+      matchingModuleIds.forEach((mId) => {
+        delete moduleProgress[mId]
+      })
+
+      const client = getSupabaseClient()
+      if (client && isSupabaseConfigured()) {
+        client.from('courses').delete().eq('id', courseId).catch((err) => console.warn('Supabase course delete notice:', err))
+        client.from('youtube_playlists').delete().eq('id', plId).catch((err) => console.warn('Supabase playlist delete notice:', err))
+      }
+
+      return {
+        ...s,
+        courses: filteredCourses,
+        customModules: filteredModules,
+        customLessons: filteredLessons,
+        importedPlaylists: filteredPlaylists,
+        moduleProgress,
+        importLogs: [
+          {
+            id: `log-del-${Date.now()}`,
+            playlistId: plId,
+            playlistTitle: targetCourse?.title || courseId,
+            channelTitle: targetCourse?.channelTitle || 'YouTube',
+            status: 'sucesso',
+            videosFound: 0,
+            videosImported: 0,
+            videosUnavailable: 0,
+            duplicatesIgnored: 0,
+            message: `Curso "${targetCourse?.title || courseId}" e seus módulos foram removidos com sucesso.`,
+            createdAt: new Date().toISOString(),
+          },
+          ...s.importLogs,
+        ],
+      }
+    })
+  }, [])
+
+  const deletePlaylist = useCallback((playlistId: string) => {
+    deleteCourse(playlistId)
+  }, [deleteCourse])
 
   const validateCatalogIntegrity = useCallback(() => {
     return validateContentMapping(allCourses, allModules, allLessons)
@@ -1070,8 +1497,372 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       return {
         ...s,
         completedExercises: [...s.completedExercises, exerciseId],
+        completedActivities: s.completedActivities.includes(exerciseId) ? s.completedActivities : [...s.completedActivities, exerciseId],
       }
     })
+  }, [])
+
+  // --- AI Pedagogical Activity Engine Actions ---
+  const submitActivityAnswer = useCallback(
+    (activityId: string, answer: string | number, timeSpentSeconds = 0) => {
+      let result = {
+        isCorrect: false,
+        score: 0,
+        feedback: '',
+        hint: undefined as string | undefined,
+        xpEarned: 0,
+        attemptNumber: 1,
+      }
+
+      setState((s) => {
+        const act = s.activities.find((a) => a.id === activityId)
+        if (!act) return s
+
+        const currentAttempts = s.activityAttempts[activityId] || []
+        const attemptNum = currentAttempts.length + 1
+        const evalRes = activityEngine.evaluateAttempt(act, answer, attemptNum)
+
+        const attempt: ActivityAttempt = {
+          id: `att-${activityId}-${Date.now()}`,
+          activityId,
+          userId: s.profile?.id || 'anon-user',
+          answer,
+          score: evalRes.score,
+          isCorrect: evalRes.isCorrect,
+          feedback: evalRes.feedback,
+          hintProvided: evalRes.hintProvided,
+          timeSpentSeconds,
+          attemptNumber: attemptNum,
+          submittedAt: new Date().toISOString(),
+        }
+
+        const updatedAttempts = {
+          ...s.activityAttempts,
+          [activityId]: [...currentAttempts, attempt],
+        }
+
+        const isNewlyCompleted = evalRes.isCorrect && !s.completedActivities.includes(activityId)
+        const completedActivities = isNewlyCompleted
+          ? [...s.completedActivities, activityId]
+          : s.completedActivities
+        const completedExercises = isNewlyCompleted
+          ? [...s.completedExercises, activityId]
+          : s.completedExercises
+
+        // Update skill mastery
+        const currentSkill = s.skillMasteryMap[act.skillName] || {
+          skillName: act.skillName,
+          score: 0,
+          attemptsCount: 0,
+        }
+        const newAttemptsCount = currentSkill.attemptsCount + 1
+        const newScore = Math.round(
+          (currentSkill.score * currentSkill.attemptsCount + evalRes.score) / newAttemptsCount,
+        )
+        const updatedSkillMastery = {
+          ...s.skillMasteryMap,
+          [act.skillName]: {
+            skillName: act.skillName,
+            score: newScore,
+            attemptsCount: newAttemptsCount,
+          },
+        }
+
+        // Update module progress exercisesCompleted
+        const mod = s.customModules.find((m) => m.id === act.moduleId)
+        const curModProg = s.moduleProgress[act.moduleId]
+        const updatedModProgress = { ...s.moduleProgress }
+        if (mod && curModProg) {
+          const modActs = s.activities.filter((a) => a.moduleId === act.moduleId)
+          const doneInMod = modActs.filter((a) => completedActivities.includes(a.id)).length
+          const mastery = learningPathEngine.calculateModuleMastery(
+            act.moduleId,
+            {
+              ...curModProg,
+              exercisesCompleted: doneInMod,
+            },
+            mod,
+          )
+
+          updatedModProgress[act.moduleId] = {
+            ...curModProg,
+            exercisesCompleted: doneInMod,
+            masteryScore: mastery.totalMastery,
+          }
+        }
+
+        // If incorrect, record difficulty topic
+        let updatedDiffs = s.difficulties
+        if (!evalRes.isCorrect) {
+          const topicName = act.skillName || act.technology || 'Conceitos da Aula'
+          const exDiff = s.difficulties.find((d) => d.topic.toLowerCase() === topicName.toLowerCase())
+          if (exDiff) {
+            updatedDiffs = s.difficulties.map((d) =>
+              d.topic.toLowerCase() === topicName.toLowerCase() ? { ...d, count: d.count + 1 } : d,
+            )
+          } else {
+            updatedDiffs = [...s.difficulties, { topic: topicName, count: 1 }]
+          }
+        }
+
+        result = {
+          isCorrect: evalRes.isCorrect,
+          score: evalRes.score,
+          feedback: evalRes.feedback,
+          hint: evalRes.hintProvided,
+          xpEarned: isNewlyCompleted ? evalRes.xpEarned : 0,
+          attemptNumber: attemptNum,
+        }
+
+        return {
+          ...s,
+          activityAttempts: updatedAttempts,
+          completedActivities,
+          completedExercises,
+          skillMasteryMap: updatedSkillMastery,
+          moduleProgress: updatedModProgress,
+          difficulties: updatedDiffs,
+          streak: s.streak === 0 ? 1 : s.streak,
+          studiedMinutes: s.studiedMinutes + Math.ceil(timeSpentSeconds / 60 || 2),
+          todayStudiedMinutes: s.todayStudiedMinutes + Math.ceil(timeSpentSeconds / 60 || 2),
+        }
+      })
+
+      return result
+    },
+    [],
+  )
+
+  const generateActivitiesForLesson = useCallback(
+    async (lessonId: string): Promise<LearningActivity[]> => {
+      const lesson = state.customLessons.find((l) => l.id === lessonId)
+      if (!lesson) return []
+      const mod = state.customModules.find((m) => m.id === lesson.moduleId)
+      const generated = activityEngine.generateActivitiesForLesson({
+        courseId: mod?.courseId,
+        moduleId: lesson.moduleId,
+        lessonId: lesson.id,
+        lessonTitle: lesson.title,
+        lessonDescription: lesson.description,
+        technology: mod?.technology || 'JavaScript',
+      })
+      setState((s) => {
+        const existingIds = new Set(s.activities.map((a) => a.id))
+        const newOnes = generated.filter((g) => !existingIds.has(g.id))
+        return { ...s, activities: [...s.activities, ...newOnes] }
+      })
+      return generated
+    },
+    [state.customLessons, state.customModules],
+  )
+
+  const generateActivitiesForModule = useCallback(
+    async (moduleId: string): Promise<LearningActivity[]> => {
+      const mod = state.customModules.find((m) => m.id === moduleId)
+      if (!mod) return []
+      const lessons = state.customLessons.filter((l) => mod.lessonIds.includes(l.id))
+      const allGen: LearningActivity[] = []
+      lessons.forEach((l) => {
+        const gen = activityEngine.generateActivitiesForLesson({
+          courseId: mod.courseId,
+          moduleId: mod.id,
+          lessonId: l.id,
+          lessonTitle: l.title,
+          lessonDescription: l.description,
+          technology: mod.technology || 'JavaScript',
+        })
+        allGen.push(...gen)
+      })
+      setState((s) => {
+        const existingIds = new Set(s.activities.map((a) => a.id))
+        const newOnes = allGen.filter((g) => !existingIds.has(g.id))
+        return { ...s, activities: [...s.activities, ...newOnes] }
+      })
+      return allGen
+    },
+    [state.customModules, state.customLessons],
+  )
+
+  const generateModuleProject = useCallback(
+    async (moduleId: string): Promise<ModuleProject> => {
+      const mod = state.customModules.find((m) => m.id === moduleId) || state.customModules[0]
+      const lessons = state.customLessons.filter((l) => mod.lessonIds.includes(l.id))
+      const proj = activityEngine.generateModuleProject(mod, lessons, mod.technology || 'JavaScript')
+      setState((s) => ({
+        ...s,
+        moduleProjects: { ...s.moduleProjects, [moduleId]: proj },
+      }))
+      return proj
+    },
+    [state.customModules, state.customLessons],
+  )
+
+  const generateModuleAssessment = useCallback(
+    async (moduleId: string): Promise<Assessment> => {
+      const mod = state.customModules.find((m) => m.id === moduleId) || state.customModules[0]
+      const lessons = state.customLessons.filter((l) => mod.lessonIds.includes(l.id))
+      const assessment = activityEngine.generateModuleAssessment(mod, lessons, mod.technology || 'JavaScript')
+      setState((s) => ({
+        ...s,
+        assessments: { ...s.assessments, [moduleId]: assessment },
+      }))
+      return assessment
+    },
+    [state.customModules, state.customLessons],
+  )
+
+  const submitModuleReflection = useCallback(
+    (moduleId: string, refData: Omit<ModuleReflection, 'id' | 'userId' | 'submittedAt'>) => {
+      const reflection: ModuleReflection = {
+        ...refData,
+        id: `ref-${moduleId}-${Date.now()}`,
+        userId: state.profile?.id || 'anon-user',
+        moduleId,
+        submittedAt: new Date().toISOString(),
+      }
+      setState((s) => {
+        const mod = s.customModules.find((m) => m.id === moduleId)
+        const aiRec = moduleCompletionEngine.analyzeReflection(reflection, mod?.title)
+        const finalRef = { ...reflection, aiRecommendations: aiRec }
+
+        return {
+          ...s,
+          moduleReflections: { ...s.moduleReflections, [moduleId]: finalRef },
+          notifications: [
+            ...s.notifications,
+            {
+              id: `notif-ref-${Date.now()}`,
+              title: `Reflexão do Módulo Registrada ✨`,
+              message: aiRec,
+              type: 'success',
+              read: false,
+              createdAt: new Date().toISOString(),
+            },
+          ],
+        }
+      })
+    },
+    [state.profile, state.customModules],
+  )
+
+  const reviewProjectSubmission = useCallback(
+    async (
+      moduleId: string,
+      submission: { githubUrl: string; deployUrl?: string; description?: string; codeContent?: string },
+    ) => {
+      const mod = state.customModules.find((m) => m.id === moduleId) || state.customModules[0]
+      const proj = state.moduleProjects[moduleId] || activityEngine.generateModuleProject(mod, [])
+      const reviewResult = activityEngine.reviewProjectSubmission(proj, submission)
+
+      const projectSub: ProjectSubmission = {
+        id: `sub-${moduleId}-${Date.now()}`,
+        moduleId,
+        title: proj.title,
+        description: submission.description || '',
+        githubUrl: submission.githubUrl,
+        deployUrl: submission.deployUrl,
+        codeContent: submission.codeContent,
+        status: reviewResult.passed ? 'approved' : 'submitted',
+        grade: reviewResult.grade,
+        feedback: reviewResult.feedback,
+        rubricEvaluation: reviewResult.rubricEvaluation,
+        submittedAt: new Date().toISOString(),
+        evaluatedAt: new Date().toISOString(),
+      }
+
+      setState((s) => {
+        const curModProg = s.moduleProgress[moduleId]
+        const mastery = learningPathEngine.calculateModuleMastery(
+          moduleId,
+          {
+            ...curModProg,
+            projectSubmitted: true,
+          },
+          mod,
+        )
+
+        return {
+          ...s,
+          projectSubmissions: { ...s.projectSubmissions, [moduleId]: projectSub },
+          moduleProgress: {
+            ...s.moduleProgress,
+            [moduleId]: {
+              ...curModProg,
+              moduleId,
+              lessonsCompleted: curModProg?.lessonsCompleted ?? 0,
+              exercisesCompleted: curModProg?.exercisesCompleted ?? 0,
+              assessmentScore: curModProg?.assessmentScore ?? null,
+              projectSubmitted: true,
+              masteryScore: mastery.totalMastery,
+              status: curModProg?.status ?? 'in-progress',
+            },
+          },
+        }
+      })
+
+      return reviewResult
+    },
+    [state.customModules, state.moduleProjects],
+  )
+
+  const checkModuleCompletion = useCallback(
+    (moduleId: string): ModuleCompletionStatus => {
+      const mod = state.customModules.find((m) => m.id === moduleId)
+      if (!mod) {
+        return {
+          moduleId,
+          lessonsCompleted: false,
+          activitiesCompleted: false,
+          projectCompleted: false,
+          assessmentPassed: false,
+          reflectionCompleted: false,
+          isFullyCompleted: false,
+          totalScore: 0,
+          blockReason: 'Módulo não encontrado.',
+        }
+      }
+      return moduleCompletionEngine.evaluateModuleCompletion({
+        module: mod,
+        moduleProgress: state.moduleProgress[moduleId],
+        completedLessons: state.completedLessons,
+        completedActivities: state.completedActivities,
+        moduleActivities: state.activities,
+        assessment: state.assessments[moduleId],
+        reflection: state.moduleReflections[moduleId],
+        isSuperAdmin: isSuperAdmin(state.profile),
+      })
+    },
+    [
+      state.customModules,
+      state.moduleProgress,
+      state.completedLessons,
+      state.completedActivities,
+      state.activities,
+      state.assessments,
+      state.moduleReflections,
+      state.profile,
+    ],
+  )
+
+  const adminApproveActivity = useCallback((activityId: string) => {
+    setState((s) => ({
+      ...s,
+      activities: s.activities.map((a) => (a.id === activityId ? { ...a, status: 'published' } : a)),
+    }))
+  }, [])
+
+  const adminUpdateActivity = useCallback((activityId: string, patch: Partial<LearningActivity>) => {
+    setState((s) => ({
+      ...s,
+      activities: s.activities.map((a) => (a.id === activityId ? { ...a, ...patch } : a)),
+    }))
+  }, [])
+
+  const adminDeleteActivity = useCallback((activityId: string) => {
+    setState((s) => ({
+      ...s,
+      activities: s.activities.filter((a) => a.id !== activityId),
+    }))
   }, [])
 
   const recordDifficulty = useCallback((topic: string) => {
@@ -1080,7 +1871,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       let updatedDiffs: Difficulty[]
       if (existing) {
         updatedDiffs = s.difficulties.map((d) =>
-          d.topic.toLowerCase() === topic.toLowerCase() ? { ...d, count: d.count + 1 } : d
+          d.topic.toLowerCase() === topic.toLowerCase() ? { ...d, count: d.count + 1 } : d,
         )
       } else {
         updatedDiffs = [...s.difficulties, { topic, count: 1 }]
@@ -1097,10 +1888,14 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       const mod = allMods.find((m) => m.id === moduleId)
       const passed = score >= 50
 
-      const mastery = learningPathEngine.calculateModuleMastery(moduleId, {
-        ...current,
-        assessmentScore: score,
-      }, mod)
+      const mastery = learningPathEngine.calculateModuleMastery(
+        moduleId,
+        {
+          ...current,
+          assessmentScore: score,
+        },
+        mod,
+      )
 
       const { updatedPath, adaptationNotice } = learningPathEngine.adaptTrailPostAssessment(
         s.activePath,
@@ -1249,6 +2044,13 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     return cert
   }, [state.profile, state.activePath, state.customModules])
 
+  const issueCertificate = useCallback((certificate: CertificateData) => {
+    setState((s) => ({
+      ...s,
+      certificates: [certificate, ...s.certificates],
+    }))
+  }, [])
+
   const updateProfile = useCallback((patch: Partial<UserProfile>) => {
     setState((s) => ({
       ...s,
@@ -1295,6 +2097,11 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
 
   const isModuleUnlocked = useCallback(
     (moduleId: string): boolean => {
+      // REGRA: Administrador (Super Admin) possui acesso livre e irrestrito a todos os módulos
+      if (isSuperAdmin(state.profile)) {
+        return true
+      }
+
       const allMods = state.customModules
       const mod = allMods.find((m) => m.id === moduleId)
       if (!mod) return false
@@ -1320,7 +2127,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
 
       return true
     },
-    [state.moduleProgress, state.customModules, state.activePath, isModuleComplete],
+    [state.profile, state.moduleProgress, state.customModules, state.activePath, isModuleComplete],
   )
 
   const moduleStatus = useCallback(
@@ -1437,9 +2244,11 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     signIn,
     signUp,
     signOut,
+    isSuperAdmin: isSuperAdmin(state.profile),
     completeOnboarding,
     completePlacement,
     generateCustomPath,
+    recalculateLearningPath,
     resetActivePathToAdaptive,
     ingestFullChannelToStore,
     importCourseFromPlaylist,
@@ -1447,9 +2256,26 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     syncPlaylistInStore,
     updateTechnologySource,
     updatePlaylistClassification,
+    addCustomCourse,
+    updateCourse,
+    deleteCourse,
+    deletePlaylist,
     validateCatalogIntegrity,
     resetEducationalCatalog,
     syncOfficialTrustedChannels,
+    // Activity Engine Actions
+    submitActivityAnswer,
+    generateActivitiesForLesson,
+    generateActivitiesForModule,
+    generateModuleProject,
+    generateModuleAssessment,
+    submitModuleReflection,
+    reviewProjectSubmission,
+    checkModuleCompletion,
+    adminApproveActivity,
+    adminUpdateActivity,
+    adminDeleteActivity,
+    // Progression & Learning Actions
     completeLesson,
     recordVideoProgress,
     saveLessonNote,
@@ -1464,6 +2290,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     recordStudySession,
     addInterviewReport,
     generateCertificate,
+    issueCertificate,
     updateProfile,
     markNotificationAsRead,
     clearAllNotifications,

@@ -1,0 +1,976 @@
+{
+  "logica": [
+    {
+      "order": 1,
+      "title": "Introdução a Algoritmos - Curso de Algoritmos #01 - Gustavo Guanabara",
+      "description": "Aula do Curso de Algoritmo criado pelo professor Gustavo Guanabara para o portal CursoemVideo.com.  Download de pacotes e curso com certificado GRÁTIS: http://cursoemvideo.com/cour",
+      "videoId": "8mei6uVttho",
+      "thumbnailUrl": "https://img.youtube.com/vi/8mei6uVttho/hqdefault.jpg"
+    },
+    {
+      "order": 2,
+      "title": "Primeiro Algoritmo - Curso de Algoritmos #02 - Gustavo Guanabara",
+      "description": "Aula do Curso de Algoritmos criado pelo professor Gustavo Guanabara para o portal CursoemVideo.com.  Download de pacotes e curso com certificado GRÁTIS: http://cursoemvideo.com/cou",
+      "videoId": "M2Af7gkbbro",
+      "thumbnailUrl": "https://img.youtube.com/vi/M2Af7gkbbro/hqdefault.jpg"
+    },
+    {
+      "order": 3,
+      "title": "Comando de Entrada e Operadores - Curso de Algoritmos #03 - Gustavo Guanabara",
+      "description": "Aula do Curso de Algoritmos criado pelo professor Gustavo Guanabara para o portal CursoemVideo.com.\n\nCurso em Vídeo\nSite: http://www.cursoemvideo.com\nYouTube: http://www.youtube.co",
+      "videoId": "RDrfZ-7WE8c",
+      "thumbnailUrl": "https://img.youtube.com/vi/RDrfZ-7WE8c/hqdefault.jpg"
+    },
+    {
+      "order": 4,
+      "title": "Seja APOIADOR e receba RECOMPENSAS",
+      "description": "O Estudonauta é um projeto de Educação do Prof. Gustavo Guanabara, que já conta com centenas de aulas disponíveis e cursos com certificado:\n\n- Fundamentos de Programação com Portug",
+      "videoId": "U_A2kwUfmlw",
+      "thumbnailUrl": "https://img.youtube.com/vi/U_A2kwUfmlw/hqdefault.jpg"
+    },
+    {
+      "order": 5,
+      "title": "Operadores Lógicos e Relacionais - Curso de Algoritmos #04 - Gustavo Guanabara",
+      "description": "Aula do Curso de HTML5 criado pelo professor Gustavo Guanabara para o portal CursoemVideo.com.   Download de pacotes e curso com certificado GRÁTIS: http://cursoemvideo.com/course/",
+      "videoId": "Ig4QZNpVZYs",
+      "thumbnailUrl": "https://img.youtube.com/vi/Ig4QZNpVZYs/hqdefault.jpg"
+    },
+    {
+      "order": 6,
+      "title": "Introdução ao Scratch - Curso de Algoritmos #05 - Gustavo Guanabara",
+      "description": "Aprenda como utilizar o Scratch, uma ferramenta que auxilia no aprendizado de Algoritmos e foi criado em um dos laboratórios do MIT, uma das referências no ramo de tecnologia.\n\nAul",
+      "videoId": "GrPkuk1ezyo",
+      "thumbnailUrl": "https://img.youtube.com/vi/GrPkuk1ezyo/hqdefault.jpg"
+    },
+    {
+      "order": 7,
+      "title": "Exercícios de Algoritmo Resolvidos - Curso de Algoritmos #06 - Gustavo Guanabara",
+      "description": "Nessa aula, veremos uma sequência de exercícios resolvidos de algoritmos para praticar os conceitos vistos até aqui, com estruturas sequenciais.\n\nUtilizando o Scratch e o VisuAlg, ",
+      "videoId": "v2nCgGSVCeE",
+      "thumbnailUrl": "https://img.youtube.com/vi/v2nCgGSVCeE/hqdefault.jpg"
+    },
+    {
+      "order": 8,
+      "title": "Estruturas Condicionais 1 - Curso de Algoritmos #07 - Gustavo Guanabara",
+      "description": "Veja como funcionam as estruturas condicionais, utilizando o comando SE..ENTAO..SENAO. Nessa primeira parte, veremos as estruturas condicionais simples e compostas.\n\nUtilizando o S",
+      "videoId": "_g05aHdBAEY",
+      "thumbnailUrl": "https://img.youtube.com/vi/_g05aHdBAEY/hqdefault.jpg"
+    },
+    {
+      "order": 9,
+      "title": "Estruturas Condicionais 2 - Curso de Algoritmos #08 - Gustavo Guanabara",
+      "description": "Estruturas Condicionais Se e Escolha Caso em Algoritmos. Veja como criar algoritmos com estruturas condicionais aninhadas e estruturas de múltipla escolha. \n\nCom o Se aninhado, voc",
+      "videoId": "7gGFHzqh4d8",
+      "thumbnailUrl": "https://img.youtube.com/vi/7gGFHzqh4d8/hqdefault.jpg"
+    },
+    {
+      "order": 10,
+      "title": "Estruturas de Repetição 1 - Curso de Algoritmos #09 - Gustavo Guanabara",
+      "description": "A estrutura de repetição ENQUANTO vai permitir que você execute blocos de comandos várias vezes e simplificar a forma de representar lógicas que vão construir programas.\n\nVeja de u",
+      "videoId": "U5PnCt58Q68",
+      "thumbnailUrl": "https://img.youtube.com/vi/U5PnCt58Q68/hqdefault.jpg"
+    },
+    {
+      "order": 11,
+      "title": "Estruturas de Repetição 2 - Curso de Algoritmos #10 - Gustavo Guanabara",
+      "description": "A estrutura Repita..Ate é uma estrutura de repetição com teste lógico no final, o que permite que você execute o bloco interno pelo menos uma vez, independente do resultado do test",
+      "videoId": "fP49L1i_-HU",
+      "thumbnailUrl": "https://img.youtube.com/vi/fP49L1i_-HU/hqdefault.jpg"
+    },
+    {
+      "order": 12,
+      "title": "Estruturas de Repetição 3 - Curso de Algoritmos #11 - Gustavo Guanabara",
+      "description": "A estrutura Para.. Faça é uma estrutura de repetição com variável de controle, o que permite que você execute o bloco interno uma quantidade determinada de vezes. \n\nAula do Curso d",
+      "videoId": "WJQz20i7CyI",
+      "thumbnailUrl": "https://img.youtube.com/vi/WJQz20i7CyI/hqdefault.jpg"
+    },
+    {
+      "order": 13,
+      "title": "Procedimentos - Curso de Algoritmos #12 - Gustavo Guanabara",
+      "description": "Procedimentos em Algoritmos. Aprenda a criar rotinas a serem executadas por programas. Nessa primeira aula de rotinas, aprenderemos como funciona a passagem de parâmetros por valor",
+      "videoId": "KoNehy7rn8U",
+      "thumbnailUrl": "https://img.youtube.com/vi/KoNehy7rn8U/hqdefault.jpg"
+    },
+    {
+      "order": 14,
+      "title": "Funções - Curso de Algoritmos #13 - by Gustavo Guanabara",
+      "description": "Funções em Algoritmos são rotinas que são capazes de executar instruções e retornar um resultado, valor de retorno.\n\nVocê pode ter dois tipos de passagem de parâmetros para funções",
+      "videoId": "-nNx7e8GzHQ",
+      "thumbnailUrl": "https://img.youtube.com/vi/-nNx7e8GzHQ/hqdefault.jpg"
+    },
+    {
+      "order": 15,
+      "title": "Vetores - Curso de Algoritmos #14 - Gustavo Guanabara",
+      "description": "Vetores são Variáveis Compostas Homogêneas Unidimensionais, pois conseguem armazenar vários valores de um mesmo tipo em uma mesma variável.\n\nUm vetor pode ter vários espaços intern",
+      "videoId": "j9473xQ39vY",
+      "thumbnailUrl": "https://img.youtube.com/vi/j9473xQ39vY/hqdefault.jpg"
+    },
+    {
+      "order": 16,
+      "title": "Matrizes - Curso de Algoritmos #15 - Gustavo Guanabara",
+      "description": "Aula de Matrizes para o Curso de Algoritmos.\n\nMatrizes são Variáveis Compostas Homogêneas Multidimensionais. Ao contrário dos vetores, para identificar um elemento em uma matriz é ",
+      "videoId": "hkE9WrjpAAk",
+      "thumbnailUrl": "https://img.youtube.com/vi/hkE9WrjpAAk/hqdefault.jpg"
+    },
+    {
+      "order": 17,
+      "title": "Dia do Programador: alguns GRANDES Programadores da História",
+      "description": "O Dia do Programador acontece sempre no 256° dia do ano. Já que 2016 é bissexto, nesse ano vamos comemorar no dia 12 de Setembro e não no dia 13 de Setembro como é de costume.\n\nLIN",
+      "videoId": "uZImRLpJunA",
+      "thumbnailUrl": "https://img.youtube.com/vi/uZImRLpJunA/hqdefault.jpg"
+    }
+  ],
+  "html": [
+    {
+      "order": 1,
+      "title": "Curso de HTML5 - 00 - Site Completo - by Gustavo Guanabara",
+      "description": "HTML5 é uma linguagem de marcação hipertexto utilizada para criar sites. A versão 5 da linguagem foi homologada e lançada a partir de 2009, mas só ganhou mercado no final de 2012 c",
+      "videoId": "epDCjksKMok",
+      "thumbnailUrl": "https://img.youtube.com/vi/epDCjksKMok/hqdefault.jpg"
+    },
+    {
+      "order": 2,
+      "title": "Curso HTML5 - 01 - História da Internet - by Gustavo Guanabara",
+      "description": "Nesta primeira aula, aprenda como a Internet surgiu e evoluiu até o que temos hoje em dia. Um apanhado geral de todos os inventores e invenções que fizeram parte da evolução da mai",
+      "videoId": "rsFCVjr5yxc",
+      "thumbnailUrl": "https://img.youtube.com/vi/rsFCVjr5yxc/hqdefault.jpg"
+    },
+    {
+      "order": 3,
+      "title": "Curso de HTML5 - 02 - História da HTML - by Gustavo Guanabara",
+      "description": "Você sabe como surgiu a linguagem HTML? Conhece a evolução desde a HTML1 até HTML5? Sabe quais são as principais funções W3C? Veja nessa aula a resposta para todas essas perguntas ",
+      "videoId": "NSmapCNcSyI",
+      "thumbnailUrl": "https://img.youtube.com/vi/NSmapCNcSyI/hqdefault.jpg"
+    },
+    {
+      "order": 4,
+      "title": "Curso de HTML5 - 03 - Como Funciona a Internet - by Gustavo Guanabara",
+      "description": "EXTRA! Download GRÁTIS dos pacotes para as aulas:\nhttps://www.dropbox.com/sh/bpe3xjlnqw97j4f/AAB-ZiLvQprb3Ef398US8pM8a\nNos ajude com LEGENDAS para nossos vídeos: https://youtu.be/Y",
+      "videoId": "LMfeZ6XD0No",
+      "thumbnailUrl": "https://img.youtube.com/vi/LMfeZ6XD0No/hqdefault.jpg"
+    },
+    {
+      "order": 5,
+      "title": "Seja APOIADOR e receba RECOMPENSAS",
+      "description": "O Estudonauta é um projeto de Educação do Prof. Gustavo Guanabara, que já conta com centenas de aulas disponíveis e cursos com certificado:\n\n- Fundamentos de Programação com Portug",
+      "videoId": "U_A2kwUfmlw",
+      "thumbnailUrl": "https://img.youtube.com/vi/U_A2kwUfmlw/hqdefault.jpg"
+    },
+    {
+      "order": 6,
+      "title": "Curso de HTML5 - 04 - Primeiro Exemplo em HTML5 - by Gustavo Guanabara",
+      "description": "Aula 100% prática de HTML5 com CSS3. Conheça as tags básicas e saiba como criar um documento no novo padrão.\n\nEXTRA! Download GRÁTIS dos pacotes para as aulas: https://www.cursoemv",
+      "videoId": "yCSSsBNBzso",
+      "thumbnailUrl": "https://img.youtube.com/vi/yCSSsBNBzso/hqdefault.jpg"
+    },
+    {
+      "order": 7,
+      "title": "Curso de HTML5 + CSS3 + JS atualizado em 2020",
+      "description": "O nosso curso de HTML5 + CSS3 foi criado em 2013 e está passando por uma reformulação em 2020, com conteúdo e didática atualizados. Se você quiser participar do grupo de apoiadores",
+      "videoId": "P8LxrpNQrTU",
+      "thumbnailUrl": "https://img.youtube.com/vi/P8LxrpNQrTU/hqdefault.jpg"
+    },
+    {
+      "order": 8,
+      "title": "Curso de HTML5 - 05 - Tags Básicas em HTML5 - By Gustavo Guanabara",
+      "description": "EXTRA! Download GRÁTIS dos pacotes para as aulas:\nhttps://www.dropbox.com/sh/bpe3xjlnqw97j4f/AAB-ZiLvQprb3Ef398US8pM8a\nNos ajude com LEGENDAS para nossos vídeos: https://youtu.be/Y",
+      "videoId": "EANOXuQsglo",
+      "thumbnailUrl": "https://img.youtube.com/vi/EANOXuQsglo/hqdefault.jpg"
+    },
+    {
+      "order": 9,
+      "title": "Curso de HTML5 - 06 - Parágrafos, Quebras e Símbolos Especiais - by Gustavo Guanabara",
+      "description": "Curso de HTML5 é um projeto do site CursoEmVideo.com e vai criar um site completo utilizando a tecnologia mais recente do mercado: o HTML5. O professor Gustavo Guanabara chega na s",
+      "videoId": "wlgU9ltZwqc",
+      "thumbnailUrl": "https://img.youtube.com/vi/wlgU9ltZwqc/hqdefault.jpg"
+    },
+    {
+      "order": 10,
+      "title": "Curso de HTML5 - 07 - Formatação de Texto com HTML5 e CSS3 - by Gustavo Guanabara",
+      "description": "EXTRA! Download GRÁTIS dos pacotes para as aulas:\nhttps://www.dropbox.com/sh/bpe3xjlnqw97j4f/AAB-ZiLvQprb3Ef398US8pM8a\nNos ajude com LEGENDAS para nossos vídeos: https://youtu.be/Y",
+      "videoId": "oQExPqFT7ec",
+      "thumbnailUrl": "https://img.youtube.com/vi/oQExPqFT7ec/hqdefault.jpg"
+    },
+    {
+      "order": 11,
+      "title": "Curso de HTML5 - 08 - Códigos de Cores em HTML5 e CSS3 - by Gustavo Guanabara",
+      "description": "EXTRA! Download GRÁTIS dos pacotes para as aulas:\nhttps://www.dropbox.com/sh/bpe3xjlnqw97j4f/AAB-ZiLvQprb3Ef398US8pM8a\nNos ajude com LEGENDAS para nossos vídeos: https://youtu.be/Y",
+      "videoId": "KX3GLDvKJzI",
+      "thumbnailUrl": "https://img.youtube.com/vi/KX3GLDvKJzI/hqdefault.jpg"
+    },
+    {
+      "order": 12,
+      "title": "Curso de HTML5 - 09 - Imagens em HTML5 - by Gustavo Guanabara",
+      "description": "EXTRA! Download GRÁTIS dos pacotes para as aulas:\nhttps://www.dropbox.com/sh/bpe3xjlnqw97j4f/AAB-ZiLvQprb3Ef398US8pM8a\nNos ajude com LEGENDAS para nossos vídeos: https://youtu.be/Y",
+      "videoId": "w1Mf4hPXurs",
+      "thumbnailUrl": "https://img.youtube.com/vi/w1Mf4hPXurs/hqdefault.jpg"
+    },
+    {
+      "order": 13,
+      "title": "Curso de HTML5 - 10 - Formatação de Imagens com CSS3 - by Gustavo Guanabara",
+      "description": "EXTRA! Download GRÁTIS dos pacotes para as aulas:\nhttps://www.dropbox.com/sh/bpe3xjlnqw97j4f/AAB-ZiLvQprb3Ef398US8pM8a\nNos ajude com LEGENDAS para nossos vídeos: https://youtu.be/Y",
+      "videoId": "A3mlsAk4G2k",
+      "thumbnailUrl": "https://img.youtube.com/vi/A3mlsAk4G2k/hqdefault.jpg"
+    },
+    {
+      "order": 14,
+      "title": "Curso de HTML5 - 11 - Listas em HTML5 com OL e UL - by Gustavo Guanabara",
+      "description": "EXTRA! Download GRÁTIS dos pacotes para as aulas:\nhttps://www.dropbox.com/sh/bpe3xjlnqw97j4f/AAB-ZiLvQprb3Ef398US8pM8a\nNos ajude com LEGENDAS para nossos vídeos: https://youtu.be/Y",
+      "videoId": "EbVG8_5Pyz0",
+      "thumbnailUrl": "https://img.youtube.com/vi/EbVG8_5Pyz0/hqdefault.jpg"
+    },
+    {
+      "order": 15,
+      "title": "Curso de HTML5 - 12 - Links em HTML5 - by Gustavo Guanabara",
+      "description": "EXTRA! Download GRÁTIS dos pacotes para as aulas:\nhttps://www.dropbox.com/sh/bpe3xjlnqw97j4f/AAB-ZiLvQprb3Ef398US8pM8a\nNos ajude com LEGENDAS para nossos vídeos: https://youtu.be/Y",
+      "videoId": "WX9vucyEcJs",
+      "thumbnailUrl": "https://img.youtube.com/vi/WX9vucyEcJs/hqdefault.jpg"
+    },
+    {
+      "order": 16,
+      "title": "Curso de HTML5 - 13 - Menu com CSS3 - by Gustavo Guanabara",
+      "description": "EXTRA! Download GRÁTIS dos pacotes para as aulas:\nhttps://www.dropbox.com/sh/bpe3xjlnqw97j4f/AAB-ZiLvQprb3Ef398US8pM8a\nNos ajude com LEGENDAS para nossos vídeos: https://youtu.be/Y",
+      "videoId": "kU7b9olDWns",
+      "thumbnailUrl": "https://img.youtube.com/vi/kU7b9olDWns/hqdefault.jpg"
+    },
+    {
+      "order": 17,
+      "title": "Curso de HTML5 - 14 - Efeitos visuais em CSS3 - by Gustavo Guanabara",
+      "description": "EXTRA! Download GRÁTIS dos pacotes para as aulas:\nhttps://www.dropbox.com/sh/bpe3xjlnqw97j4f/AAB-ZiLvQprb3Ef398US8pM8a\nNos ajude com LEGENDAS para nossos vídeos: https://youtu.be/Y",
+      "videoId": "fN3Gp9DOI7U",
+      "thumbnailUrl": "https://img.youtube.com/vi/fN3Gp9DOI7U/hqdefault.jpg"
+    },
+    {
+      "order": 18,
+      "title": "Curso de HTML5 - 15 - Formatação de Interfaces com HTML5 - by Gustavo Guanabara",
+      "description": "EXTRA! Download GRÁTIS dos pacotes para as aulas:\nhttps://www.dropbox.com/sh/bpe3xjlnqw97j4f/AAB-ZiLvQprb3Ef398US8pM8a\nNos ajude com LEGENDAS para nossos vídeos: https://youtu.be/Y",
+      "videoId": "mSmz6jy4YbI",
+      "thumbnailUrl": "https://img.youtube.com/vi/mSmz6jy4YbI/hqdefault.jpg"
+    },
+    {
+      "order": 19,
+      "title": "Curso de HTML5 - 16 - Cabeçalho em CSS3 - by Gustavo Guanabara",
+      "description": "EXTRA! Download GRÁTIS dos pacotes para as aulas:\nhttps://www.dropbox.com/sh/bpe3xjlnqw97j4f/AAB-ZiLvQprb3Ef398US8pM8a\nNos ajude com LEGENDAS para nossos vídeos: https://youtu.be/Y",
+      "videoId": "1a5lQhBW2PI",
+      "thumbnailUrl": "https://img.youtube.com/vi/1a5lQhBW2PI/hqdefault.jpg"
+    },
+    {
+      "order": 20,
+      "title": "Curso de HTML5 - 17 - Fontes em CSS3 - by Gustavo Guanabara",
+      "description": "EXTRA! Download GRÁTIS dos pacotes para as aulas:\nhttps://www.dropbox.com/sh/bpe3xjlnqw97j4f/AAB-ZiLvQprb3Ef398US8pM8a\nNos ajude com LEGENDAS para nossos vídeos: https://youtu.be/Y",
+      "videoId": "tcrxYeE-67A",
+      "thumbnailUrl": "https://img.youtube.com/vi/tcrxYeE-67A/hqdefault.jpg"
+    },
+    {
+      "order": 21,
+      "title": "Curso de HTML5 - 18 - Semântica em HTML5 - by Gustavo Guanabara",
+      "description": "EXTRA! Download GRÁTIS dos pacotes para as aulas:\nhttps://www.dropbox.com/sh/bpe3xjlnqw97j4f/AAB-ZiLvQprb3Ef398US8pM8a\nNos ajude com LEGENDAS para nossos vídeos: https://youtu.be/Y",
+      "videoId": "unvKmK3wZEQ",
+      "thumbnailUrl": "https://img.youtube.com/vi/unvKmK3wZEQ/hqdefault.jpg"
+    },
+    {
+      "order": 22,
+      "title": "Curso de HTML5 - 19 - Tabelas em HTML - by Gustavo Guanabara",
+      "description": "Como criar tabelas em HTML5? Veremos nessa aula, como utilizar as tags TABLE, CAPTION, TR, TD e muitas outras usadas para criar tabelas em sites HTML.\n\nCada linha da tabela em HTML",
+      "videoId": "PQzUj5Hd0jk",
+      "thumbnailUrl": "https://img.youtube.com/vi/PQzUj5Hd0jk/hqdefault.jpg"
+    },
+    {
+      "order": 23,
+      "title": "Curso de HTML5 - 20 - Estilos CSS para Tabelas em HTML5 - by Gustavo Guanabara",
+      "description": "Veja como criar estilos de formatação com CSS3 para tabelas feitas em HTML5.\n\nNa aula anterior do Curso de HTML5, fizemos a criação de uma TABLE utilizando parâmetros como COLSPAN ",
+      "videoId": "-RCsJvfFKgw",
+      "thumbnailUrl": "https://img.youtube.com/vi/-RCsJvfFKgw/hqdefault.jpg"
+    },
+    {
+      "order": 24,
+      "title": "Curso de HTML5 - 21 - Interfaces em HTML5",
+      "description": "Veja como construir interfaces complexas utilizando apenas HTML5 e CSS3. Na versão 5, temos várias tags semânticas como HEADER, SECTION, ASIDE, NAV, FOOTER e ARTICLE.\n\nPara criar u",
+      "videoId": "QMAe5GMT_Ew",
+      "thumbnailUrl": "https://img.youtube.com/vi/QMAe5GMT_Ew/hqdefault.jpg"
+    },
+    {
+      "order": 25,
+      "title": "Curso de HTML5 - 22 - Introdução ao JavaScript",
+      "description": "Introdução ao JavaScript. Veja como criar programas simples com a linguagem JS, criada e popularizada pela empresa Netscape. \n\nVamos aprender alguns comandos específicos e introdut",
+      "videoId": "jXPU0uAzmYY",
+      "thumbnailUrl": "https://img.youtube.com/vi/jXPU0uAzmYY/hqdefault.jpg"
+    },
+    {
+      "order": 26,
+      "title": "Curso de HTML5 - 23 - JavaScript com Objetos",
+      "description": "HTML5 + JavaScript\n\nEntenda JavaScript e veja como trabalhar com FUNCTION para criar funções que são disparadas de acordo com alguns eventos no HTML5, como ONCLICK e ONMOUSEMOVE.\n\n",
+      "videoId": "zfrX_VZ5Fb4",
+      "thumbnailUrl": "https://img.youtube.com/vi/zfrX_VZ5Fb4/hqdefault.jpg"
+    },
+    {
+      "order": 27,
+      "title": "Curso de HTML5 - 24 - Funções JavaScript",
+      "description": "Como criar funções em JavaScript que recebem parâmetros. Além disso, veremos o conceito de máquina de estados para aprimorar ainda mais nossos scripts.\n\nEssa é a terceira aula que ",
+      "videoId": "5fgd60pzKks",
+      "thumbnailUrl": "https://img.youtube.com/vi/5fgd60pzKks/hqdefault.jpg"
+    },
+    {
+      "order": 28,
+      "title": "Curso de HTML5 - 25 - Integrando JavaScript e HTML5",
+      "description": "Como juntar JavaScript e HTML5 em uma mesma página. Veja como integrar scripts aos seus códigos estáticos em linguagem HTML.\n\nUsando os métodos ONMOUSEOVER e ONMOUSEOUT do JavaScri",
+      "videoId": "UrIWMJIhwTU",
+      "thumbnailUrl": "https://img.youtube.com/vi/UrIWMJIhwTU/hqdefault.jpg"
+    },
+    {
+      "order": 29,
+      "title": "Curso de HTML5 - 26 - Documentos Adicionais",
+      "description": "Nessa aula, faremos uma breve revisão de alguns conceitos semânticos de HTML5 e CSS3 para começarmos a criar uma página completa para as especificações técnicas.\n\nPara baixar o pac",
+      "videoId": "fUFMHMWP9YM",
+      "thumbnailUrl": "https://img.youtube.com/vi/fUFMHMWP9YM/hqdefault.jpg"
+    },
+    {
+      "order": 30,
+      "title": "Curso de HTML5 - 27 - IFRAME em HTML5",
+      "description": "Imagem em HTML5 e IFRAME usando HTML5 e CSS3.\n\nVeja como adaptar as suas páginas HTML5 ao padrão definido pela sua interface, seguindo o mesmo esquema em todos os documento.\n\nTambé",
+      "videoId": "WRcs8rebZtA",
+      "thumbnailUrl": "https://img.youtube.com/vi/WRcs8rebZtA/hqdefault.jpg"
+    },
+    {
+      "order": 31,
+      "title": "Curso de HTML5 - 28 - Mapas de Imagem",
+      "description": "Mapa de Imagem é uma técnica utilizada para criar múltiplos links em uma mesma imagem, criando áreas sensíveis ao clique em imagens para documentos HTML5.\n\nDentro da imagem criada ",
+      "videoId": "KcJzovbw_yY",
+      "thumbnailUrl": "https://img.youtube.com/vi/KcJzovbw_yY/hqdefault.jpg"
+    },
+    {
+      "order": 32,
+      "title": "Curso de HTML5 - 29 - Álbum de Fotos em HTML5 - Parte 1 - By Gustavo Guanabara",
+      "description": "Como criar um álbum de fotos usando HTML5 e CSS3. Nessa aula, o professor Gustavo Guanabara (ou seria Optimus Prime?) vai mostrar uma maneira bem criativa de criar um álbum de foto",
+      "videoId": "Dvq1yWmrQNU",
+      "thumbnailUrl": "https://img.youtube.com/vi/Dvq1yWmrQNU/hqdefault.jpg"
+    },
+    {
+      "order": 33,
+      "title": "Curso de HTML5 - 30 - Álbum de Fotos em HTML5 - Parte 2 - By Gustavo Guanabara",
+      "description": "Dando continuidade na Criação de um Álbum de Fotos usando apenas HTML5 e alguns efeitos em CSS3, incluindo efeito de Zoom com CSS.\n\nAula do Curso de HTML5 criado pelo professor Gus",
+      "videoId": "g7d8pbEu3oM",
+      "thumbnailUrl": "https://img.youtube.com/vi/g7d8pbEu3oM/hqdefault.jpg"
+    },
+    {
+      "order": 34,
+      "title": "Curso de HTML5 - 31 - Áudio e Vídeo em HTML5 - by Gustavo Guanabara",
+      "description": "Como adicionar Áudio e Vídeo com HTML5. A nova versão da linguagem suporta a inserção de conteúdo multimídia com HTML5.\n\nCom a tag AUDIO é possível adicionar um áudio a um site com",
+      "videoId": "SDAr3NIbIVM",
+      "thumbnailUrl": "https://img.youtube.com/vi/SDAr3NIbIVM/hqdefault.jpg"
+    },
+    {
+      "order": 35,
+      "title": "Curso de HTML5 - 32 - Áudio e Vídeo Avançados - by Gustavo Guanabara",
+      "description": "Nessa aula você terá técnicas avançadas para a configuração de áudio e vídeo em um site em HTML5. Na verdade, aplicaremos um estilo CSS para tornar a visualização mais agradável.\n\n",
+      "videoId": "90uPbUirZ3I",
+      "thumbnailUrl": "https://img.youtube.com/vi/90uPbUirZ3I/hqdefault.jpg"
+    },
+    {
+      "order": 36,
+      "title": "Curso de HTML5 - 33 - Formulários em HTML5 (parte 1) - by Gustavo Guanabara",
+      "description": "Veja como criar formulários em HTML e conheça as tags novas para formulários no HTML5, como os tipos NUMBER, DATE e EMAIL. Essa será a primeira parte de três tutoriais sobre formul",
+      "videoId": "metoFY-x_yg",
+      "thumbnailUrl": "https://img.youtube.com/vi/metoFY-x_yg/hqdefault.jpg"
+    },
+    {
+      "order": 37,
+      "title": "Curso de HTML5 - 34 - Formulários em HTML5 (parte 2) - by Gustavo Guanabara",
+      "description": "A aula de formulários em HTML5 tem continuidade com alguns objetos e propriedades novos. \n\nPara a tag FORM, o parâmetro METHOD aceita os valores GET e POST:\n\n- O método GET envia d",
+      "videoId": "lwuDJN9Udfc",
+      "thumbnailUrl": "https://img.youtube.com/vi/lwuDJN9Udfc/hqdefault.jpg"
+    },
+    {
+      "order": 38,
+      "title": "Curso de HTML5 - 35 - Como Hospedar um Site - by Gustavo Guanabara",
+      "description": "Como enviar arquivos HTML para o servidor? \nComo utilizar o FTP para enviar arquivos?\nComo hospedar um site criado em HTML5?\nQual o melhor servidor de hospedagem de sites?\nQual é a",
+      "videoId": "31eGheRQACI",
+      "thumbnailUrl": "https://img.youtube.com/vi/31eGheRQACI/hqdefault.jpg"
+    },
+    {
+      "order": 39,
+      "title": "Curso de HTML5 - 36 - Formulários com JavaScript - by Gustavo Guanabara",
+      "description": "Como utilizar JavaScript em formulários HTML5.\n\nAula do Curso de HTML5 criado pelo professor Gustavo Guanabara para o portal CursoemVideo.com.  Download de pacotes e curso com cert",
+      "videoId": "YY5hqlcbfoI",
+      "thumbnailUrl": "https://img.youtube.com/vi/YY5hqlcbfoI/hqdefault.jpg"
+    },
+    {
+      "order": 40,
+      "title": "Dia do Programador: alguns GRANDES Programadores da História",
+      "description": "O Dia do Programador acontece sempre no 256° dia do ano. Já que 2016 é bissexto, nesse ano vamos comemorar no dia 12 de Setembro e não no dia 13 de Setembro como é de costume.\n\nLIN",
+      "videoId": "uZImRLpJunA",
+      "thumbnailUrl": "https://img.youtube.com/vi/uZImRLpJunA/hqdefault.jpg"
+    }
+  ],
+  "js": [
+    {
+      "order": 1,
+      "title": "Curso de JavaScript - Teaser",
+      "description": "Curso em Vídeo de JavaScript e ECMAScript para Iniciantes, desenvolvido pelo professor Gustavo Guanabara com o patrocínio do Google. Acompanhe o curso completo em https://www.youtu",
+      "videoId": "1-w1RfGIov4",
+      "thumbnailUrl": "https://img.youtube.com/vi/1-w1RfGIov4/hqdefault.jpg"
+    },
+    {
+      "order": 2,
+      "title": "Curso Grátis de JavaScript Moderno",
+      "description": "Olá, Pequeno Gafanhoto! O Curso em Vídeo e o Google apresentam um curso de JavaScript e ECMAScript para Iniciantes aqui no YouTube! Veja nesse vídeo os detalhes sobre o lançamento,",
+      "videoId": "BXqUH86F-kA",
+      "thumbnailUrl": "https://img.youtube.com/vi/BXqUH86F-kA/hqdefault.jpg"
+    },
+    {
+      "order": 3,
+      "title": "Módulo A - Conhecendo o JavaScript",
+      "description": "Seja bem-vindo ao Módulo A do seu Curso em Vídeo de JavaScript para Iniciante! A partir de agora, vamos conhecer um pouco mais sobre a linguagem JS, quais são os seus fundamentos e",
+      "videoId": "uzEhd3Lugik",
+      "thumbnailUrl": "https://img.youtube.com/vi/uzEhd3Lugik/hqdefault.jpg"
+    },
+    {
+      "order": 4,
+      "title": "O que o JavaScript é capaz de fazer? - Curso JavaScript #01",
+      "description": "Você sabe para que serve a linguagem JavaScript / ECMAScript? Sabe a diferença entre um cliente e um servidor para a Internet? Sabe para que servem as tecnologias HTML5, CSS3 e Jav",
+      "videoId": "Ptbk2af68e8",
+      "thumbnailUrl": "https://img.youtube.com/vi/Ptbk2af68e8/hqdefault.jpg"
+    },
+    {
+      "order": 5,
+      "title": "JavaScript: como chegamos até aqui? - Curso JavaScript #02",
+      "description": "Você sabe qual foi a empresa a criar o JavaScript? Sabe qual é a diferença entre as linguagens Java e JavaScript? Sabe qual é a relação que existe entre as linguagens JavaScript e ",
+      "videoId": "rUTKomc2gG8",
+      "thumbnailUrl": "https://img.youtube.com/vi/rUTKomc2gG8/hqdefault.jpg"
+    },
+    {
+      "order": 6,
+      "title": "Dando os primeiros passos - Curso JavaScript #03",
+      "description": "Quais são os melhores livros de JavaScript em Português? Onde ter acesso à documentação oficial do JavaScript em Português e Inglês? Quais são os requisitos de software para aprend",
+      "videoId": "FdePtO5JSd0",
+      "thumbnailUrl": "https://img.youtube.com/vi/FdePtO5JSd0/hqdefault.jpg"
+    },
+    {
+      "order": 7,
+      "title": "Criando o seu primeiro script - Curso JavaScript #04",
+      "description": "Você já sabe diferenciar dentro do seu código, os trechos em HTML5, em CSS3 e em JavaScript? Sabe organizar as pastas do seu projeto dentro do Visual Studio Code? Sabe como testar ",
+      "videoId": "OmmJBfcMJA8",
+      "thumbnailUrl": "https://img.youtube.com/vi/OmmJBfcMJA8/hqdefault.jpg"
+    },
+    {
+      "order": 8,
+      "title": "Módulo B - Comandos Básicos do JavaScript",
+      "description": "Seja bem-vindo ao Módulo B do seu Curso em Vídeo de JavaScript para Iniciante! Nesse segundo módulo, vamos aprender os comandos básicos do JavaScript, bem como o uso dos principais",
+      "videoId": "FjT97HVT5g8",
+      "thumbnailUrl": "https://img.youtube.com/vi/FjT97HVT5g8/hqdefault.jpg"
+    },
+    {
+      "order": 9,
+      "title": "Variáveis e Tipos Primitivos - Curso JavaScript #05",
+      "description": "Você sabe o que são variáveis? Sabe declarar variáveis em JavaScript? Sabe quais são os tipos primitivos do JavaScript? Consegue entender o que significa colocar um valor null dent",
+      "videoId": "Vbabsye7mWo",
+      "thumbnailUrl": "https://img.youtube.com/vi/Vbabsye7mWo/hqdefault.jpg"
+    },
+    {
+      "order": 10,
+      "title": "Tratamento de dados - Curso JavaScript #06",
+      "description": "Você já aprendeu a manipular dados em JavaScript? Sabe como guardar o resultado de um prompt dentro de uma variável? Sabe converter String para Número em JavaScript? Consegue forma",
+      "videoId": "OJgu_KCCUSY",
+      "thumbnailUrl": "https://img.youtube.com/vi/OJgu_KCCUSY/hqdefault.jpg"
+    },
+    {
+      "order": 11,
+      "title": "Operadores (Parte1) - Curso JavaScript #07",
+      "description": "Você já sabe como fazer cálculos usando JavaScript? Conhece os operadores aritméticos do JavaScript? Consegue entender a ordem de precedência dos operadores em JavaScript? Consegue",
+      "videoId": "hZG9ODUdxHo",
+      "thumbnailUrl": "https://img.youtube.com/vi/hZG9ODUdxHo/hqdefault.jpg"
+    },
+    {
+      "order": 12,
+      "title": "Operadores (Parte 2) - Curso JavaScript #08",
+      "description": "Você já conhece os operadores relacionais e os operadores lógicos em JavaScript? Sabe a diferença entre usar = ou == ou === em JavaScript? Conhece a ordem de precedência dos operad",
+      "videoId": "BP63NhITvao",
+      "thumbnailUrl": "https://img.youtube.com/vi/BP63NhITvao/hqdefault.jpg"
+    },
+    {
+      "order": 13,
+      "title": "Módulo C - Entendendo o DOM",
+      "description": "Seja bem-vindo ao Módulo C do seu Curso em Vídeo de JavaScript para Iniciante! Nesse terceiro módulo, vamos aprender o que é o Document Object Model, para que ele serve e como mani",
+      "videoId": "H80nCKs9c2k",
+      "thumbnailUrl": "https://img.youtube.com/vi/H80nCKs9c2k/hqdefault.jpg"
+    },
+    {
+      "order": 14,
+      "title": "Introdução ao DOM - Curso JavaScript #09",
+      "description": "Você sabe o que significa a sigla DOM? Sabe para que serve o Document Object Model? Sabe como criar uma árvore DOM para o seu site? Sabe como usar o JavaScript para manipular o DOM",
+      "videoId": "WWZX8RWLxIk",
+      "thumbnailUrl": "https://img.youtube.com/vi/WWZX8RWLxIk/hqdefault.jpg"
+    },
+    {
+      "order": 15,
+      "title": "Eventos DOM - Curso JavaScript #10",
+      "description": "Você já entendeu como funciona o DOM com JavaScript? Sabe criar funções em JavaScript? Consegue ligar uma função a um evento em um formulário HTML5 usando JavaScript? Sabe como peg",
+      "videoId": "wWnBB-mZIvY",
+      "thumbnailUrl": "https://img.youtube.com/vi/wWnBB-mZIvY/hqdefault.jpg"
+    },
+    {
+      "order": 16,
+      "title": "Módulo D - Condições em JavaScript",
+      "description": "Seja bem-vindo ao Módulo D do seu Curso em Vídeo de JavaScript para Iniciante! Nesse quarto módulo, vamos aprender como criar condições no JavaScript, utilizando as estruturas if, ",
+      "videoId": "uPFasdmZHJc",
+      "thumbnailUrl": "https://img.youtube.com/vi/uPFasdmZHJc/hqdefault.jpg"
+    },
+    {
+      "order": 17,
+      "title": "Condições (Parte 1) - Curso JavaScript #11",
+      "description": "Você sabe usar o comando if no JavaScript? Sabe diferenciar condições simples e condições compostas? Sabe como criar uma condição usando JavaScript? Sabe como instalar e configurar",
+      "videoId": "cOdG4eACN2A",
+      "thumbnailUrl": "https://img.youtube.com/vi/cOdG4eACN2A/hqdefault.jpg"
+    },
+    {
+      "order": 18,
+      "title": "Condições (Parte 2) - Curso JavaScript #12",
+      "description": "Você sabe mudar a cor de fundo de um site, dinamicamente, usando JavaScript? Sabe como inserir uma imagem usando JavaScript em um site, sem ter a tag img previamente definida? Sabe",
+      "videoId": "EEStcIe8rAM",
+      "thumbnailUrl": "https://img.youtube.com/vi/EEStcIe8rAM/hqdefault.jpg"
+    },
+    {
+      "order": 19,
+      "title": "Exercícios JavaScript (Parte 1) - Curso JavaScript",
+      "description": "Vamos fazer alguns exercícios de JavaScript? Chegou a hora de provar a si mesmo que todo o seu esforço está valendo a pena até aqui. Quando aprendemos e praticamos, solicitamos os ",
+      "videoId": "b2K7eo5Jdj8",
+      "thumbnailUrl": "https://img.youtube.com/vi/b2K7eo5Jdj8/hqdefault.jpg"
+    },
+    {
+      "order": 20,
+      "title": "Exercícios JavaScript (Parte 2) - Curso JavaScript",
+      "description": "Vamos fazer alguns exercícios de JavaScript? Chegou a hora de provar a si mesmo que todo o seu esforço está valendo a pena até aqui. Quando aprendemos e praticamos, solicitamos os ",
+      "videoId": "UXSWgnbSHxs",
+      "thumbnailUrl": "https://img.youtube.com/vi/UXSWgnbSHxs/hqdefault.jpg"
+    },
+    {
+      "order": 21,
+      "title": "Exercícios JavaScript (Parte 3) - Curso JavaScript",
+      "description": "Vamos fazer alguns exercícios de JavaScript? Chegou a hora de provar a si mesmo que todo o seu esforço está valendo a pena até aqui. Quando aprendemos e praticamos, solicitamos os ",
+      "videoId": "f5es-PpaUI8",
+      "thumbnailUrl": "https://img.youtube.com/vi/f5es-PpaUI8/hqdefault.jpg"
+    },
+    {
+      "order": 22,
+      "title": "Módulo E - Repetições em JavaScript",
+      "description": "Seja bem-vindo ao Módulo E do seu Curso em Vídeo de JavaScript para Iniciante! Nesse quinto módulo, vamos aprender como realizar repetições em JavaScript, usando as estruturas whil",
+      "videoId": "3emz6rpcJyA",
+      "thumbnailUrl": "https://img.youtube.com/vi/3emz6rpcJyA/hqdefault.jpg"
+    },
+    {
+      "order": 23,
+      "title": "Repetições (Parte 1) - Curso JavaScript #13",
+      "description": "Você sabe como utilizar as estruturas while e do..while em JavaScript? Sabe como realizar repetições ou laços em JavaScript? Sabe como fazer um mesmo código ser executado várias ve",
+      "videoId": "5rZqYPKIwkY",
+      "thumbnailUrl": "https://img.youtube.com/vi/5rZqYPKIwkY/hqdefault.jpg"
+    },
+    {
+      "order": 24,
+      "title": "Repetições (Parte 2) - Curso JavaScript #14",
+      "description": "Você sabe utilizar a estrutura for para realizar repetições em JavaScript? Sabe como utilizar repetições com variáveis de controle em JavaScript? Sabe a diferença existente entre w",
+      "videoId": "eX-lkN_Zahc",
+      "thumbnailUrl": "https://img.youtube.com/vi/eX-lkN_Zahc/hqdefault.jpg"
+    },
+    {
+      "order": 25,
+      "title": "Exercícios JavaScript (Parte 4) - Curso JavaScript",
+      "description": "Vamos fazer alguns exercícios de JavaScript? Chegou a hora de provar a si mesmo que todo o seu esforço está valendo a pena até aqui. Quando aprendemos e praticamos, solicitamos os ",
+      "videoId": "6tyHypeY4-8",
+      "thumbnailUrl": "https://img.youtube.com/vi/6tyHypeY4-8/hqdefault.jpg"
+    },
+    {
+      "order": 26,
+      "title": "Exercícios JavaScript (Parte 5) - Curso JavaScript",
+      "description": "Vamos fazer alguns exercícios de JavaScript? Chegou a hora de provar a si mesmo que todo o seu esforço está valendo a pena até aqui. Quando aprendemos e praticamos, solicitamos os ",
+      "videoId": "oMNbc_LFz8w",
+      "thumbnailUrl": "https://img.youtube.com/vi/oMNbc_LFz8w/hqdefault.jpg"
+    },
+    {
+      "order": 27,
+      "title": "Exercícios JavaScript (Parte 6) - Curso JavaScript",
+      "description": "Vamos fazer alguns exercícios de JavaScript? Chegou a hora de provar a si mesmo que todo o seu esforço está valendo a pena até aqui. Quando aprendemos e praticamos, solicitamos os ",
+      "videoId": "mfHAQ-4Rspw",
+      "thumbnailUrl": "https://img.youtube.com/vi/mfHAQ-4Rspw/hqdefault.jpg"
+    },
+    {
+      "order": 28,
+      "title": "Módulo F - Avançando os estudos em JavaScript",
+      "description": "Seja bem-vindo ao Módulo F do seu Curso em Vídeo de JavaScript para Iniciante! Nesse sexto módulo, vamos aprender como trabalhar com arrays e funções. Além disso, veremos dicas par",
+      "videoId": "5m4UhZd-Les",
+      "thumbnailUrl": "https://img.youtube.com/vi/5m4UhZd-Les/hqdefault.jpg"
+    },
+    {
+      "order": 29,
+      "title": "Variáveis Compostas - Curso JavaScript #15",
+      "description": "Você sabe como funciona um array em JavaScript? Sabe qual é a vantagem em usar variáveis compostas em JavaScript? Consegue pensar em uma maneira de simplificar seus códigos em Java",
+      "videoId": "XdkW62tkAgU",
+      "thumbnailUrl": "https://img.youtube.com/vi/XdkW62tkAgU/hqdefault.jpg"
+    },
+    {
+      "order": 30,
+      "title": "Funções - Curso JavaScript #16",
+      "description": "Você sabe usar funções em JavaScript? Sabe como aplicar o uso de rotinas em seus códigos para torná-los mais simples? Sabe como usar uma função como resposta a um determinado event",
+      "videoId": "mc3TKp2XzhI",
+      "thumbnailUrl": "https://img.youtube.com/vi/mc3TKp2XzhI/hqdefault.jpg"
+    },
+    {
+      "order": 31,
+      "title": "Exercícios JavaScript (Parte 7) - Curso JavaScript",
+      "description": "Vamos fazer alguns exercícios de JavaScript? Chegou a hora de provar a si mesmo que todo o seu esforço está valendo a pena até aqui. Quando aprendemos e praticamos, solicitamos os ",
+      "videoId": "vEOEZ03ZyiE",
+      "thumbnailUrl": "https://img.youtube.com/vi/vEOEZ03ZyiE/hqdefault.jpg"
+    },
+    {
+      "order": 32,
+      "title": "Exercícios JavaScript (Parte 8) - Curso JavaScript",
+      "description": "Vamos fazer alguns exercícios de JavaScript? Chegou a hora de provar a si mesmo que todo o seu esforço está valendo a pena até aqui. Quando aprendemos e praticamos, solicitamos os ",
+      "videoId": "slLoLLCd-k0",
+      "thumbnailUrl": "https://img.youtube.com/vi/slLoLLCd-k0/hqdefault.jpg"
+    },
+    {
+      "order": 33,
+      "title": "Próximos Passos - Curso JavaScript #17",
+      "description": "O que você precisa aprender sobre JavaScript a partir de agora? Você conseguiu assistir todas as aulas do curso para iniciantes em JavaScript? Quer aprender um pouco mais de JavaSc",
+      "videoId": "roP93FA-NgU",
+      "thumbnailUrl": "https://img.youtube.com/vi/roP93FA-NgU/hqdefault.jpg"
+    }
+  ],
+  "python": [
+    {
+      "order": 1,
+      "title": "Curso Python #01 - Seja um Programador",
+      "description": "Você está pensando em ser um Programador e não sabe por onde começar? Pois nessa aula vamos te dar todas as informações e mostrar o caminho a seguir.\n\nGostou da aula? Então torne-s",
+      "videoId": "S9uPNppGsGo",
+      "thumbnailUrl": "https://img.youtube.com/vi/S9uPNppGsGo/hqdefault.jpg"
+    },
+    {
+      "order": 2,
+      "title": "Curso Python #02 - Para que serve o Python?",
+      "description": "De onde vem o Python? Por que esse nome? Quais são as grandes empresas mundiais que usam Python em seus softwares? Essas e muitas outras perguntas serão respondidas nessa aula. \n\nG",
+      "videoId": "Mp0vhMDI7fA",
+      "thumbnailUrl": "https://img.youtube.com/vi/Mp0vhMDI7fA/hqdefault.jpg"
+    },
+    {
+      "order": 3,
+      "title": "Curso Python #03 - Instalando o Python3 e o IDLE",
+      "description": "Entenda como funciona um Interpretador e veja como o Python funciona. Depois aprenda como instalar o Python 3.0 e o IDLE em seu computador com Windows, Linux ou Mac OS.\n\nGostou da ",
+      "videoId": "VuKvR1J2LQE",
+      "thumbnailUrl": "https://img.youtube.com/vi/VuKvR1J2LQE/hqdefault.jpg"
+    },
+    {
+      "order": 4,
+      "title": "Curso Python #04 - Primeiros comandos em Python3",
+      "description": "Agora chegou a hora de aprender os comandos básicos do Python e fazer os primeiros programas em Linguagem Python.\n\nGostou da aula? Então torne-se um Gafanhoto APOIADOR do CursoemVí",
+      "videoId": "31llNGKWDdo",
+      "thumbnailUrl": "https://img.youtube.com/vi/31llNGKWDdo/hqdefault.jpg"
+    },
+    {
+      "order": 5,
+      "title": "Seja APOIADOR e receba RECOMPENSAS",
+      "description": "O Estudonauta é um projeto de Educação do Prof. Gustavo Guanabara, que já conta com centenas de aulas disponíveis e cursos com certificado:\n\n- Fundamentos de Programação com Portug",
+      "videoId": "U_A2kwUfmlw",
+      "thumbnailUrl": "https://img.youtube.com/vi/U_A2kwUfmlw/hqdefault.jpg"
+    },
+    {
+      "order": 6,
+      "title": "Curso Python #05 - Instalando o PyCharm e o QPython3",
+      "description": "Nesta aula, veremos como instalar e configurar a IDE (Integrated Development Environment) Python chamada PyCharm no Windows, MacOS e Linux. Além disso, veremos como programar Pytho",
+      "videoId": "ElRd0cbXIv4",
+      "thumbnailUrl": "https://img.youtube.com/vi/ElRd0cbXIv4/hqdefault.jpg"
+    },
+    {
+      "order": 7,
+      "title": "PyCharm mudou! Saiba como treinar Python no PC, celular e tablet",
+      "description": "Nesta aula extra do Curso em Vídeo de Python, Gustavo Guanabara explica as mudanças no PyCharm, que agora funciona como Produto Unificado, e apresenta alternativas para treinar Pyt",
+      "videoId": "XND4VeMMzqg",
+      "thumbnailUrl": "https://img.youtube.com/vi/XND4VeMMzqg/hqdefault.jpg"
+    },
+    {
+      "order": 8,
+      "title": "Exercício Python #001 - Deixando tudo pronto",
+      "description": "Nesse vídeo, mostraremos como criar um projeto Python no PyCharm e deixar tudo preparado para receber os exercícios da série, que vão utilizar o mesmo projeto.\n\nVeja o curso comple",
+      "videoId": "nIHq1MtJaKs",
+      "thumbnailUrl": "https://img.youtube.com/vi/nIHq1MtJaKs/hqdefault.jpg"
+    },
+    {
+      "order": 9,
+      "title": "Exercício Python #002 - Respondendo ao Usuário",
+      "description": "Exercício Python 002: Faça um programa que leia o nome de uma pessoa e mostre uma mensagem de boas-vindas.\n\nGostou da aula? Então torne-se um Gafanhoto APOIADOR do CursoemVídeo ace",
+      "videoId": "FNqdV5Zb_5Q",
+      "thumbnailUrl": "https://img.youtube.com/vi/FNqdV5Zb_5Q/hqdefault.jpg"
+    },
+    {
+      "order": 10,
+      "title": "Curso Python #06 - Tipos Primitivos e Saída de Dados",
+      "description": "Nessa aula, vamos aprender como funcionam os tipos primitivos no Python e as peculiaridades do int() float() bool() e str(). Além disso, veremos como fazer as primeiras operações c",
+      "videoId": "hdDHg1p3YVc",
+      "thumbnailUrl": "https://img.youtube.com/vi/hdDHg1p3YVc/hqdefault.jpg"
+    },
+    {
+      "order": 11,
+      "title": "Exercício Python #003 - Somando dois números",
+      "description": "Exercício Python 003: Crie um programa que leia dois números e mostre a soma entre eles.\n\nVeja o curso completo de Python em https://www.youtube.com/playlist?list=PLHz_AreHm4dlKP6Q",
+      "videoId": "PB254Cfjlyk",
+      "thumbnailUrl": "https://img.youtube.com/vi/PB254Cfjlyk/hqdefault.jpg"
+    },
+    {
+      "order": 12,
+      "title": "Exercício Python #004 - Dissecando uma Variável",
+      "description": "Exercício Python 004: Faça um programa que leia algo pelo teclado e mostre na tela o seu tipo primitivo e todas as informações possíveis sobre ele.\n\nGostou da aula? Então torne-se ",
+      "videoId": "tHYxjJxtJko",
+      "thumbnailUrl": "https://img.youtube.com/vi/tHYxjJxtJko/hqdefault.jpg"
+    },
+    {
+      "order": 13,
+      "title": "Curso Python #07 - Operadores Aritméticos",
+      "description": "Nessa aula, vamos aprender quais são os operadores aritméticos do Python e também sua ordem de precedência dentro de expressões matemáticas. Veja como funcionam os operadores de ad",
+      "videoId": "Vw6gLypRKmY",
+      "thumbnailUrl": "https://img.youtube.com/vi/Vw6gLypRKmY/hqdefault.jpg"
+    },
+    {
+      "order": 14,
+      "title": "Exercício Python #005 - Antecessor e Sucessor",
+      "description": "Exercício Python 005: Faça um programa que leia um número Inteiro e mostre na tela o seu sucessor e seu antecessor.\n\nVeja o curso completo de Python em https://www.youtube.com/play",
+      "videoId": "664e0G_S9nU",
+      "thumbnailUrl": "https://img.youtube.com/vi/664e0G_S9nU/hqdefault.jpg"
+    },
+    {
+      "order": 15,
+      "title": "Exercício Python #006 - Dobro, Triplo, Raiz Quadrada",
+      "description": "Exercício Python 006: Crie um algoritmo que leia um número e mostre o seu dobro, triplo e raiz quadrada.\n\nVeja o curso completo de Python em https://www.youtube.com/playlist?list=P",
+      "videoId": "mqcNw_dhl8I",
+      "thumbnailUrl": "https://img.youtube.com/vi/mqcNw_dhl8I/hqdefault.jpg"
+    },
+    {
+      "order": 16,
+      "title": "Exercício Python #007 - Média Aritmética",
+      "description": "Exercício Python 007: Desenvolva um programa que leia as duas notas de um aluno, calcule e mostre a sua média.\n\nVeja o curso completo de Python em https://www.youtube.com/playlist?",
+      "videoId": "_QfISzy0IKs",
+      "thumbnailUrl": "https://img.youtube.com/vi/_QfISzy0IKs/hqdefault.jpg"
+    },
+    {
+      "order": 17,
+      "title": "Exercício Python #008 - Conversor de Medidas",
+      "description": "Exercício Python 008: Escreva um programa que leia um valor em metros e o exiba convertido em centímetros e milímetros.\n\nVeja o curso completo de Python em https://www.youtube.com/",
+      "videoId": "KjcdG05EAZc",
+      "thumbnailUrl": "https://img.youtube.com/vi/KjcdG05EAZc/hqdefault.jpg"
+    },
+    {
+      "order": 18,
+      "title": "Exercício Python #009 - Tabuada",
+      "description": "Exercício Python 009: Faça um programa que leia um número Inteiro qualquer e mostre na tela a sua tabuada.\n\nVeja o curso completo de Python em https://www.youtube.com/playlist?list",
+      "videoId": "qajq3SI0QQs",
+      "thumbnailUrl": "https://img.youtube.com/vi/qajq3SI0QQs/hqdefault.jpg"
+    },
+    {
+      "order": 19,
+      "title": "Exercício Python #010 - Conversor de Moedas",
+      "description": "Exercício Python 010: Crie um programa que leia quanto dinheiro uma pessoa tem na carteira e mostre quantos dólares ela pode comprar.\n\nVeja o curso completo de Python em https://ww",
+      "videoId": "xM4AX3Lp2mo",
+      "thumbnailUrl": "https://img.youtube.com/vi/xM4AX3Lp2mo/hqdefault.jpg"
+    },
+    {
+      "order": 20,
+      "title": "Exercício Python #011 - Pintando Parede",
+      "description": "Exercício Python 011: Faça um programa que leia a largura e a altura de uma parede em metros, calcule a sua área e a quantidade de tinta necessária para pintá-la, sabendo que cada ",
+      "videoId": "mzSJpn9ldt4",
+      "thumbnailUrl": "https://img.youtube.com/vi/mzSJpn9ldt4/hqdefault.jpg"
+    },
+    {
+      "order": 21,
+      "title": "Exercício Python #012 - Calculando Descontos",
+      "description": "Exercício Python 012: Faça um algoritmo que leia o preço de um produto e mostre seu novo preço, com 5% de desconto.\n\nVeja o curso completo de Python em https://www.youtube.com/play",
+      "videoId": "4MAmKOT9FeU",
+      "thumbnailUrl": "https://img.youtube.com/vi/4MAmKOT9FeU/hqdefault.jpg"
+    },
+    {
+      "order": 22,
+      "title": "Exercício Python #013 - Reajuste Salarial",
+      "description": "Exercício Python 013: Faça um algoritmo que leia o salário de um funcionário e mostre seu novo salário, com 15% de aumento.\n\nVeja o curso completo de Python em https://www.youtube.",
+      "videoId": "cTkivN8XcJ0",
+      "thumbnailUrl": "https://img.youtube.com/vi/cTkivN8XcJ0/hqdefault.jpg"
+    },
+    {
+      "order": 23,
+      "title": "Exercício Python #014 - Conversor de Temperaturas",
+      "description": "Exercício Python 014: Escreva um programa que converta uma temperatura digitando em graus Celsius e converta para graus Fahrenheit.\n\nVeja o curso completo de Python em https://www.",
+      "videoId": "9l_Gay8BuAw",
+      "thumbnailUrl": "https://img.youtube.com/vi/9l_Gay8BuAw/hqdefault.jpg"
+    },
+    {
+      "order": 24,
+      "title": "Exercício Python #015 - Aluguel de Carros",
+      "description": "Exercício Python 015: Escreva um programa que pergunte a quantidade de Km percorridos por um carro alugado e a quantidade de dias pelos quais ele foi alugado. Calcule o preço a pag",
+      "videoId": "I4NYUeetLAc",
+      "thumbnailUrl": "https://img.youtube.com/vi/I4NYUeetLAc/hqdefault.jpg"
+    },
+    {
+      "order": 25,
+      "title": "Curso Python #08 - Utilizando Módulos",
+      "description": "Nessa aula, vamos aprender como utilizar módulos em Python utilizando os comandos import e from/import no Python. Veja como carregar bibliotecas de funções e utilizar vários recurs",
+      "videoId": "oOUyhGNib2Q",
+      "thumbnailUrl": "https://img.youtube.com/vi/oOUyhGNib2Q/hqdefault.jpg"
+    },
+    {
+      "order": 26,
+      "title": "Exercício Python #016 - Quebrando um número",
+      "description": "Exercício Python 016: Crie um programa que leia um número Real qualquer pelo teclado e mostre na tela a sua porção Inteira.\n\nEx: Digite um número: 6.127\nO número 6.127 tem a parte ",
+      "videoId": "-iSbDpl5Jhw",
+      "thumbnailUrl": "https://img.youtube.com/vi/-iSbDpl5Jhw/hqdefault.jpg"
+    },
+    {
+      "order": 27,
+      "title": "Exercício Python #017 - Catetos e Hipotenusa",
+      "description": "Exercício Python 017: Faça um programa que leia o comprimento do cateto oposto e do cateto adjacente de um triângulo retângulo. Calcule e mostre o comprimento da hipotenusa.\n\nVeja ",
+      "videoId": "vmPW9iWsYkY",
+      "thumbnailUrl": "https://img.youtube.com/vi/vmPW9iWsYkY/hqdefault.jpg"
+    },
+    {
+      "order": 28,
+      "title": "Exercício Python #018 - Seno, Cosseno e Tangente",
+      "description": "Exercício Python 018: Faça um programa que leia um ângulo qualquer e mostre na tela o valor do seno, cosseno e tangente desse ângulo.\n\nVeja o curso completo de Python em https://ww",
+      "videoId": "9GvsphwW26k",
+      "thumbnailUrl": "https://img.youtube.com/vi/9GvsphwW26k/hqdefault.jpg"
+    },
+    {
+      "order": 29,
+      "title": "Exercício Python #019 - Sorteando um item na lista",
+      "description": "Exercício Python 019: Um professor quer sortear um dos seus quatro alunos para apagar o quadro. Faça um programa que ajude ele, lendo o nome dos alunos e escrevendo na tela o nome ",
+      "videoId": "_Nk02-mfB5I",
+      "thumbnailUrl": "https://img.youtube.com/vi/_Nk02-mfB5I/hqdefault.jpg"
+    },
+    {
+      "order": 30,
+      "title": "Exercício Python #020 - Sorteando uma ordem na lista",
+      "description": "Exercício Python 020: O mesmo professor do desafio 019 quer sortear a ordem de apresentação de trabalhos dos alunos. Faça um programa que leia o nome dos quatro alunos e mostre a o",
+      "videoId": "OPh0nngbBSY",
+      "thumbnailUrl": "https://img.youtube.com/vi/OPh0nngbBSY/hqdefault.jpg"
+    },
+    {
+      "order": 31,
+      "title": "Exercício Python #021 - Tocando um MP3",
+      "description": "Exercício Python 021: Faça um programa em Python que abra e reproduza o áudio de um arquivo MP3.\n\nVeja o curso completo de Python em https://www.youtube.com/playlist?list=PLHz_AreH",
+      "videoId": "9FiEji_fzvk",
+      "thumbnailUrl": "https://img.youtube.com/vi/9FiEji_fzvk/hqdefault.jpg"
+    },
+    {
+      "order": 32,
+      "title": "Curso Python #09 - Manipulando Texto",
+      "description": "Nessa aula, vamos aprender operações com String no Python. As principais operações que vamos aprender são o Fatiamento de String, Análise com len(), count(), find(), transformações",
+      "videoId": "a7DH88vk2Sk",
+      "thumbnailUrl": "https://img.youtube.com/vi/a7DH88vk2Sk/hqdefault.jpg"
+    },
+    {
+      "order": 33,
+      "title": "Exercício Python #022 - Analisador de Textos",
+      "description": "Exercício Python 022: Crie um programa que leia o nome completo de uma pessoa e mostre: \n- O nome com todas as letras maiúsculas e minúsculas.\n- Quantas letras ao todo (sem conside",
+      "videoId": "EQQt-6QqXOs",
+      "thumbnailUrl": "https://img.youtube.com/vi/EQQt-6QqXOs/hqdefault.jpg"
+    },
+    {
+      "order": 34,
+      "title": "Exercício Python #023 - Separando dígitos de um número",
+      "description": "Exercício Python 023: Faça um programa que leia um número de 0 a 9999 e mostre na tela cada um dos dígitos separados.\n\nVeja o curso completo de Python em https://www.youtube.com/pl",
+      "videoId": "wD2aerLMBWA",
+      "thumbnailUrl": "https://img.youtube.com/vi/wD2aerLMBWA/hqdefault.jpg"
+    },
+    {
+      "order": 35,
+      "title": "Exercício Python #024 - Verificando as primeiras letras de um texto",
+      "description": "Exercício Python 024: Crie um programa que leia o nome de uma cidade diga se ela começa ou não com o nome \"SANTO\".\n\nVeja o curso completo de Python em https://www.youtube.com/playl",
+      "videoId": "QroT8cZMRnc",
+      "thumbnailUrl": "https://img.youtube.com/vi/QroT8cZMRnc/hqdefault.jpg"
+    },
+    {
+      "order": 36,
+      "title": "Exercício Python #025 - Procurando uma string dentro de outra",
+      "description": "Exercício Python 025: Crie um programa que leia o nome de uma pessoa e diga se ela tem \"SILVA\" no nome.\n\nVeja o curso completo de Python em https://www.youtube.com/playlist?list=PL",
+      "videoId": "WHWGz2Dy1ZU",
+      "thumbnailUrl": "https://img.youtube.com/vi/WHWGz2Dy1ZU/hqdefault.jpg"
+    },
+    {
+      "order": 37,
+      "title": "Exercício Python #026 - Primeira e última ocorrência de uma string",
+      "description": "Exercício Python 026: Faça um programa que leia uma frase pelo teclado e mostre quantas vezes aparece a letra \"A\", em que posição ela aparece a primeira vez e em que posição ela ap",
+      "videoId": "23UOVEetNPY",
+      "thumbnailUrl": "https://img.youtube.com/vi/23UOVEetNPY/hqdefault.jpg"
+    },
+    {
+      "order": 38,
+      "title": "Exercício Python #027 - Primeiro e último nome de uma pessoa",
+      "description": "Exercício Python 027: Faça um programa que leia o nome completo de uma pessoa, mostrando em seguida o primeiro e o último nome separadamente.\n\nEx: Ana Maria de Souza (primeiro = An",
+      "videoId": "SifYYsXhLM8",
+      "thumbnailUrl": "https://img.youtube.com/vi/SifYYsXhLM8/hqdefault.jpg"
+    },
+    {
+      "order": 39,
+      "title": "Curso Python #10 - Condições (Parte 1)",
+      "description": "Nessa aula, vamos aprender como utilizar estruturas condicionais simples e compostas nos seus programas em Python.\n\nVeja como aplicar os comandos if: e else: no Python.\n\nGostou da ",
+      "videoId": "K10u3XIf1-Q",
+      "thumbnailUrl": "https://img.youtube.com/vi/K10u3XIf1-Q/hqdefault.jpg"
+    },
+    {
+      "order": 40,
+      "title": "Exercício Python #028 - Jogo da Adivinhação v.1.0",
+      "description": "Exercício Python 028: Escreva um programa que faça o computador \"pensar\" em um número inteiro entre 0 e 5 e peça para o usuário tentar descobrir qual foi o número escolhido pelo co",
+      "videoId": "kchC5KLZSZ4",
+      "thumbnailUrl": "https://img.youtube.com/vi/kchC5KLZSZ4/hqdefault.jpg"
+    },
+    {
+      "order": 41,
+      "title": "Exercício Python #029 - Radar eletrônico",
+      "description": "Exercício Python 029: Escreva um programa que leia a velocidade de um carro. Se ele ultrapassar 80Km/h, mostre uma mensagem dizendo que ele foi multado. A multa vai custar R$7,00 p",
+      "videoId": "hgJ_ETNGSj8",
+      "thumbnailUrl": "https://img.youtube.com/vi/hgJ_ETNGSj8/hqdefault.jpg"
+    },
+    {
+      "order": 42,
+      "title": "Exercício Python #030 - Par ou Ímpar?",
+      "description": "Exercício Python 030: Crie um programa que leia um número inteiro e mostre na tela se ele é PAR ou ÍMPAR.\n\nVeja o curso completo de Python em https://www.youtube.com/playlist?list=",
+      "videoId": "4vFCzKuHOn4",
+      "thumbnailUrl": "https://img.youtube.com/vi/4vFCzKuHOn4/hqdefault.jpg"
+    },
+    {
+      "order": 43,
+      "title": "Exercício Python #031 - Custo da Viagem",
+      "description": "Exercício Python 031: Desenvolva um programa que pergunte a distância de uma viagem em Km. Calcule o preço da passagem, cobrando R$0,50 por Km para viagens de até 200Km e R$0,45 pa",
+      "videoId": "PGqHyzWoagc",
+      "thumbnailUrl": "https://img.youtube.com/vi/PGqHyzWoagc/hqdefault.jpg"
+    },
+    {
+      "order": 44,
+      "title": "Exercício Python #032 - Ano Bissexto",
+      "description": "Exercício Python 032: Faça um programa que leia um ano qualquer e mostre se ele é bissexto.\n\nVeja o curso completo de Python em https://www.youtube.com/playlist?list=PLHz_AreHm4dlK",
+      "videoId": "cyGY_83m4Xw",
+      "thumbnailUrl": "https://img.youtube.com/vi/cyGY_83m4Xw/hqdefault.jpg"
+    },
+    {
+      "order": 45,
+      "title": "Exercício Python #033 - Maior e menor valores",
+      "description": "Exercício Python 033: Faça um programa que leia três números e mostre qual é o maior e qual é o menor.\n\nVeja o curso completo de Python em https://www.youtube.com/playlist?list=PLH",
+      "videoId": "a_8FbW5oH6I",
+      "thumbnailUrl": "https://img.youtube.com/vi/a_8FbW5oH6I/hqdefault.jpg"
+    },
+    {
+      "order": 46,
+      "title": "Exercício Python #034 - Aumentos múltiplos",
+      "description": "Exercício Python 034: Escreva um programa que pergunte o salário de um funcionário e calcule o valor do seu aumento. Para salários superiores a R$1250,00, calcule um aumento de 10%",
+      "videoId": "Sfadj_AzKHw",
+      "thumbnailUrl": "https://img.youtube.com/vi/Sfadj_AzKHw/hqdefault.jpg"
+    },
+    {
+      "order": 47,
+      "title": "Exercício Python #035 - Analisando Triângulo v1.0",
+      "description": "Exercício Python 035: Desenvolva um programa que leia o comprimento de três retas e diga ao usuário se elas podem ou não formar um triângulo.\n\nVeja o curso completo de Python em ht",
+      "videoId": "NZiNphKkxhg",
+      "thumbnailUrl": "https://img.youtube.com/vi/NZiNphKkxhg/hqdefault.jpg"
+    },
+    {
+      "order": 48,
+      "title": "Curso Python #11 - Cores no Terminal",
+      "description": "Nessa aula, vamos aprender como utilizar os códigos de escape sequence ANSI para configurar cores para os seus programas em Python. Veja como utilizar o código \\033[m com todas as ",
+      "videoId": "0hBIhkcA8O8",
+      "thumbnailUrl": "https://img.youtube.com/vi/0hBIhkcA8O8/hqdefault.jpg"
+    }
+  ]
+}

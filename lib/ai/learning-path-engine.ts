@@ -1,17 +1,23 @@
 /**
- * LearningPathEngine — AI Adaptive Curriculum & Prerequisite Dependency Engine
+ * LearningPathEngine — AI Smart Adaptive Curriculum & Prerequisite Dependency Engine
  *
- * Evaluates student onboarding, diagnostic placement results, calculates knowledge gaps,
- * skill mastery, resolves the prerequisite dependency graph against the authentic Course & Content Catalog,
- * calculates weighted Module Mastery Scores, generates daily study plans,
- * and dynamically adapts the curriculum post-assessments without fabricating fake IDs.
+ * Implements strict pedagogical progression rules:
+ * 1. BEGINNER_THRESHOLD = 65
+ * 2. If declared_level = NONE/BEGINNER or overall_score < 65 or logic < 65:
+ *    - MANDATORY STAGE 1: Logic and Programming Foundations (Lógica & Algoritmos)
+ *    - Chosen technology (e.g. JS, Python, React) is the TARGET GOAL, not the first step!
+ * 3. Consults ONLY the authentic Catalog. If no Logic course exists, flags CONTENT_GAP instead of injecting Python.
+ * 4. For score >= 65%: Evaluates topic_scores, knowledge_map, and career prerequisites to determine entry point.
+ * 5. Complete separation between Content Catalog (global) and Learning Path (individual & persisted).
  */
 
 import type {
   Course,
   DailyStudyPlan,
   DailyStudyTask,
+  DevArea,
   KnowledgeGap,
+  KnowledgeMap,
   LearningModule,
   LearningPath,
   LearningPathItem,
@@ -20,11 +26,15 @@ import type {
   ModuleProgress,
   OnboardingData,
   PlacementResult,
+  SkillLevel,
   SpacedReviewItem,
   TrailAdaptationNotice,
+  TrailAuditData,
   TrailItemStatus,
   UserProfile,
 } from '@/lib/types'
+
+export const BEGINNER_THRESHOLD = 65
 
 export interface TrailGenerationResult {
   path: LearningPath
@@ -37,6 +47,10 @@ export interface TrailGenerationResult {
   rationale: string
   knowledgeGaps: KnowledgeGap[]
   skillMastery: Record<string, number>
+  knowledgeMap: KnowledgeMap
+  startingStage: 'LOGIC_AND_PROGRAMMING_FOUNDATIONS' | 'ADVANCED_ENTRY'
+  mandatoryLogic: boolean
+  auditData?: TrailAuditData
 }
 
 export class LearningPathEngine {
@@ -62,11 +76,11 @@ export class LearningPathEngine {
       }
     }
 
-    const totalLessons = Math.max(1, mod.lessonIds.length)
+    const totalLessons = Math.max(1, mod.lessonIds?.length || 1)
     const lessonsDone = progress?.lessonsCompleted ?? 0
     const lessonsScore = Math.min(20, Math.round((lessonsDone / totalLessons) * 20))
 
-    const totalExercises = Math.max(1, mod.exerciseCount)
+    const totalExercises = Math.max(1, mod.exerciseCount || 1)
     const exercisesDone = progress?.exercisesCompleted ?? 0
     const exercisesScore = Math.min(30, Math.round((exercisesDone / totalExercises) * 30))
 
@@ -166,8 +180,51 @@ export class LearningPathEngine {
   }
 
   /**
-   * Calculates specific Knowledge Gaps and Skill Mastery percentages by crossing
-   * self-declared knowledge against diagnostic assessment performance.
+   * Normalizes or extracts the comprehensive KnowledgeMap from placement test data.
+   */
+  public extractKnowledgeMap(
+    onboarding: OnboardingData | null,
+    placement: PlacementResult | null
+  ): KnowledgeMap {
+    if (placement?.knowledgeMap) {
+      return placement.knowledgeMap
+    }
+
+    const score = placement?.score ?? 0
+    const known = onboarding?.knownTopics || []
+    const isBeginner =
+      onboarding?.currentKnowledge === 'zero' ||
+      onboarding?.currentKnowledge === 'iniciante' ||
+      score < BEGINNER_THRESHOLD
+
+    if (isBeginner) {
+      return {
+        logic: Math.min(score, 50),
+        algorithms: Math.max(0, Math.round(score * 0.7)),
+        html: known.includes('HTML e CSS básico') ? 45 : 15,
+        css: known.includes('HTML e CSS básico') ? 40 : 10,
+        javascript: known.includes('JavaScript básico') ? 35 : 5,
+        git: known.includes('Git e GitHub') ? 35 : 0,
+        databases: 10,
+        apis: 5,
+      }
+    }
+
+    // Intermediate / Advanced baseline calculation
+    return {
+      logic: Math.max(score, 70),
+      algorithms: Math.max(score - 10, 60),
+      html: known.includes('HTML e CSS básico') ? 85 : 60,
+      css: known.includes('HTML e CSS básico') ? 80 : 55,
+      javascript: known.includes('JavaScript básico') ? 75 : 45,
+      git: known.includes('Git e GitHub') ? 70 : 40,
+      databases: Math.max(score - 20, 30),
+      apis: Math.max(score - 25, 25),
+    }
+  }
+
+  /**
+   * Calculates specific Knowledge Gaps and Skill Mastery percentages.
    */
   public calculateGapsAndMastery(
     onboarding: OnboardingData | null,
@@ -175,81 +232,77 @@ export class LearningPathEngine {
   ): {
     knowledgeGaps: KnowledgeGap[]
     skillMastery: Record<string, number>
+    knowledgeMap: KnowledgeMap
   } {
-    const score = placement?.score ?? 0
-    const weakTopics = placement?.weakTopics || []
-    const knownTopics = onboarding?.knownTopics || []
-
-    const mastery: Record<string, number> = {
-      'Lógica de Programação': 0,
-      'Algoritmos & Estruturas': 0,
-      'Git & GitHub': 0,
-      'HTML5 Semântico': 0,
-      'CSS3 & Layouts': 0,
-      'JavaScript Moderno': 0,
-      'React & Next.js': 0,
-      'Node.js & APIs': 0,
-      'Banco de Dados & SQL': 0,
-      'Arquitetura de Software': 0,
-    }
-
+    const kMap = this.extractKnowledgeMap(onboarding, placement)
     const gaps: KnowledgeGap[] = []
 
-    // 1. Logic & Foundations
-    if (score >= 85) {
-      mastery['Lógica de Programação'] = 95
-      mastery['Algoritmos & Estruturas'] = 90
-    } else if (score >= 65) {
-      mastery['Lógica de Programação'] = 75
-      mastery['Algoritmos & Estruturas'] = 60
-      if (weakTopics.some((t) => t.toLowerCase().includes('loop') || t.toLowerCase().includes('repeti'))) {
-        gaps.push({
-          topic: 'Estruturas de Repetição (Loops)',
-          severity: 'media',
-          recommendedModuleId: 'mod-logica',
-          description: 'Reforço recomendado em iterações e laços de repetição (for / while).',
-        })
-      }
-    } else {
-      mastery['Lógica de Programação'] = Math.max(15, score)
-      mastery['Algoritmos & Estruturas'] = Math.max(10, Math.round(score * 0.8))
+    // 1. Logic Gap
+    if (kMap.logic < BEGINNER_THRESHOLD) {
       gaps.push({
-        topic: 'Fundamentos de Algoritmos & Lógica',
+        topic: 'Lógica de Programação & Pensamento Computacional',
         severity: 'alta',
         recommendedModuleId: 'mod-logica',
-        description: 'Base essencial necessária antes de avançar para a sintaxe da web.',
+        description: `Aproveitamento em lógica (${kMap.logic}%) abaixo do limiar pedagógico de ${BEGINNER_THRESHOLD}%. Fundamento indispensável.`,
       })
     }
 
-    // 2. Web & Frontend Knowledge
-    if (knownTopics.includes('HTML e CSS básico')) {
-      mastery['HTML5 Semântico'] = 45
-      mastery['CSS3 & Layouts'] = 40
-    } else {
+    // 2. Algorithms Gap
+    if (kMap.algorithms < BEGINNER_THRESHOLD) {
       gaps.push({
-        topic: 'Estruturação Semântica com HTML5 & CSS3',
+        topic: 'Algoritmos & Estruturas de Decisão/Repetição',
+        severity: 'alta',
+        recommendedModuleId: 'mod-algoritmos',
+        description: 'Reforço necessário em loops (for/while), condicionais e estruturas de dados básicas.',
+      })
+    }
+
+    // 3. Git Gap
+    if (kMap.git < 50) {
+      gaps.push({
+        topic: 'Controle de Versão com Git & GitHub',
+        severity: 'media',
+        recommendedModuleId: 'mod-git',
+        description: 'Fluxo de versionamento, commits, branches e publicação no repositório.',
+      })
+    }
+
+    // 4. HTML/CSS Gap
+    if (kMap.html < 60 || kMap.css < 60) {
+      gaps.push({
+        topic: 'Estruturação & Estilização Web (HTML5/CSS3)',
         severity: 'media',
         recommendedModuleId: 'mod-html',
-        description: 'Construção de páginas web acessíveis e responsivas.',
+        description: 'Semântica web, acessibilidade, Flexbox e layouts responsivos.',
       })
     }
 
-    if (knownTopics.includes('JavaScript básico')) {
-      mastery['JavaScript Moderno'] = 40
-    } else {
+    // 5. JavaScript Gap
+    if (kMap.javascript < 65) {
       gaps.push({
-        topic: 'Manipulação de DOM & JavaScript ES6+',
+        topic: 'JavaScript Moderno ES6+ & DOM',
         severity: 'alta',
         recommendedModuleId: 'mod-js',
-        description: 'Comportamento dinâmico de aplicações client-side.',
+        description: 'Manipulação de elementos, eventos, Promises, Fetch API e funções assíncronas.',
       })
     }
 
-    return { knowledgeGaps: gaps, skillMastery: mastery }
+    const skillMastery: Record<string, number> = {
+      'Lógica de Programação': kMap.logic,
+      'Algoritmos & Raciocínio': kMap.algorithms,
+      'Git & GitHub': kMap.git,
+      'HTML5 Semântico': kMap.html,
+      'CSS3 & Flexbox/Grid': kMap.css,
+      'JavaScript ES6+': kMap.javascript,
+      'Bancos de Dados & SQL': kMap.databases,
+      'APIs REST & Backend': kMap.apis,
+    }
+
+    return { knowledgeGaps: gaps, skillMastery, knowledgeMap: kMap }
   }
 
   /**
-   * Classifica semanticamente um módulo em fases pedagógicas universais
+   * Classifica semanticamente um módulo em fases pedagógicas universais.
    */
   public classifyModulePedagogically(
     mod: LearningModule,
@@ -290,7 +343,7 @@ export class LearningPathEngine {
       combined.includes('portugol') ||
       combined.includes('visualg') ||
       combined.includes('pensamento computacional') ||
-      (combined.includes('fundamentos da programação') && !combined.includes('web') && !combined.includes('react') && !combined.includes('node'))
+      (combined.includes('fundamentos') && !combined.includes('web') && !combined.includes('react') && !combined.includes('node'))
     ) {
       return {
         phaseOrder: 1,
@@ -454,8 +507,71 @@ export class LearningPathEngine {
   }
 
   /**
-   * Generates a fully personalized, adaptive learning trail based on student data
-   * and the real verified content library.
+   * Determina a relevância de um módulo para a carreira escolhida pelo aluno.
+   * Evita colocar cursos de tecnologias desconexas (ex: Python em Fullstack JS sem necessidade).
+   */
+  public isModuleRelevantForCareer(
+    categoryKey: string,
+    modTechnology: string,
+    area: DevArea,
+    targetTechs: string[] = []
+  ): boolean {
+    const techLower = (modTechnology || '').toLowerCase()
+    const targetTechsLower = targetTechs.map((t) => t.toLowerCase())
+
+    // 1. Fundamentos universais (Lógica, Git) são SEMPRE relevantes para qualquer carreira
+    if (categoryKey === 'logica' || categoryKey === 'git') {
+      return true
+    }
+
+    // 2. Se o aluno especificou explicitamente a tecnologia, ela é relevante
+    if (targetTechsLower.some((t) => techLower.includes(t) || t.includes(techLower))) {
+      return true
+    }
+
+    // 3. Regras por carreira
+    switch (area) {
+      case 'frontend':
+        return ['html_css', 'javascript', 'typescript', 'frontend', 'carreira'].includes(categoryKey)
+
+      case 'backend':
+        return ['backend', 'database', 'typescript', 'javascript', 'carreira'].includes(categoryKey)
+
+      case 'fullstack':
+        return ['html_css', 'javascript', 'typescript', 'frontend', 'backend', 'database', 'fullstack', 'carreira'].includes(categoryKey)
+
+      case 'data-science':
+      case 'ia':
+      case 'machine-learning':
+        return techLower.includes('python') || ['database', 'backend', 'carreira'].includes(categoryKey)
+
+      case 'mobile':
+        return ['javascript', 'typescript', 'frontend', 'carreira'].includes(categoryKey) || techLower.includes('mobile') || techLower.includes('react native') || techLower.includes('flutter')
+
+      case 'devops':
+      case 'cloud':
+        return ['backend', 'database', 'fullstack', 'carreira'].includes(categoryKey) || techLower.includes('docker') || techLower.includes('linux') || techLower.includes('aws')
+
+      case 'cybersecurity':
+      case 'seguranca':
+        return ['backend', 'database', 'carreira'].includes(categoryKey) || techLower.includes('segurança') || techLower.includes('security') || techLower.includes('linux')
+
+      case 'database':
+        return ['database', 'backend', 'carreira'].includes(categoryKey)
+
+      case 'qa':
+        return ['javascript', 'typescript', 'frontend', 'backend', 'carreira'].includes(categoryKey) || techLower.includes('test') || techLower.includes('qa')
+
+      case 'software-engineering':
+        return ['javascript', 'typescript', 'backend', 'database', 'fullstack', 'carreira'].includes(categoryKey)
+
+      default:
+        return true
+    }
+  }
+
+  /**
+   * Generates a fully personalized, adaptive learning trail based on authentic catalog content.
    */
   public generateAdaptiveTrail(
     profile: UserProfile | null,
@@ -465,42 +581,66 @@ export class LearningPathEngine {
     availableModules: LearningModule[],
     availableLessons: Lesson[],
   ): TrailGenerationResult {
-    const area = onboarding?.area || 'fullstack'
-    const level = placement?.level || onboarding?.currentKnowledge || 'iniciante-absoluto'
+    const area: DevArea = onboarding?.area || 'fullstack'
+    const declaredLevel: SkillLevel = (onboarding?.currentKnowledge as SkillLevel) || 'iniciante'
     const userName = profile?.name || 'Aluno DevPath'
     const score = placement?.score ?? 0
+    const targetTechs = onboarding?.technologies || []
 
-    const { knowledgeGaps, skillMastery } = this.calculateGapsAndMastery(onboarding, placement)
+    const { knowledgeGaps, skillMastery, knowledgeMap } = this.calculateGapsAndMastery(onboarding, placement)
 
-    // Check if user is a beginner who must start strictly with Logic/Algorithms
-    const isZeroOrBeginner =
-      onboarding?.currentKnowledge === 'zero' ||
-      onboarding?.currentKnowledge === 'iniciante' ||
-      score < 85 ||
-      placement?.level === 'iniciante-absoluto' ||
-      placement?.level === 'iniciante'
+    // ============================================================
+    // REGRA FUNDAMENTAL DOS 65%:
+    // Se declared_level = NONE/BEGINNER ou overall_score < 65 ou knowledgeMap.logic < 65:
+    // Ponto de partida obrigatório = Lógica de Programação / Fundamentos
+    // ============================================================
+    const isDeclaredBeginner = declaredLevel === 'iniciante-absoluto' || declaredLevel === 'iniciante'
+    const isScoreBelowThreshold = score < BEGINNER_THRESHOLD
+    const isLogicWeak = knowledgeMap.logic < BEGINNER_THRESHOLD
 
-    const canSkipLogic =
-      score >= 85 &&
-      (onboarding?.currentKnowledge === 'intermediario' || onboarding?.currentKnowledge === 'avancado')
+    const requiresMandatoryLogic = isDeclaredBeginner || isScoreBelowThreshold || isLogicWeak
+    const startingStage = requiresMandatoryLogic ? 'LOGIC_AND_PROGRAMMING_FOUNDATIONS' : 'ADVANCED_ENTRY'
 
-    let title = 'Trilha Personalizada: Full Stack JavaScript'
-    let rationale = isZeroOrBeginner
-      ? `Detectamos pelo seu teste de nivelamento (aproveitamento de ${score}%) que você está no nível Iniciante. Sua trilha começa obrigatoriamente pelos Fundamentos de Lógica e Algoritmos antes de avançar para linguagens e frameworks.`
-      : 'Trilha personalizada focada em consolidação prática e projetos full stack.'
+    let title = 'Trilha Personalizada: Full Stack Developer'
     let months = 6
 
     if (area === 'frontend') {
       title = 'Trilha Personalizada: Front-End Moderno (React & Next.js)'
       months = 4
     } else if (area === 'backend') {
-      title = 'Trilha Personalizada: Back-End & APIs Robustas (Node.js & SQL)'
+      title = 'Trilha Personalizada: Back-End & APIs Robustas'
       months = 5
-    } else if (area === 'data-science' || area === 'ia') {
-      title = 'Trilha Personalizada: Python & Inteligência Artificial'
+    } else if (area === 'mobile') {
+      title = 'Trilha Personalizada: Mobile Developer'
+      months = 5
+    } else if (area === 'data-science') {
+      title = 'Trilha Personalizada: Data Science & Analytics'
       months = 6
+    } else if (area === 'ia' || area === 'machine-learning') {
+      title = 'Trilha Personalizada: Inteligência Artificial & LLMs'
+      months = 6
+    } else if (area === 'devops' || area === 'cloud') {
+      title = 'Trilha Personalizada: DevOps & Cloud Architecture'
+      months = 5
+    } else if (area === 'database') {
+      title = 'Trilha Personalizada: Bancos de Dados & Modelagem SQL'
+      months = 4
+    } else if (area === 'cybersecurity' || area === 'seguranca') {
+      title = 'Trilha Personalizada: Cybersecurity & Segurança da Informação'
+      months = 6
+    } else if (area === 'software-engineering') {
+      title = 'Trilha Personalizada: Engenharia de Software & Arquitetura'
+      months = 6
+    } else if (area === 'qa') {
+      title = 'Trilha Personalizada: QA & Automação de Testes'
+      months = 4
     }
 
+    const decisionReason = requiresMandatoryLogic
+      ? `Regra Pedagógica dos 65%: Como seu aproveitamento diagnóstico foi de ${score}% (ou nível inicial declarado como iniciante), sua primeira etapa obrigatória é Lógica de Programação e Algoritmos antes de avançar para a tecnologia-alvo (${targetTechs.join(', ') || area}).`
+      : `Ponto de Entrada Avançado: Seu aproveitamento diagnóstico de ${score}% validou o domínio dos fundamentos de lógica (${knowledgeMap.logic}%). Sua trilha foi otimizada para focar nas tecnologias específicas de ${area}.`
+
+    // Se não houver módulos disponíveis no catálogo
     if (availableModules.length === 0) {
       return {
         path: {
@@ -514,6 +654,10 @@ export class LearningPathEngine {
           adaptations: [],
           knowledgeGaps,
           skillMastery,
+          knowledgeMap,
+          startingStage,
+          mandatoryLogic: requiresMandatoryLogic,
+          diagnosticScore: score,
           customizedFor: userName,
           generatedAt: new Date().toISOString(),
         },
@@ -523,22 +667,34 @@ export class LearningPathEngine {
         initialLessonId: '',
         estimatedHours: 0,
         estimatedMonths: 0,
-        rationale: 'Cadastre um canal ou playlist na área administrativa para alimentar os cursos.',
+        rationale: 'Cadastre cursos na área administrativa para estruturar a trilha.',
         knowledgeGaps,
         skillMastery,
+        knowledgeMap,
+        startingStage,
+        mandatoryLogic: requiresMandatoryLogic,
       }
     }
 
-    // Classify each module pedagogically
-    const enrichedModules = availableModules.map((mod) => {
-      const classification = this.classifyModulePedagogically(mod, availableCourses)
-      return {
-        mod,
-        classification,
-      }
-    })
+    // 1. Classifica todos os módulos do catálogo e filtra apenas os relevantes para a carreira
+    const enrichedModules = availableModules
+      .map((mod) => {
+        const classification = this.classifyModulePedagogically(mod, availableCourses)
+        const isRelevant = this.isModuleRelevantForCareer(
+          classification.categoryKey,
+          mod.technology || '',
+          area,
+          targetTechs
+        )
+        return {
+          mod,
+          classification,
+          isRelevant,
+        }
+      })
+      .filter((item) => item.isRelevant)
 
-    // Sort strictly by pedagogical standardOrder (Lógica -> Git -> HTML/CSS -> JS -> TS -> Frontend -> Backend/Python -> DB -> Fullstack -> Carreira)
+    // 2. Ordena estritamente por standardOrder pedagógico (Lógica -> Git -> HTML/CSS -> JS -> TS -> Frontend -> Backend -> DB -> Fullstack -> Carreira)
     enrichedModules.sort((a, b) => {
       if (a.classification.standardOrder !== b.classification.standardOrder) {
         return a.classification.standardOrder - b.classification.standardOrder
@@ -549,11 +705,29 @@ export class LearningPathEngine {
       return (a.mod.order || 1) - (b.mod.order || 1)
     })
 
+    // 3. Verifica se existe conteúdo de Lógica no catálogo real
+    const hasRealLogicCourse = enrichedModules.some(
+      (m) => m.classification.categoryKey === 'logica'
+    )
+
     const resolvedModules: LearningModule[] = []
     const trailItems: LearningPathItem[] = []
     const resolvedCourses: Course[] = []
     const visitedCourseIds = new Set<string>()
+    const courseAuditList: TrailAuditData['courseSequenceAudit'] = []
 
+    // 4. Caso obrigatório de Lógica sem conteúdo real no catálogo: Flag CONTENT_GAP (Não injetar Python!)
+    if (requiresMandatoryLogic && !hasRealLogicCourse) {
+      knowledgeGaps.unshift({
+        topic: 'Lógica de Programação & Algoritmos (Conteúdo Ausente)',
+        severity: 'alta',
+        recommendedModuleId: 'gap-logic',
+        description: 'Não existe atualmente conteúdo suficiente no catálogo para a etapa Lógica de Programação. O administrador foi notificado.',
+        isContentGap: true,
+      })
+    }
+
+    // 5. Itera sobre os módulos ordenados construindo a sequência individual
     enrichedModules.forEach((item, idx) => {
       const foundMod = item.mod
       const cls = item.classification
@@ -565,21 +739,23 @@ export class LearningPathEngine {
       let unlockRequirement = 'Ponto de partida da formação.'
 
       if (idx === 0) {
-        if (canSkipLogic && cls.categoryKey === 'logica') {
+        if (!requiresMandatoryLogic && cls.categoryKey === 'logica') {
+          // Aluno avançado com lógica validada: módulo marcado como concluído
           itemStatus = 'concluido'
           locked = false
-          itemReason = 'Fundamentos de lógica validados com sucesso no teste de nivelamento (>= 85%).'
+          itemReason = `Fundamentos de lógica dispensados por aproveitamento diagnóstico (${score}% >= ${BEGINNER_THRESHOLD}%).`
+          unlockRequirement = 'Dispensado por teste de nivelamento.'
         } else {
           itemStatus = 'disponivel'
           locked = false
-          itemReason = isZeroOrBeginner
-            ? `Ponto de partida fundamental. Diagnóstico indicou início no nível iniciante (aproveitamento de ${score}%). A base algorítmica é indispensável.`
+          itemReason = requiresMandatoryLogic
+            ? `Ponto de partida obrigatório. Diagnóstico (${score}%) exige consolidação prévia de Lógica de Programação e Algoritmos.`
             : 'Ponto de partida da sua jornada adaptativa.'
         }
-      } else if (idx === 1 && canSkipLogic && enrichedModules[0].classification.categoryKey === 'logica') {
+      } else if (idx === 1 && !requiresMandatoryLogic && enrichedModules[0].classification.categoryKey === 'logica') {
         itemStatus = 'disponivel'
         locked = false
-        itemReason = 'Início liberado devido à dispensa pedagógica de Lógica de Programação.'
+        itemReason = 'Início liberado devido à validação prévia de Fundamentos de Lógica.'
         unlockRequirement = 'Dispensado por teste de nivelamento.'
       } else {
         itemStatus = 'bloqueado'
@@ -606,6 +782,8 @@ export class LearningPathEngine {
         skills: foundMod.skills || [],
         estimatedHours: foundMod.estimatedHours || 10,
         lessonIds: foundMod.lessonIds || [],
+        selectedFromCatalog: true,
+        pedagogicalRationale: itemReason,
       }
       trailItems.push(pathItem)
 
@@ -614,6 +792,12 @@ export class LearningPathEngine {
         if (c) {
           resolvedCourses.push(c)
           visitedCourseIds.add(foundMod.courseId)
+          courseAuditList.push({
+            courseId: c.id,
+            courseTitle: c.title,
+            reason: itemReason,
+            prerequisiteStatus: locked ? 'Bloqueado por pré-requisito sequencial' : 'Liberado para estudo',
+          })
         }
       }
     })
@@ -624,39 +808,57 @@ export class LearningPathEngine {
       return it?.status === 'disponivel' || it?.status === 'em_andamento'
     }) || resolvedModules[0]
 
-    const initialLessonId = initialMod?.lessonIds[0] || ''
+    const initialLessonId = initialMod?.lessonIds?.[0] || ''
 
     const path: LearningPath = {
       id: `path-${area}-${Date.now()}`,
       title,
       goal: onboarding?.goal || 'primeiro-emprego',
       area,
-      description: rationale,
+      description: decisionReason,
       moduleIds: resolvedModules.map((m) => m.id),
       items: trailItems,
-      adaptations: isZeroOrBeginner
+      adaptations: requiresMandatoryLogic
         ? [
             {
               id: `adapt-init-${Date.now()}`,
               date: new Date().toLocaleDateString('pt-BR'),
-              reason: `Diagnóstico indicou nível Iniciante (score: ${score}%).`,
+              reason: `Regra Pedagógica dos 65%: Diagnóstico (${score}%).`,
               changesMade: 'Priorização obrigatória da FASE 1 — Fundamentos de Lógica e Algoritmos com bloqueio sequencial dos módulos avançados.',
             },
           ]
-        : canSkipLogic
-        ? [
+        : [
             {
-              id: `adapt-skip-${Date.now()}`,
+              id: `adapt-adv-${Date.now()}`,
               date: new Date().toLocaleDateString('pt-BR'),
-              reason: `Excelente desempenho no teste diagnóstico (score: ${score}%).`,
-              changesMade: 'Fundamentos de lógica dispensados. Ponto de partida avançado para a fase de linguagens e ferramentas.',
+              reason: `Aproveitamento superior no teste diagnóstico (${score}% >= 65%).`,
+              changesMade: 'Fundamentos validados com sucesso. Ponto de partida ajustado para tecnologias centrais.',
             },
-          ]
-        : [],
+          ],
       knowledgeGaps,
       skillMastery,
+      knowledgeMap,
+      startingStage,
+      mandatoryLogic: requiresMandatoryLogic,
+      diagnosticScore: score,
       customizedFor: userName,
       generatedAt: new Date().toISOString(),
+    }
+
+    const auditData: TrailAuditData = {
+      trailId: path.id,
+      userId: profile?.id || 'anon-user',
+      userName,
+      targetCareer: area,
+      declaredLevel,
+      diagnosticScore: score,
+      startingStage,
+      decisionReason,
+      knowledgeMap,
+      prerequisitesValidated: resolvedModules.map((m) => m.title),
+      gapsIdentified: knowledgeGaps.map((g) => g.topic),
+      courseSequenceAudit: courseAuditList,
+      generatedAt: path.generatedAt || new Date().toISOString(),
     }
 
     return {
@@ -667,9 +869,13 @@ export class LearningPathEngine {
       initialLessonId,
       estimatedHours: totalHours,
       estimatedMonths: months,
-      rationale,
+      rationale: decisionReason,
       knowledgeGaps,
       skillMastery,
+      knowledgeMap,
+      startingStage,
+      mandatoryLogic: requiresMandatoryLogic,
+      auditData,
     }
   }
 
@@ -693,7 +899,6 @@ export class LearningPathEngine {
     let notice: TrailAdaptationNotice | undefined
 
     if (score >= 50) {
-      // Score >= 50%: Module is unlocked and user can advance
       if (currentItemIdx !== -1) {
         items[currentItemIdx] = {
           ...items[currentItemIdx],
@@ -718,7 +923,6 @@ export class LearningPathEngine {
         adaptations.push(notice)
       }
     } else {
-      // Needs Reinforcement (< 50%) -> Module stays locked
       if (currentItemIdx !== -1) {
         items[currentItemIdx] = {
           ...items[currentItemIdx],

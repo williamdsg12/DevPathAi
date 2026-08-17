@@ -257,12 +257,18 @@ export default function OnboardingPage() {
             {step === 3 && (
               <div className="grid gap-3 sm:grid-cols-2">
                 {[
-                  { key: 'fullstack', label: 'Full Stack', desc: 'Frontend + Backend + Banco de Dados (Mais recomendado)' },
-                  { key: 'frontend', label: 'Front-end', desc: 'Interfaces visuais, React, Next.js e experiência do usuário.' },
-                  { key: 'backend', label: 'Back-end & APIs', desc: 'Servidores, regras de negócio, microsserviços e SQL.' },
-                  { key: 'mobile', label: 'Mobile (React Native / Flutter)', desc: 'Aplicativos para Android e iOS.' },
-                  { key: 'ia', label: 'Inteligência Artificial & Dados', desc: 'Python, Machine Learning e integração de LLMs.' },
-                  { key: 'devops', label: 'DevOps & Cloud', desc: 'CI/CD, Docker, Kubernetes e infraestrutura na nuvem.' },
+                  { key: 'fullstack', label: 'Full Stack Developer', desc: 'Frontend + Backend + Banco de Dados (Mais completo)' },
+                  { key: 'frontend', label: 'Front-end Moderno', desc: 'Interfaces visuais, React, Next.js e UI/UX.' },
+                  { key: 'backend', label: 'Back-end & APIs', desc: 'Servidores, microsserviços, regras de negócio e SQL.' },
+                  { key: 'mobile', label: 'Mobile (React Native / Flutter)', desc: 'Aplicativos nativos e multiplataforma para Android e iOS.' },
+                  { key: 'data-science', label: 'Data Science & Analytics', desc: 'Python, análise de dados, estatística e dashboards.' },
+                  { key: 'ia', label: 'Inteligência Artificial & LLMs', desc: 'Engenharia de prompts, IA generativa e Machine Learning.' },
+                  { key: 'devops', label: 'DevOps & CI/CD', desc: 'Docker, Kubernetes, Linux e automação de deploy.' },
+                  { key: 'cloud', label: 'Cloud Computing', desc: 'Arquitetura e infraestrutura na AWS, GCP e Azure.' },
+                  { key: 'database', label: 'Bancos de Dados & SQL', desc: 'PostgreSQL, MySQL, modelagem de dados e otimização.' },
+                  { key: 'cybersecurity', label: 'Cybersecurity & Web Security', desc: 'Segurança ofensiva/defensiva, OWASP e pentest.' },
+                  { key: 'software-engineering', label: 'Engenharia de Software', desc: 'Clean Code, SOLID, Design Patterns e Arquitetura.' },
+                  { key: 'qa', label: 'QA & Automação de Testes', desc: 'Garantia de qualidade, Playwright, Cypress e testes unitários.' },
                 ].map((item) => (
                   <OptionCard
                     key={item.key}

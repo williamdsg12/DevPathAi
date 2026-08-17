@@ -1,8 +1,14 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { ingestFullChannel } from '@/lib/youtube/service'
+import { validateSuperAdminRequest } from '@/lib/auth/rbac'
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    const auth = validateSuperAdminRequest(req)
+    if (!auth.authorized && auth.response) {
+      return auth.response
+    }
+
     const body = await req.json()
     const channelInput = body.channelInput || body.url || body.handle
 

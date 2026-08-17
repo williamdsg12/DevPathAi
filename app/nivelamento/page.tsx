@@ -48,36 +48,61 @@ export default function PlacementTestPage() {
     if (currentIdx < totalQ - 1) {
       setCurrentIdx((i) => i + 1)
     } else {
-      // Calculate Score
+      // Calculate Score and Topic-by-Topic Knowledge Map
       let correct = 0
       const strong: string[] = []
       const weak: string[] = []
+      const topicScores: Record<string, number> = {}
 
       placementQuestions.forEach((q, idx) => {
         const userChoice = answers[idx]
-        if (userChoice === q.correctIndex) {
+        const isCorrect = userChoice === q.correctIndex
+        if (isCorrect) {
           correct++
           if (!strong.includes(q.topic)) strong.push(q.topic)
         } else {
           if (!weak.includes(q.topic)) weak.push(q.topic)
         }
+        topicScores[q.categoryKey || q.topic] = isCorrect ? 100 : 25
       })
 
       const score = Math.round((correct / totalQ) * 100)
+      const declaredLevel = profile?.userJourneyState || 'iniciante'
+
+      const knowledgeMap = {
+        logic: topicScores['logic'] ?? (answers[0] === 1 ? 100 : 25),
+        algorithms: topicScores['algorithms'] ?? (answers[1] === 1 ? 100 : 25),
+        html: topicScores['html'] ?? (answers[2] === 1 ? 100 : 25),
+        css: topicScores['css'] ?? (answers[3] === 1 ? 100 : 25),
+        javascript: topicScores['javascript'] ?? (answers[4] === 2 ? 100 : 25),
+        git: topicScores['git'] ?? (answers[5] === 1 ? 100 : 25),
+        databases: topicScores['databases'] ?? (answers[6] === 2 ? 100 : 25),
+        apis: topicScores['apis'] ?? (answers[7] === 1 ? 100 : 25),
+      }
+
       let level = 'iniciante-absoluto'
       if (score >= 85) level = 'intermediario'
       else if (score >= 65) level = 'basico'
       else if (score >= 40) level = 'iniciante'
 
+      const mandatoryLogic = score < 65 || knowledgeMap.logic < 65
+      const startingStage = mandatoryLogic ? 'LOGIC_AND_PROGRAMMING_FOUNDATIONS' : 'ADVANCED_ENTRY'
+
       const placementData: PlacementResult = {
         score,
+        overallScore: score,
         level,
+        declaredLevel,
+        knowledgeMap,
+        topicScores,
         strongTopics: strong.length ? strong : ['Conceitos fundamentais'],
         weakTopics: weak.length ? weak : ['Nenhuma fraqueza crítica detectada'],
+        startingStage,
+        mandatoryLogic,
         recommendations: [
-          score >= 80
-            ? 'Você já possui boa base! Recomendamos focar na consolidação prática com projetos.'
-            : 'Recomendamos começar pelos fundamentos de Lógica e Algoritmos para consolidar o raciocínio.',
+          mandatoryLogic
+            ? 'Regra Pedagógica dos 65%: Sua formação iniciará obrigatoriamente por Fundamentos de Lógica e Algoritmos.'
+            : 'Aproveitamento sólido! O motor adaptativo validou seus fundamentos e estruturou um ponto de entrada customizado.',
         ],
       }
 
@@ -205,6 +230,66 @@ export default function PlacementTestPage() {
             </div>
 
             <CardContent className="space-y-6 p-6">
+              {/* Pedagogical Rule 65% Banner */}
+              <div className={`rounded-xl border p-4 ${
+                result.mandatoryLogic
+                  ? 'border-blue-500/30 bg-blue-500/[0.06] text-blue-400'
+                  : 'border-emerald-500/30 bg-emerald-500/[0.06] text-emerald-400'
+              }`}>
+                <p className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 mb-1">
+                  <Brain className="size-4" />
+                  {result.mandatoryLogic ? 'Regra Pedagógica dos 65% (Ponto de Partida Obrigatório)' : 'Validação de Fundamentos (Ponto de Entrada Avançado)'}
+                </p>
+                <p className="text-xs text-foreground/90 leading-relaxed">
+                  {result.mandatoryLogic
+                    ? `Seu aproveitamento diagnóstico foi de ${result.score}% (abaixo do limiar de 65% ou com base de lógica a fortalecer). A primeira etapa da sua trilha será obrigatoriamente Lógica de Programação e Algoritmos antes de avançar para a tecnologia-alvo.`
+                    : `Parabéns! Seu aproveitamento de ${result.score}% superou o limiar de 65% e comprovou domínio prévio nos fundamentos de lógica. O motor personalizará seu ponto de partida.`}
+                </p>
+              </div>
+
+              {/* Knowledge Map Grid */}
+              {result.knowledgeMap ? (
+                <div className="space-y-3 rounded-xl border border-border/70 bg-card/60 p-4">
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Mapa de Conhecimento por Competência
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <div className="rounded-lg border border-border/50 bg-background/50 p-2.5">
+                      <p className="text-[10px] text-muted-foreground">Lógica</p>
+                      <p className="text-sm font-bold text-foreground">{result.knowledgeMap.logic}%</p>
+                    </div>
+                    <div className="rounded-lg border border-border/50 bg-background/50 p-2.5">
+                      <p className="text-[10px] text-muted-foreground">Algoritmos</p>
+                      <p className="text-sm font-bold text-foreground">{result.knowledgeMap.algorithms}%</p>
+                    </div>
+                    <div className="rounded-lg border border-border/50 bg-background/50 p-2.5">
+                      <p className="text-[10px] text-muted-foreground">HTML5</p>
+                      <p className="text-sm font-bold text-foreground">{result.knowledgeMap.html}%</p>
+                    </div>
+                    <div className="rounded-lg border border-border/50 bg-background/50 p-2.5">
+                      <p className="text-[10px] text-muted-foreground">CSS3</p>
+                      <p className="text-sm font-bold text-foreground">{result.knowledgeMap.css}%</p>
+                    </div>
+                    <div className="rounded-lg border border-border/50 bg-background/50 p-2.5">
+                      <p className="text-[10px] text-muted-foreground">JavaScript</p>
+                      <p className="text-sm font-bold text-foreground">{result.knowledgeMap.javascript}%</p>
+                    </div>
+                    <div className="rounded-lg border border-border/50 bg-background/50 p-2.5">
+                      <p className="text-[10px] text-muted-foreground">Git/GitHub</p>
+                      <p className="text-sm font-bold text-foreground">{result.knowledgeMap.git}%</p>
+                    </div>
+                    <div className="rounded-lg border border-border/50 bg-background/50 p-2.5">
+                      <p className="text-[10px] text-muted-foreground">SQL / Banco</p>
+                      <p className="text-sm font-bold text-foreground">{result.knowledgeMap.databases}%</p>
+                    </div>
+                    <div className="rounded-lg border border-border/50 bg-background/50 p-2.5">
+                      <p className="text-[10px] text-muted-foreground">APIs / Backend</p>
+                      <p className="text-sm font-bold text-foreground">{result.knowledgeMap.apis}%</p>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-xl border border-success/30 bg-success/5 p-4">
                   <p className="text-xs font-bold uppercase tracking-wider text-success flex items-center gap-1.5 mb-2">
@@ -241,7 +326,7 @@ export default function PlacementTestPage() {
                 </p>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Com base no seu teste, determinamos seu ponto de partida como{' '}
-                  <strong className="text-foreground capitalize">{result.level}</strong>. Agora a IA gerará sua trilha personalizada estruturada em 6 fases sequenciais.
+                  <strong className="text-foreground capitalize">{result.level}</strong>. Agora a IA gerará sua trilha individual estruturada a partir do catálogo real.
                 </p>
               </div>
 

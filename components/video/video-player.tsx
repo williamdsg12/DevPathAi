@@ -222,12 +222,24 @@ export function VideoPlayer({
       <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black shadow-2xl border border-border/60 group">
         <iframe
           ref={iframeRef}
-          src={`https://www.youtube-nocookie.com/embed/${normalized.videoId}?rel=0&enablejsapi=1&modestbranding=1&playsinline=1`}
+          src={`https://www.youtube.com/embed/${normalized.videoId}?rel=0&enablejsapi=1&modestbranding=1&playsinline=1`}
           title={title}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
           className="absolute inset-0 size-full border-0"
         />
+
+        {/* Quick External Watch link in hover corner */}
+        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto">
+          <a
+            href={normalized.watchUrl || `https://www.youtube.com/watch?v=${normalized.videoId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/80 hover:bg-red-600 text-white text-xs font-bold shadow-lg backdrop-blur transition-colors"
+          >
+            <Play className="size-3 fill-white" /> Assistir no YouTube ↗
+          </a>
+        </div>
       </div>
     )
   }

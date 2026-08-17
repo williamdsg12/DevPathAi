@@ -33,12 +33,33 @@ export type DevArea =
   | 'mobile'
   | 'data-science'
   | 'ia'
-  | 'machine-learning'
   | 'devops'
   | 'cloud'
-  | 'seguranca'
+  | 'database'
+  | 'cybersecurity'
+  | 'software-engineering'
   | 'qa'
+  | 'machine-learning'
+  | 'seguranca'
   | 'games'
+
+export const AREA_LABELS: Record<string, string> = {
+  frontend: 'Front-end Moderno (React, Next.js, Web)',
+  backend: 'Back-end & APIs (Node.js, Python, SQL)',
+  fullstack: 'Full Stack Developer (JS / TS / Node / React)',
+  mobile: 'Mobile Development (React Native & Flutter)',
+  'data-science': 'Data Science & Analytics',
+  ia: 'Inteligência Artificial & IA Generativa / LLMs',
+  devops: 'DevOps & CI/CD (Docker, Kubernetes, Linux)',
+  cloud: 'Cloud Computing (AWS, GCP, Azure)',
+  database: 'Bancos de Dados & Modelagem SQL / NoSQL',
+  cybersecurity: 'Cybersecurity, Pentest & Web Security',
+  'software-engineering': 'Engenharia de Software, SOLID & Arquitetura',
+  qa: 'QA & Automação de Testes (Playwright, Jest)',
+  'machine-learning': 'Machine Learning & MLOps',
+  seguranca: 'Segurança da Informação',
+  games: 'Desenvolvimento de Jogos',
+}
 
 export type LearningStyle = 'videos' | 'leitura' | 'exercicios' | 'projetos' | 'misto'
 
@@ -49,6 +70,8 @@ export type UserJourneyState =
   | 'GENERATING_PATH'
   | 'PATH_CONFIRMATION'
   | 'ACTIVE'
+
+export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'STUDENT'
 
 export interface UserProfile {
   id: string
@@ -65,6 +88,7 @@ export interface UserProfile {
   placementDone: boolean
   userJourneyState?: UserJourneyState
   isAdmin?: boolean
+  role?: UserRole
   xp?: number
   level?: number
   streak?: number
@@ -106,13 +130,29 @@ export interface OnboardingData {
   financialTarget?: string
 }
 
+export interface KnowledgeMap {
+  logic: number // Lógica de Programação & Algoritmos (0-100)
+  algorithms: number // Estruturas & Raciocínio (0-100)
+  html: number // HTML5 Semântico (0-100)
+  css: number // CSS3, Flexbox & Grid (0-100)
+  javascript: number // JavaScript Moderno ES6+ (0-100)
+  git: number // Git & GitHub (0-100)
+  databases: number // SQL & Modelagem de Dados (0-100)
+  apis: number // APIs REST & Backend (0-100)
+}
+
 export interface PlacementResult {
-  score: number
+  score: number // overall_score
+  overallScore?: number
   level: SkillLevel | string
+  declaredLevel?: SkillLevel | string
+  knowledgeMap?: KnowledgeMap
+  topicScores?: Record<string, number>
   strongTopics?: string[]
   weakTopics?: string[]
   recommendations?: string[]
-  topicScores?: Record<string, number>
+  startingStage?: 'LOGIC_AND_PROGRAMMING_FOUNDATIONS' | 'ADVANCED_ENTRY'
+  mandatoryLogic?: boolean
 }
 
 export interface KnowledgeGap {
@@ -120,6 +160,48 @@ export interface KnowledgeGap {
   severity: 'alta' | 'media' | 'baixa'
   recommendedModuleId: string
   description: string
+  isContentGap?: boolean // Flag quando não há conteúdo no catálogo real
+}
+
+export interface ContentGapAudit {
+  id: string
+  stageRequired: string
+  technology: string
+  missingTopic: string
+  reason: string
+  detectedAt: string
+  affectedUsersCount: number
+}
+
+export interface ContentHealthMetrics {
+  totalCourses: number
+  completeCourses: number
+  coursesWithGaps: number
+  totalVideos: number
+  unavailableVideos: number
+  lessonsWithoutVideo: number
+  contentGaps: ContentGapAudit[]
+}
+
+export interface TrailAuditData {
+  trailId: string
+  userId: string
+  userName: string
+  targetCareer: string
+  declaredLevel: string
+  diagnosticScore: number
+  startingStage: string
+  decisionReason: string
+  knowledgeMap: KnowledgeMap
+  prerequisitesValidated: string[]
+  gapsIdentified: string[]
+  courseSequenceAudit: {
+    courseId: string
+    courseTitle: string
+    reason: string
+    prerequisiteStatus: string
+  }[]
+  generatedAt: string
 }
 
 export interface SkillMastery {
@@ -224,26 +306,113 @@ export interface Lesson {
   isUnavailable?: boolean
 }
 
-export type ExerciseType =
-  | 'multiple-choice'
-  | 'true-false'
-  | 'code'
-  | 'fill-code'
+export type ActivityType =
+  | 'multiple_choice'
+  | 'true_false'
   | 'written'
+  | 'fill_code'
+  | 'find_bug'
+  | 'fix_code'
+  | 'code'
+  | 'practical_challenge'
+  | 'mini_project'
+  | 'module_project'
 
-export interface Exercise {
+export type ActivityDifficulty = 'facil' | 'medio' | 'dificil' | 'desafio'
+
+export type ActivityStatus = 'draft' | 'review' | 'approved' | 'published'
+
+export interface LearningActivity {
   id: string
+  title: string
+  statement: string // Enunciado REAL obrigatório e descritivo
+  description?: string
+  objective?: string
+  type: ActivityType
+  difficulty: ActivityDifficulty
+  status: ActivityStatus
+  xpReward: number
+  expectedTimeMin: number
+  courseId?: string
   moduleId: string
-  type: ExerciseType
-  prompt: string
+  lessonId: string // Vínculo canônico com a aula
+  skillId?: string
+  skillName: string
+  technology: string
   options?: string[]
-  correctIndex?: number
+  correctOptionIndex?: number
   correctAnswer?: string
   codeStarter?: string
   codeSolution?: string
+  testCases?: Array<{ input: string; expectedOutput: string; description?: string }>
   explanation: string
-  difficulty: 'facil' | 'medio' | 'dificil'
+  hint?: string // Dica na 1ª tentativa
+  detailedGuidance?: string // Orientação na 2ª tentativa
+  activityHash?: string
+  isMandatory?: boolean
+  createdAt: string
+  updatedAt?: string
+}
+
+// Backward compatibility alias
+export type ExerciseType = ActivityType
+export interface Exercise extends LearningActivity {
+  prompt?: string
+  correctIndex?: number
   points?: number
+}
+
+export interface ActivityAttempt {
+  id: string
+  activityId: string
+  userId: string
+  answer: string | number
+  score: number // 0 a 100
+  isCorrect: boolean
+  feedback: string
+  hintProvided?: string
+  timeSpentSeconds: number
+  attemptNumber: number
+  submittedAt: string
+}
+
+export interface ProjectRubricCriterion {
+  criterion: string
+  weightPercent: number // soma 100%
+  description: string
+}
+
+export interface ModuleProject {
+  id: string
+  moduleId: string
+  courseId?: string
+  title: string
+  description: string
+  technology: string
+  difficulty: ActivityDifficulty
+  requirements: string[]
+  deliverables: string[]
+  rubric: ProjectRubricCriterion[]
+  starterCodeUrl?: string
+  evaluationCriteria?: string[]
+  status: ActivityStatus
+  createdAt: string
+}
+
+export interface ProjectSubmission {
+  id: string
+  moduleId: string
+  title: string
+  description: string
+  githubUrl: string
+  deployUrl?: string
+  codeContent?: string
+  status: 'submitted' | 'approved' | 'rejected'
+  grade?: number
+  feedback?: string
+  rubricEvaluation?: Array<{ criterion: string; score: number; feedback: string }>
+  submittedAt: string
+  evaluatedAt?: string
 }
 
 export interface AssessmentQuestion {
@@ -253,6 +422,8 @@ export interface AssessmentQuestion {
   correctIndex: number
   explanation?: string
   topic: string
+  skillName?: string
+  points?: number
 }
 
 export interface Assessment {
@@ -262,6 +433,7 @@ export interface Assessment {
   minScore: number
   timeLimitMin: number
   questions: AssessmentQuestion[]
+  createdAt?: string
 }
 
 export interface RecoveryPlan {
@@ -270,6 +442,7 @@ export interface RecoveryPlan {
   recommendedLessons: string[]
   extraExercises: string[]
   miniChallenge: string
+  reinforcementActivityIds?: string[]
 }
 
 export interface AssessmentResult {
@@ -281,29 +454,32 @@ export interface AssessmentResult {
   strongTopics: string[]
   feedback: string
   recoveryPlan?: RecoveryPlan
+  attemptNumber?: number
 }
 
-export interface ModuleProject {
+export interface ModuleReflection {
   id: string
+  userId: string
   moduleId: string
-  title: string
-  description: string
-  requirements: string[]
-  deliverables?: string[]
-  evaluationCriteria?: string[]
-}
-
-export interface ProjectSubmission {
-  id: string
-  moduleId: string
-  title: string
-  description: string
-  githubUrl: string
-  deployUrl?: string
-  status: 'submitted' | 'approved' | 'rejected'
-  grade?: number
-  feedback?: string
+  overallFeedback: string
+  hardestTopic: string
+  unmasteredTopic: string
+  topicsToReview: string[]
+  preparedToAdvance: boolean
+  aiRecommendations?: string
   submittedAt: string
+}
+
+export interface ModuleCompletionStatus {
+  moduleId: string
+  lessonsCompleted: boolean
+  activitiesCompleted: boolean
+  projectCompleted: boolean
+  assessmentPassed: boolean
+  reflectionCompleted: boolean
+  isFullyCompleted: boolean
+  totalScore: number
+  blockReason?: string
 }
 
 export interface LearningModule {
@@ -346,6 +522,10 @@ export interface LearningPathItem {
   estimatedHours: number
   lessonIds: string[]
   masteryScore?: number
+  contentGap?: boolean
+  selectedFromCatalog?: boolean
+  pedagogicalRationale?: string
+  prerequisitesValidated?: string[]
 }
 
 export interface TrailAdaptationNotice {
@@ -367,8 +547,13 @@ export interface LearningPath {
   adaptations?: TrailAdaptationNotice[]
   knowledgeGaps?: KnowledgeGap[]
   skillMastery?: Record<string, number>
+  knowledgeMap?: KnowledgeMap
+  startingStage?: string
+  mandatoryLogic?: boolean
+  diagnosticScore?: number
   customizedFor?: string
   generatedAt?: string
+  recalculatedAt?: string
 }
 
 // Per-user progress state
@@ -629,6 +814,8 @@ export interface IngestionReport {
   channelHandle: string
   playlistsFound: number
   playlistsImported: number
+  playlistsFailed?: number
+  failedPlaylistsList?: Array<{ playlistId: string; title: string; error: string }>
   videosFound: number
   videosImported: number
   duplicatesIgnored: number

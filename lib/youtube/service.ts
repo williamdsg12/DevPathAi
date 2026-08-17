@@ -39,7 +39,7 @@ export function extractPlaylistOrVideoId(input: string): {
 
   // Channel Handle (e.g. @CursoemVideo, @rocketseat)
   if (trimmed.startsWith('@')) {
-    return { type: 'channel_handle', id: trimmed.slice(1) }
+    return { type: 'channel_handle', id: trimmed }
   }
 
   // Direct Channel ID (UC...)
@@ -53,18 +53,25 @@ export function extractPlaylistOrVideoId(input: string): {
   }
 
   try {
-    const url = new URL(trimmed)
+    const url = new URL(trimmed.startsWith('http') ? trimmed : `https://${trimmed}`)
 
-    // Handle @channel in URL (e.g. youtube.com/@CursoemVideo)
+    // Handle @channel in URL (e.g. youtube.com/@CursoemVideo, youtube.com/@cursoemvideo/courses, youtube.com/@cursoemvideo/playlists)
     const pathname = url.pathname
     if (pathname.includes('/@')) {
-      const handle = pathname.split('/@')[1]?.split('/')[0]
-      if (handle) return { type: 'channel_handle', id: handle }
+      const rawHandle = pathname.split('/@')[1]?.split('/')[0]?.split('?')[0]
+      if (rawHandle) {
+        return { type: 'channel_handle', id: `@${rawHandle.replace(/^@/, '')}` }
+      }
     }
 
     if (pathname.startsWith('/channel/')) {
-      const chId = pathname.replace('/channel/', '').split('/')[0]
+      const chId = pathname.replace('/channel/', '').split('/')[0]?.split('?')[0]
       if (chId) return { type: 'channel_id', id: chId }
+    }
+
+    if (pathname.startsWith('/c/') || pathname.startsWith('/user/')) {
+      const customName = pathname.split('/')[2]?.split('?')[0]
+      if (customName) return { type: 'channel_handle', id: `@${customName.replace(/^@/, '')}` }
     }
 
     const listParam = url.searchParams.get('list')
@@ -78,7 +85,7 @@ export function extractPlaylistOrVideoId(input: string): {
     }
 
     if (url.hostname === 'youtu.be') {
-      const vid = url.pathname.slice(1)
+      const vid = url.pathname.slice(1).split('?')[0]
       if (vid) return { type: 'video', id: vid }
     }
   } catch {
@@ -213,35 +220,60 @@ export async function fetchChannelDetails(handleOrIdOrUrl: string): Promise<Cont
   const parsed = extractPlaylistOrVideoId(handleOrIdOrUrl)
 
   try {
-    let url = ''
-    if (parsed.type === 'channel_handle') {
-      url = `${YOUTUBE_API_BASE}/channels?part=snippet,contentDetails,statistics&forHandle=${encodeURIComponent(
-        parsed.id,
-      )}&key=${apiKey}`
-    } else if (parsed.type === 'channel_id') {
-      url = `${YOUTUBE_API_BASE}/channels?part=snippet,contentDetails,statistics&id=${encodeURIComponent(
-        parsed.id,
-      )}&key=${apiKey}`
-    } else {
-      const searchUrl = `${YOUTUBE_API_BASE}/search?part=snippet&type=channel&q=${encodeURIComponent(
-        handleOrIdOrUrl,
-      )}&key=${apiKey}`
-      const searchRes = await fetch(searchUrl, { cache: 'no-store' })
-      if (!searchRes.ok) return null
-      const searchData = await searchRes.json()
-      const firstChannel = searchData.items?.[0]
-      if (!firstChannel?.snippet?.channelId) return null
+    let item: any = null
 
-      url = `${YOUTUBE_API_BASE}/channels?part=snippet,contentDetails,statistics&id=${encodeURIComponent(
-        firstChannel.snippet.channelId,
+    // 1. Try by channel_id
+    if (parsed.type === 'channel_id') {
+      const url = `${YOUTUBE_API_BASE}/channels?part=snippet,contentDetails,statistics&id=${encodeURIComponent(
+        parsed.id,
       )}&key=${apiKey}`
+      const res = await fetch(url, { cache: 'no-store' })
+      if (res.ok) {
+        const data = await res.json()
+        item = data.items?.[0]
+      }
     }
 
-    const res = await fetch(url, { cache: 'no-store' })
-    if (!res.ok) return null
+    // 2. Try by channel_handle (forHandle requires @ prefix in YouTube Data API v3)
+    if (!item && parsed.type === 'channel_handle') {
+      const handleWithAt = parsed.id.startsWith('@') ? parsed.id : `@${parsed.id}`
+      const url = `${YOUTUBE_API_BASE}/channels?part=snippet,contentDetails,statistics&forHandle=${encodeURIComponent(
+        handleWithAt,
+      )}&key=${apiKey}`
+      const res = await fetch(url, { cache: 'no-store' })
+      if (res.ok) {
+        const data = await res.json()
+        item = data.items?.[0]
+      }
+    }
 
-    const data = await res.json()
-    const item = data.items?.[0]
+    // 3. Fallback: Search channel by query if forHandle didn't find or input is free text
+    if (!item) {
+      const cleanQuery = handleOrIdOrUrl
+        .replace(/https?:\/\/(www\.)?youtube\.com\//, '')
+        .replace(/^@/, '')
+        .replace(/\/(courses|playlists|videos|featured)$/, '')
+
+      const searchUrl = `${YOUTUBE_API_BASE}/search?part=snippet&type=channel&q=${encodeURIComponent(
+        cleanQuery,
+      )}&maxResults=1&key=${apiKey}`
+      const searchRes = await fetch(searchUrl, { cache: 'no-store' })
+      if (searchRes.ok) {
+        const searchData = await searchRes.json()
+        const firstChannel = searchData.items?.[0]
+        if (firstChannel?.snippet?.channelId) {
+          const chUrl = `${YOUTUBE_API_BASE}/channels?part=snippet,contentDetails,statistics&id=${encodeURIComponent(
+            firstChannel.snippet.channelId,
+          )}&key=${apiKey}`
+          const chRes = await fetch(chUrl, { cache: 'no-store' })
+          if (chRes.ok) {
+            const chData = await chRes.json()
+            item = chData.items?.[0]
+          }
+        }
+      }
+    }
+
     if (!item) return null
 
     const snippet = item.snippet
@@ -341,7 +373,7 @@ export async function fetchChannelPlaylists(channelId: string): Promise<YouTubeP
 
       pageToken = data.nextPageToken
       safetyCount++
-    } while (pageToken && safetyCount < 10)
+    } while (pageToken && safetyCount < 50)
 
     return playlists
   } catch (err) {
@@ -638,8 +670,144 @@ export async function syncCoursePlaylist(
 }
 
 /**
- * Automatic Full Channel Ingestion Engine.
- * Ingests a channel, its playlists, and generates Courses, LearningModules and Lessons.
+ * Canonical Single YouTube Playlist Ingestion Pipeline.
+ * Fetches metadata, all videos via full pagination, applies pedagogical classification,
+ * and generates Course, LearningModule and Lesson records strictly ordered from 1 to N.
+ */
+export async function importSinglePlaylistPipeline(playlistId: string): Promise<{
+  success: boolean
+  playlist?: YouTubePlaylist
+  course?: Course
+  modules?: LearningModule[]
+  lessons?: Lesson[]
+  totalVideos?: number
+  unavailableCount?: number
+  error?: string
+}> {
+  try {
+    // 1. Fetch Playlist Metadata
+    const playlistMeta = await fetchPlaylistMetadata(playlistId)
+    if (!playlistMeta) {
+      return {
+        success: false,
+        error: 'Não foi possível encontrar a playlist no YouTube. Verifique se ela é pública ou se a chave de API está ativa.',
+      }
+    }
+
+    // 2. Fetch All Videos in Playlist with Full Pagination
+    const { videos, unavailableCount } = await fetchAllPlaylistVideos(playlistId)
+    if (!videos || videos.length === 0) {
+      return {
+        success: false,
+        error: 'Nenhum vídeo disponível ou público encontrado nesta playlist.',
+      }
+    }
+
+    // 3. AI Pedagogical Classification
+    const classification = classifyPlaylistContext(playlistMeta.title, playlistMeta.description)
+
+    const totalSeconds = videos.reduce((acc, v) => acc + (v.durationSeconds || 0), 0)
+    const totalHours = Math.max(1, Math.round(totalSeconds / 3600))
+    const courseId = `crs-${playlistId}`
+    const modId = `mod-${playlistId}`
+
+    // 4. Construct Lessons strictly ordered from 1 to N
+    const lessons: Lesson[] = videos.map((vid, idx) => {
+      const lessonId = `l-${playlistId}-${vid.youtubeVideoId}`
+      return {
+        id: lessonId,
+        moduleId: modId,
+        order: idx + 1,
+        title: vid.title,
+        type: 'video',
+        durationMin: Math.max(5, Math.round((vid.durationSeconds || 900) / 60)),
+        description: vid.description ? vid.description.slice(0, 200) + '...' : `Aula ${idx + 1} do curso ${playlistMeta.title}.`,
+        videoId: vid.youtubeVideoId,
+        externalVideoId: vid.youtubeVideoId,
+        videoUrl: `https://www.youtube.com/watch?v=${vid.youtubeVideoId}`,
+        sourceType: 'youtube',
+        availabilityStatus: 'available',
+        youtubeExists: true,
+        embedAvailable: true,
+        source: vid.channelTitle || playlistMeta.channelTitle || 'YouTube',
+        playlistId,
+        technology: classification.technology,
+        topic: vid.title,
+        thumbnailUrl: vid.thumbnailUrl || playlistMeta.thumbnailUrl,
+        isUnavailable: false,
+        lastCheckedAt: new Date().toISOString(),
+      }
+    })
+
+    // 5. Construct Learning Module
+    const module: LearningModule = {
+      id: modId,
+      order: 1,
+      phase: classification.category,
+      phaseOrder: 1,
+      title: playlistMeta.title,
+      slug: `mod-${playlistId}`,
+      description: `Módulo completo contendo ${lessons.length} aulas sequenciais com prática e acompanhamento.`,
+      objective: `Dominar os fundamentos e aplicações práticas de ${classification.technology}.`,
+      icon: classification.technology.toLowerCase().includes('react') ? 'atom' : classification.technology.toLowerCase().includes('node') ? 'server' : 'code',
+      prerequisites: classification.technology.includes('Lógica') ? [] : ['mod-logica'],
+      lessonIds: lessons.map((l) => l.id),
+      exerciseCount: Math.min(15, Math.max(4, Math.ceil(lessons.length / 2))),
+      hasProject: true,
+      hasAssessment: true,
+      estimatedHours: totalHours,
+      skills: classification.skills,
+      courseId: courseId,
+      technology: classification.technology,
+    }
+
+    // 6. Construct Course
+    const course: Course = {
+      id: courseId,
+      title: playlistMeta.title,
+      slug: playlistMeta.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `curso-${playlistId}`,
+      description: playlistMeta.description || `Curso completo estruturado a partir da playlist do canal ${playlistMeta.channelTitle}.`,
+      level: classification.level,
+      technology: classification.technology,
+      category: classification.category,
+      thumbnailUrl: playlistMeta.thumbnailUrl || videos[0]?.thumbnailUrl || '',
+      status: 'ativo',
+      sourcePlaylistId: playlistId,
+      playlistId,
+      playlistUrl: playlistMeta.youtubeUrl,
+      channelTitle: playlistMeta.channelTitle,
+      classificationConfidence: classification.confidence,
+      prerequisites: classification.technology.includes('Lógica') ? [] : ['Fundamentos de Programação'],
+      skills: classification.skills,
+      modulesCount: 1,
+      lessonsCount: videos.length,
+      totalHours,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+
+    return {
+      success: true,
+      playlist: playlistMeta,
+      course,
+      modules: [module],
+      lessons,
+      totalVideos: videos.length,
+      unavailableCount,
+    }
+  } catch (err: any) {
+    console.error(`Error in importSinglePlaylistPipeline for ${playlistId}:`, err)
+    return {
+      success: false,
+      error: err.message || 'Erro ao processar playlist.',
+    }
+  }
+}
+
+/**
+ * Automatic Full Channel Ingestion Engine (Orchestrator).
+ * Discovers all public playlists from the channel and reuses the canonical importSinglePlaylistPipeline
+ * for each individual playlist with per-playlist error resilience, failure logging and non-blocking progress.
  */
 export async function ingestFullChannel(channelInput: string): Promise<{
   channel: ContentSource
@@ -648,114 +816,61 @@ export async function ingestFullChannel(channelInput: string): Promise<{
   modules: LearningModule[]
   lessons: Lesson[]
   report: IngestionReport
+  successfulPlaylists: string[]
+  failedPlaylists: Array<{ playlistId: string; title: string; error: string }>
 } | null> {
   const channel = await fetchChannelDetails(channelInput)
   if (!channel || !channel.channelId) return null
 
+  // Discover ALL public playlists of the channel with full pagination
   const playlists = await fetchChannelPlaylists(channel.channelId)
+
   const courses: Course[] = []
   const modules: LearningModule[] = []
   const lessons: Lesson[] = []
+  const importedPlaylists: YouTubePlaylist[] = []
+  const successfulPlaylists: string[] = []
+  const failedPlaylists: Array<{ playlistId: string; title: string; error: string }> = []
 
   let totalVideosFound = 0
   let totalVideosImported = 0
   let totalUnavailable = 0
-  let autoApprovedCount = 0
-  let pendingReviewCount = 0
 
   for (const pl of playlists) {
-    const { videos, unavailableCount } = await fetchAllPlaylistVideos(pl.youtubePlaylistId)
-    totalVideosFound += pl.itemCount
-    totalVideosImported += videos.length
-    totalUnavailable += unavailableCount
+    try {
+      // Reutiliza a MESMA função canônica de importação de playlist individual
+      const plResult = await importSinglePlaylistPipeline(pl.youtubePlaylistId)
 
-    if (pl.classificationConfidence >= 90) {
-      autoApprovedCount++
-    } else {
-      pendingReviewCount++
-    }
+      if (
+        plResult.success &&
+        plResult.course &&
+        plResult.modules &&
+        plResult.lessons &&
+        plResult.lessons.length > 0
+      ) {
+        courses.push(plResult.course)
+        modules.push(...plResult.modules)
+        lessons.push(...plResult.lessons)
+        importedPlaylists.push(plResult.playlist || pl)
+        successfulPlaylists.push(pl.youtubePlaylistId)
 
-    const classification = classifyPlaylistContext(pl.title, pl.description)
-    const courseId = `crs-${pl.youtubePlaylistId}`
-    const totalSeconds = videos.reduce((acc, v) => acc + (v.durationSeconds || 0), 0)
-    const totalHours = Math.max(1, Math.round(totalSeconds / 3600))
-
-    const course: Course = {
-      id: courseId,
-      title: pl.title,
-      slug: pl.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `curso-${pl.youtubePlaylistId}`,
-      description: pl.description || `Curso completo estruturado a partir da playlist do canal ${channel.name}.`,
-      level: classification.level,
-      technology: classification.technology,
-      category: classification.category,
-      thumbnailUrl: pl.thumbnailUrl || videos[0]?.thumbnailUrl || '',
-      status: 'ativo',
-      sourceId: channel.id,
-      sourcePlaylistId: pl.youtubePlaylistId,
-      playlistId: pl.youtubePlaylistId,
-      playlistUrl: pl.youtubeUrl,
-      channelTitle: channel.name,
-      classificationConfidence: classification.confidence,
-      prerequisites: classification.technology.includes('Lógica') ? [] : ['mod-logica'],
-      skills: classification.skills,
-      modulesCount: 1,
-      lessonsCount: videos.length,
-      totalHours,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-    courses.push(course)
-
-    const modId = `mod-${pl.youtubePlaylistId}`
-    const modLessons: Lesson[] = videos.map((vid, i) => {
-      const lessonId = `l-${pl.youtubePlaylistId}-${vid.youtubeVideoId}`
-      return {
-        id: lessonId,
-        moduleId: modId,
-        order: i + 1,
-        title: vid.title,
-        type: 'video',
-        durationMin: Math.max(5, Math.round(vid.durationSeconds / 60)),
-        description: vid.description ? vid.description.slice(0, 200) + '...' : `Aula ${i + 1} do curso ${pl.title}.`,
-        videoId: vid.youtubeVideoId,
-        externalVideoId: vid.youtubeVideoId,
-        videoUrl: `https://www.youtube.com/watch?v=${vid.youtubeVideoId}`,
-        sourceType: 'youtube',
-        availabilityStatus: 'available',
-        youtubeExists: true,
-        embedAvailable: true,
-        source: channel.name,
-        playlistId: pl.youtubePlaylistId,
-        technology: classification.technology,
-        topic: vid.title,
-        thumbnailUrl: vid.thumbnailUrl,
-        isUnavailable: false,
-        lastCheckedAt: new Date().toISOString(),
+        totalVideosFound += pl.itemCount || plResult.lessons.length
+        totalVideosImported += plResult.lessons.length
+        totalUnavailable += plResult.unavailableCount || 0
+      } else {
+        failedPlaylists.push({
+          playlistId: pl.youtubePlaylistId,
+          title: pl.title,
+          error: plResult.error || 'Playlist vazia ou sem vídeos válidos',
+        })
       }
-    })
-
-    lessons.push(...modLessons)
-
-    modules.push({
-      id: modId,
-      order: 1,
-      phase: classification.category,
-      phaseOrder: 1,
-      title: pl.title,
-      slug: `mod-${pl.youtubePlaylistId}`,
-      description: `Módulo completo abrangendo todas as ${videos.length} aulas sequenciais da playlist.`,
-      objective: `Dominar os conceitos de ${classification.technology} abordados nas aulas deste bloco.`,
-      icon: classification.technology.toLowerCase().includes('react') ? 'atom' : classification.technology.toLowerCase().includes('node') ? 'server' : 'code',
-      prerequisites: [],
-      lessonIds: modLessons.map((l) => l.id),
-      exerciseCount: Math.min(15, Math.max(4, Math.ceil(videos.length / 2))),
-      hasProject: true,
-      hasAssessment: true,
-      estimatedHours: totalHours,
-      skills: classification.skills,
-      courseId: courseId,
-      technology: classification.technology,
-    })
+    } catch (err: any) {
+      failedPlaylists.push({
+        playlistId: pl.youtubePlaylistId,
+        title: pl.title,
+        error: err.message || 'Erro inesperado na playlist',
+      })
+    }
   }
 
   const report: IngestionReport = {
@@ -763,12 +878,14 @@ export async function ingestFullChannel(channelInput: string): Promise<{
     channelHandle: channel.handle || channel.name,
     playlistsFound: playlists.length,
     playlistsImported: courses.length,
+    playlistsFailed: failedPlaylists.length,
+    failedPlaylistsList: failedPlaylists,
     videosFound: totalVideosFound,
     videosImported: totalVideosImported,
     duplicatesIgnored: 0,
     unavailableCount: totalUnavailable,
-    autoApprovedCount,
-    pendingReviewCount,
+    autoApprovedCount: courses.length,
+    pendingReviewCount: 0,
     coursesGenerated: courses.length,
     ingestedAt: new Date().toISOString(),
   }
@@ -776,15 +893,17 @@ export async function ingestFullChannel(channelInput: string): Promise<{
   return {
     channel: {
       ...channel,
-      playlistsCount: playlists.length,
+      playlistsCount: importedPlaylists.length,
       videosCount: totalVideosImported,
       lastSyncedAt: new Date().toISOString(),
     },
-    playlists,
+    playlists: importedPlaylists,
     courses,
     modules,
     lessons,
     report,
+    successfulPlaylists,
+    failedPlaylists,
   }
 }
 
