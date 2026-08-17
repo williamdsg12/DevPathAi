@@ -1,91 +1,126 @@
 'use client'
 
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Menu } from 'lucide-react'
+import { ArrowRight, Menu, Sparkles, X } from 'lucide-react'
 import { Logo } from '@/components/logo'
-import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
-import { LinkButton } from '@/components/link-button'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet'
+import { cn } from '@/lib/utils'
 
-const links = [
+const navLinks = [
   { href: '#como-funciona', label: 'Como funciona' },
-  { href: '#recursos', label: 'Recursos' },
-  { href: '#trilhas', label: 'Trilhas' },
+  { href: '#trilhas', label: 'Trilha IA' },
+  { href: '#devmentor', label: 'DevMentor' },
+  { href: '#pratica', label: 'Prática & Lab' },
+  { href: '#carreira', label: 'Carreira' },
   { href: '#depoimentos', label: 'Depoimentos' },
   { href: '#faq', label: 'FAQ' },
 ]
 
 export function LandingHeader() {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 40)
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/70 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <Link href="/" aria-label="DevPath AI — início">
+    <header className="fixed top-0 left-0 right-0 z-50 px-3 sm:px-6 py-2 transition-all duration-300 pointer-events-none">
+      <nav
+        className={cn(
+          'pointer-events-auto mx-auto transition-all duration-300 flex items-center justify-between',
+          isScrolled
+            ? 'max-w-5xl rounded-2xl border border-white/10 bg-[#0d0c14]/85 px-4 sm:px-6 py-2.5 shadow-2xl shadow-purple-950/20 backdrop-blur-xl'
+            : 'max-w-7xl px-3 sm:px-6 py-4 bg-transparent border-b border-white/5',
+        )}
+      >
+        {/* Brand Logo */}
+        <Link href="/" className="flex items-center gap-2 group shrink-0">
           <Logo />
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
-          {links.map((l) => (
+        {/* Desktop Navigation Links */}
+        <div className="hidden lg:flex items-center gap-1 xl:gap-2">
+          {navLinks.map((item) => (
             <a
-              key={l.href}
-              href={l.href}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              key={item.href}
+              href={item.href}
+              className="px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors"
             >
-              {l.label}
+              {item.label}
             </a>
           ))}
-        </nav>
-
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
-          <LinkButton variant="ghost" size="sm" href="/login" className="hidden sm:inline-flex">
-            Entrar
-          </LinkButton>
-          <LinkButton size="sm" href="/cadastro" className="hidden sm:inline-flex">
-            Começar agora
-          </LinkButton>
-
-          <Sheet>
-            <SheetTrigger
-              render={
-                <Button variant="outline" size="icon" className="md:hidden" aria-label="Menu">
-                  <Menu />
-                </Button>
-              }
-            />
-            <SheetContent side="right" className="w-72">
-              <SheetHeader>
-                <SheetTitle>
-                  <Logo />
-                </SheetTitle>
-              </SheetHeader>
-              <nav className="flex flex-col gap-1 px-4">
-                {links.map((l) => (
-                  <a
-                    key={l.href}
-                    href={l.href}
-                    className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted"
-                  >
-                    {l.label}
-                  </a>
-                ))}
-              </nav>
-              <div className="mt-auto flex flex-col gap-2 p-4">
-                <LinkButton variant="outline" href="/login">
-                  Entrar
-                </LinkButton>
-                <LinkButton href="/cadastro">Começar agora</LinkButton>
-              </div>
-            </SheetContent>
-          </Sheet>
         </div>
-      </div>
+
+        {/* Right CTA Actions */}
+        <div className="hidden sm:flex items-center gap-2.5 shrink-0">
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="text-xs font-bold text-zinc-300 hover:text-white hover:bg-white/5 rounded-xl"
+          >
+            <Link href="/login">Entrar</Link>
+          </Button>
+
+          <Button
+            asChild
+            size="sm"
+            className="text-xs font-bold rounded-xl bg-violet-600 hover:bg-violet-500 text-white shadow-lg shadow-violet-600/30 gap-1.5 px-4"
+          >
+            <Link href="/cadastro">
+              <span>Começar agora</span>
+              <ArrowRight className="size-3" />
+            </Link>
+          </Button>
+        </div>
+
+        {/* Mobile Hamburger Toggle Button */}
+        <button
+          type="button"
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
+          className="lg:hidden p-2 rounded-xl border border-white/10 bg-white/[0.03] text-zinc-300 hover:text-white focus:outline-none"
+        >
+          {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+        </button>
+      </nav>
+
+      {/* Mobile Drawer Menu */}
+      {menuOpen && (
+        <div className="pointer-events-auto lg:hidden mx-auto mt-2 max-w-lg rounded-3xl border border-white/10 bg-[#0d0c14]/95 p-6 shadow-2xl backdrop-blur-2xl animate-in fade-in slide-in-from-top-4 duration-200">
+          <div className="flex flex-col gap-2 border-b border-white/10 pb-4">
+            {navLinks.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                onClick={() => setMenuOpen(false)}
+                className="px-3 py-2 rounded-xl text-sm font-semibold text-zinc-300 hover:text-white hover:bg-white/5 transition-colors"
+              >
+                {item.label}
+              </a>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-2.5 pt-4">
+            <Button asChild variant="outline" size="sm" className="w-full text-xs font-bold rounded-xl border-white/10 text-white">
+              <Link href="/login" onClick={() => setMenuOpen(false)}>
+                Entrar na minha conta
+              </Link>
+            </Button>
+            <Button asChild size="sm" className="w-full text-xs font-bold rounded-xl bg-violet-600 hover:bg-violet-500 text-white shadow-md shadow-violet-600/30">
+              <Link href="/cadastro" onClick={() => setMenuOpen(false)}>
+                Criar conta gratuita
+              </Link>
+            </Button>
+          </div>
+        </div>
+      )}
     </header>
   )
 }
