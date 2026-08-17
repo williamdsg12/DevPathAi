@@ -1,3 +1,4 @@
+import { ScrollProgressBar } from '@/components/landing/scroll-progress-bar'
 import { LandingHeader } from '@/components/landing/landing-header'
 import { HeroSection } from '@/components/landing/hero-section'
 import { HowItWorksSection } from '@/components/landing/how-it-works-section'
@@ -20,6 +21,7 @@ export const metadata = {
 export default function Page() {
   return (
     <div className="flex min-h-screen flex-col bg-[#0a0910] text-foreground selection:bg-violet-600 selection:text-white">
+      <ScrollProgressBar />
       <LandingHeader />
       <main className="flex-1">
         <HeroSection />

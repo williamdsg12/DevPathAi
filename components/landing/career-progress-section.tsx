@@ -1,17 +1,12 @@
 'use client'
 
-import React from 'react'
+import React, { useRef } from 'react'
+import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
 import {
   Briefcase,
-  CheckCircle2,
-  FileCode2,
-  Flame,
   FolderGit2,
   Globe,
-  GraduationCap,
   MessageSquare,
-  Sparkles,
-  Target,
   Trophy,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -40,8 +35,23 @@ const careerPillars = [
 ]
 
 export function CareerProgressSection() {
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start end', 'end start'],
+  })
+
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 260,
+    damping: 30,
+  })
+
   return (
-    <section id="carreira" className="py-24 sm:py-32 border-t border-white/5 bg-[#0d0c14]/70 relative">
+    <section
+      ref={sectionRef}
+      id="carreira"
+      className="py-24 sm:py-32 border-t border-white/5 bg-[#0d0c14]/70 relative overflow-hidden"
+    >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 space-y-16">
         <div className="mx-auto flex max-w-3xl flex-col items-center gap-3.5 text-center">
           <Badge className="bg-violet-950/60 border border-violet-500/30 text-violet-300 text-xs font-bold gap-1.5 px-3 py-1">
@@ -56,18 +66,29 @@ export function CareerProgressSection() {
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {careerPillars.map((item) => (
-            <div
-              key={item.title}
-              className="rounded-3xl border border-white/5 bg-[#12111a] p-6 space-y-3.5 hover:border-violet-500/30 transition-all duration-300 shadow-md group"
-            >
-              <div className="grid size-12 place-items-center rounded-2xl bg-violet-950/70 border border-violet-500/30 text-violet-400 group-hover:scale-105 transition-transform">
-                <item.icon className="size-6" />
-              </div>
-              <h3 className="text-base font-bold text-white">{item.title}</h3>
-              <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">{item.desc}</p>
-            </div>
-          ))}
+          {careerPillars.map((item, index) => {
+            const start = 0.15 + (index * 0.08)
+            const end = start + 0.25
+            const itemY = useTransform(smoothProgress, [start, end], [40, 0])
+            const itemOpacity = useTransform(smoothProgress, [start, end], [0, 1])
+
+            return (
+              <motion.div
+                key={item.title}
+                style={{
+                  y: itemY,
+                  opacity: itemOpacity,
+                }}
+                className="rounded-3xl border border-white/5 bg-[#12111a] p-6 space-y-3.5 hover:border-violet-500/30 transition-all duration-300 shadow-md group h-full"
+              >
+                <div className="grid size-12 place-items-center rounded-2xl bg-violet-950/70 border border-violet-500/30 text-violet-400 group-hover:scale-105 transition-transform">
+                  <item.icon className="size-6" />
+                </div>
+                <h3 className="text-base font-bold text-white">{item.title}</h3>
+                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">{item.desc}</p>
+              </motion.div>
+            )
+          })}
         </div>
       </div>
     </section>

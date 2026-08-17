@@ -1,6 +1,7 @@
 'use client'
 
-import React from 'react'
+import React, { useRef } from 'react'
+import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
 import {
   Bot,
   CheckCircle2,
@@ -24,30 +25,35 @@ const phases = [
     title: 'Fundamentos & Lógica',
     desc: 'Algoritmos, estruturas de decisão, loops, vetores e pensamento computacional.',
     color: 'border-violet-500/40 text-violet-300',
+    glow: 'from-violet-500/20',
   },
   {
     phase: 'FASE 2',
     title: 'Frontend & TypeScript',
     desc: 'HTML5 semântico, CSS moderno, JavaScript ES6+, React, Hooks e consumo de APIs.',
     color: 'border-purple-500/40 text-purple-300',
+    glow: 'from-purple-500/20',
   },
   {
     phase: 'FASE 3',
     title: 'Backend & Bancos de Dados',
     desc: 'Node.js, Express, PostgreSQL, Prisma ORM, autenticação JWT e regras de negócio.',
     color: 'border-indigo-500/40 text-indigo-300',
+    glow: 'from-indigo-500/20',
   },
   {
     phase: 'FASE 4',
     title: 'Full Stack & DevOps',
     desc: 'Integração ponta a ponta, Docker, CI/CD, testes unitários e deploy em nuvem.',
     color: 'border-blue-500/40 text-blue-300',
+    glow: 'from-blue-500/20',
   },
   {
     phase: 'FASE 5',
     title: 'Projetos & Carreira',
     desc: 'Aplicações completas no GitHub, portfólio profissional e simulação de entrevistas.',
     color: 'border-emerald-500/40 text-emerald-300',
+    glow: 'from-emerald-500/20',
   },
 ]
 
@@ -95,10 +101,21 @@ const features = [
 ]
 
 export function PersonalizedPathSection() {
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start end', 'end start'],
+  })
+
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 260,
+    damping: 30,
+  })
+
   return (
-    <section id="recursos" className="py-24 sm:py-32 relative">
+    <section ref={sectionRef} id="recursos" className="py-24 sm:py-32 relative overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 space-y-20">
-        {/* Top: Visual Roadmap representation */}
+        {/* Top: Visual Roadmap representation with Scroll-linked illumination */}
         <div className="space-y-12">
           <div className="mx-auto flex max-w-3xl flex-col items-center gap-3.5 text-center">
             <Badge className="bg-violet-950/60 border border-violet-500/30 text-violet-300 text-xs font-bold gap-1.5 px-3 py-1">
@@ -113,21 +130,34 @@ export function PersonalizedPathSection() {
           </div>
 
           <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-5">
-            {phases.map((p, i) => (
-              <div
-                key={p.phase}
-                className="rounded-2xl border border-white/10 bg-[#12111a] p-5 space-y-3 relative hover:border-violet-500/40 transition-colors shadow-md"
-              >
-                <div className="flex items-center justify-between">
-                  <Badge variant="outline" className={`text-[10px] font-mono font-bold ${p.color}`}>
-                    {p.phase}
-                  </Badge>
-                  <span className="text-[10px] font-bold text-zinc-500">Passo 0{i + 1}</span>
-                </div>
-                <h3 className="text-sm font-bold text-white leading-snug">{p.title}</h3>
-                <p className="text-xs text-zinc-400 leading-relaxed font-normal">{p.desc}</p>
-              </div>
-            ))}
+            {phases.map((p, i) => {
+              const start = 0.12 + (i * 0.08)
+              const end = start + 0.2
+              const phaseY = useTransform(smoothProgress, [start, end], [40, 0])
+              const phaseOpacity = useTransform(smoothProgress, [start, end], [0, 1])
+              const phaseScale = useTransform(smoothProgress, [start, end], [0.92, 1])
+
+              return (
+                <motion.div
+                  key={p.phase}
+                  style={{
+                    y: phaseY,
+                    opacity: phaseOpacity,
+                    scale: phaseScale,
+                  }}
+                  className="rounded-2xl border border-white/10 bg-[#12111a] p-5 space-y-3 relative hover:border-violet-500/40 transition-colors shadow-md group"
+                >
+                  <div className="flex items-center justify-between">
+                    <Badge variant="outline" className={`text-[10px] font-mono font-bold ${p.color}`}>
+                      {p.phase}
+                    </Badge>
+                    <span className="text-[10px] font-bold text-zinc-500">Passo 0{i + 1}</span>
+                  </div>
+                  <h3 className="text-sm font-bold text-white leading-snug">{p.title}</h3>
+                  <p className="text-xs text-zinc-400 leading-relaxed font-normal">{p.desc}</p>
+                </motion.div>
+              )
+            })}
           </div>
         </div>
 
@@ -146,22 +176,35 @@ export function PersonalizedPathSection() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {features.map((f) => (
-              <Card
-                key={f.title}
-                className="h-full rounded-2xl border border-white/5 bg-[#100f18] hover:border-violet-500/30 transition-all duration-300 group shadow-md"
-              >
-                <CardHeader className="p-5 sm:p-6 space-y-3">
-                  <div className="grid size-10 place-items-center rounded-xl bg-violet-950/70 border border-violet-500/30 text-violet-400 group-hover:scale-105 transition-transform">
-                    <f.icon className="size-5" />
-                  </div>
-                  <CardTitle className="text-base font-bold text-white">{f.title}</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
-                    {f.desc}
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            ))}
+            {features.map((f, index) => {
+              const start = 0.25 + (index * 0.05)
+              const end = start + 0.2
+              const fY = useTransform(smoothProgress, [start, end], [30, 0])
+              const fOpacity = useTransform(smoothProgress, [start, end], [0, 1])
+
+              return (
+                <motion.div
+                  key={f.title}
+                  style={{
+                    y: fY,
+                    opacity: fOpacity,
+                  }}
+                  className="h-full"
+                >
+                  <Card className="h-full rounded-2xl border border-white/5 bg-[#100f18] hover:border-violet-500/30 transition-all duration-300 group shadow-md">
+                    <CardHeader className="p-5 sm:p-6 space-y-3">
+                      <div className="grid size-10 place-items-center rounded-xl bg-violet-950/70 border border-violet-500/30 text-violet-400 group-hover:scale-105 transition-transform">
+                        <f.icon className="size-5" />
+                      </div>
+                      <CardTitle className="text-base font-bold text-white">{f.title}</CardTitle>
+                      <CardDescription className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
+                        {f.desc}
+                      </CardDescription>
+                    </CardHeader>
+                  </Card>
+                </motion.div>
+              )
+            })}
           </div>
         </div>
       </div>

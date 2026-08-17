@@ -1,27 +1,58 @@
 'use client'
 
-import React from 'react'
+import React, { useRef } from 'react'
+import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
 import {
   Bot,
-  CheckCircle2,
   Code2,
-  Cpu,
-  HelpCircle,
   Lightbulb,
-  MessageSquare,
   Sparkles,
   Zap,
 } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
 export function DevMentorAISection() {
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start end', 'end start'],
+  })
+
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 260,
+    damping: 30,
+  })
+
+  // Left column transforms
+  const leftX = useTransform(smoothProgress, [0.1, 0.4], [-50, 0])
+  const leftOpacity = useTransform(smoothProgress, [0.1, 0.35], [0, 1])
+
+  // Right chat elements progressive reveal linked directly to scroll
+  const userMsgY = useTransform(smoothProgress, [0.18, 0.38], [30, 0])
+  const userMsgOpacity = useTransform(smoothProgress, [0.18, 0.35], [0, 1])
+
+  const aiMsgY = useTransform(smoothProgress, [0.32, 0.52], [40, 0])
+  const aiMsgOpacity = useTransform(smoothProgress, [0.32, 0.5], [0, 1])
+
+  const codeBoxScale = useTransform(smoothProgress, [0.45, 0.65], [0.92, 1])
+  const codeBoxOpacity = useTransform(smoothProgress, [0.45, 0.62], [0, 1])
+
   return (
-    <section id="devmentor" className="py-24 sm:py-32 border-t border-white/5 bg-[#0d0c14] relative overflow-hidden">
+    <section
+      ref={sectionRef}
+      id="devmentor"
+      className="py-24 sm:py-32 border-t border-white/5 bg-[#0d0c14] relative overflow-hidden"
+    >
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
           {/* Left Column: Explanations & Capabilities */}
-          <div className="lg:col-span-6 space-y-6">
+          <motion.div
+            style={{
+              x: leftX,
+              opacity: leftOpacity,
+            }}
+            className="lg:col-span-6 space-y-6"
+          >
             <Badge className="bg-violet-950/60 border border-violet-500/30 text-violet-300 text-xs font-bold gap-1.5 px-3 py-1">
               <Bot className="size-3.5 text-violet-400" /> Assistente Pedagógico 24/7
             </Badge>
@@ -35,7 +66,7 @@ export function DevMentorAISection() {
             </p>
 
             <div className="grid gap-3.5 pt-2">
-              <div className="flex items-start gap-3 rounded-2xl border border-white/5 bg-black/40 p-4">
+              <div className="flex items-start gap-3 rounded-2xl border border-white/5 bg-black/40 p-4 transition-colors hover:border-violet-500/30">
                 <Lightbulb className="size-5 text-amber-400 shrink-0 mt-0.5" />
                 <div>
                   <h4 className="text-sm font-bold text-white mb-0.5">Dicas Progressivas</h4>
@@ -45,7 +76,7 @@ export function DevMentorAISection() {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 rounded-2xl border border-white/5 bg-black/40 p-4">
+              <div className="flex items-start gap-3 rounded-2xl border border-white/5 bg-black/40 p-4 transition-colors hover:border-violet-500/30">
                 <Code2 className="size-5 text-violet-400 shrink-0 mt-0.5" />
                 <div>
                   <h4 className="text-sm font-bold text-white mb-0.5">Revisão de Código & Rubrica</h4>
@@ -55,7 +86,7 @@ export function DevMentorAISection() {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 rounded-2xl border border-white/5 bg-black/40 p-4">
+              <div className="flex items-start gap-3 rounded-2xl border border-white/5 bg-black/40 p-4 transition-colors hover:border-violet-500/30">
                 <Zap className="size-5 text-emerald-400 shrink-0 mt-0.5" />
                 <div>
                   <h4 className="text-sm font-bold text-white mb-0.5">Plano de Recuperação Automático</h4>
@@ -65,11 +96,11 @@ export function DevMentorAISection() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          {/* Right Column: Interactive Chat UI Mockup */}
+          {/* Right Column: Scroll-animated Interactive Chat UI Mockup */}
           <div className="lg:col-span-6">
-            <div className="rounded-3xl border border-violet-500/30 bg-[#12111a] p-5 sm:p-7 shadow-2xl shadow-purple-950/40 space-y-4">
+            <div className="rounded-3xl border border-violet-500/30 bg-[#12111a] p-5 sm:p-7 shadow-2xl shadow-purple-950/40 space-y-4 ring-1 ring-violet-500/20">
               <div className="flex items-center justify-between border-b border-white/5 pb-4">
                 <div className="flex items-center gap-3">
                   <div className="grid size-10 place-items-center rounded-2xl bg-violet-600 text-white shadow-md shadow-violet-600/30">
@@ -87,17 +118,29 @@ export function DevMentorAISection() {
                 </Badge>
               </div>
 
-              {/* Chat Dialogue Simulation */}
+              {/* Chat Dialogue Driven by Scroll */}
               <div className="space-y-3.5 pt-2 text-xs">
-                {/* User message */}
-                <div className="flex items-start justify-end gap-2.5">
+                {/* User message (Enters first on scroll) */}
+                <motion.div
+                  style={{
+                    y: userMsgY,
+                    opacity: userMsgOpacity,
+                  }}
+                  className="flex items-start justify-end gap-2.5"
+                >
                   <div className="max-w-[85%] rounded-2xl bg-violet-600 text-white p-3.5 leading-relaxed font-medium shadow-md">
                     &quot;Qual a diferença entre usar `.map()` e `.forEach()` para transformar uma lista de usuários?&quot;
                   </div>
-                </div>
+                </motion.div>
 
-                {/* AI response */}
-                <div className="flex items-start gap-2.5">
+                {/* AI response (Enters second on scroll) */}
+                <motion.div
+                  style={{
+                    y: aiMsgY,
+                    opacity: aiMsgOpacity,
+                  }}
+                  className="flex items-start gap-2.5"
+                >
                   <div className="grid size-7 place-items-center rounded-xl bg-violet-950 text-violet-300 border border-violet-500/30 shrink-0">
                     <Sparkles className="size-3.5" />
                   </div>
@@ -110,16 +153,23 @@ export function DevMentorAISection() {
                       <li><strong className="text-zinc-400">.forEach()</strong>: Apenas itera executando efeitos colaterais, sem retornar nada (<code className="text-zinc-500 font-mono">undefined</code>).</li>
                     </ul>
 
-                    <div className="p-2.5 rounded-xl bg-black/80 border border-white/10 font-mono text-[11px] text-emerald-300">
+                    {/* AI Code block (Zooms in third on scroll) */}
+                    <motion.div
+                      style={{
+                        scale: codeBoxScale,
+                        opacity: codeBoxOpacity,
+                      }}
+                      className="p-2.5 rounded-xl bg-black/80 border border-white/10 font-mono text-[11px] text-emerald-300"
+                    >
                       <p className="text-zinc-500">// Usando map para transformar:</p>
                       <p><span className="text-violet-400">const</span> nomes = users.<span className="text-violet-400">map</span>(u =&gt; u.nome);</p>
-                    </div>
+                    </motion.div>
 
                     <p className="text-[11px] text-violet-400 font-semibold pt-1">
                       💡 Quer tentar resolver o exercício #03 da aula agora aplicando o .map()?
                     </p>
                   </div>
-                </div>
+                </motion.div>
               </div>
             </div>
           </div>

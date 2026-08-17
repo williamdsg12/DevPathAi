@@ -1,18 +1,17 @@
 'use client'
 
-import React from 'react'
+import React, { useRef } from 'react'
+import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
 import {
   Brain,
   CheckCircle2,
   Code2,
   FolderGit2,
-  GraduationCap,
   Play,
   Sparkles,
   Terminal,
   Trophy,
 } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
 const criteria5 = [
@@ -44,8 +43,24 @@ const criteria5 = [
 ]
 
 export function PracticeCodeLabSection() {
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start end', 'end start'],
+  })
+
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 260,
+    damping: 30,
+  })
+
+  // 3D perspective rotation on the code lab window linked to scroll
+  const labRotateX = useTransform(smoothProgress, [0.2, 0.65], [16, 0])
+  const labScale = useTransform(smoothProgress, [0.2, 0.65], [0.93, 1])
+  const labOpacity = useTransform(smoothProgress, [0.15, 0.45], [0, 1])
+
   return (
-    <section id="pratica" className="py-24 sm:py-32 relative">
+    <section ref={sectionRef} id="pratica" className="py-24 sm:py-32 relative overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 space-y-16">
         {/* Top: 5 Module Completion Criteria */}
         <div className="space-y-10">
@@ -62,23 +77,42 @@ export function PracticeCodeLabSection() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {criteria5.map((c) => (
-              <div
-                key={c.title}
-                className="rounded-2xl border border-white/10 bg-[#12111a] p-5 space-y-3 hover:border-emerald-500/30 transition-colors shadow-md"
-              >
-                <div className="grid size-10 place-items-center rounded-xl bg-emerald-950/60 border border-emerald-500/30 text-emerald-400">
-                  <c.icon className="size-5" />
-                </div>
-                <h3 className="text-sm font-bold text-white">{c.title}</h3>
-                <p className="text-xs text-zinc-400 leading-relaxed font-normal">{c.desc}</p>
-              </div>
-            ))}
+            {criteria5.map((c, i) => {
+              const start = 0.1 + (i * 0.06)
+              const end = start + 0.2
+              const cY = useTransform(smoothProgress, [start, end], [30, 0])
+              const cOpacity = useTransform(smoothProgress, [start, end], [0, 1])
+
+              return (
+                <motion.div
+                  key={c.title}
+                  style={{
+                    y: cY,
+                    opacity: cOpacity,
+                  }}
+                  className="rounded-2xl border border-white/10 bg-[#12111a] p-5 space-y-3 hover:border-emerald-500/30 transition-colors shadow-md h-full"
+                >
+                  <div className="grid size-10 place-items-center rounded-xl bg-emerald-950/60 border border-emerald-500/30 text-emerald-400">
+                    <c.icon className="size-5" />
+                  </div>
+                  <h3 className="text-sm font-bold text-white">{c.title}</h3>
+                  <p className="text-xs text-zinc-400 leading-relaxed font-normal">{c.desc}</p>
+                </motion.div>
+              )
+            })}
           </div>
         </div>
 
-        {/* Bottom: Code Lab Interactive Environment Mockup */}
-        <div className="rounded-3xl border border-white/10 bg-[#100f18] p-5 sm:p-8 shadow-2xl space-y-6">
+        {/* Bottom: Code Lab 3D Scroll Reveal Window */}
+        <motion.div
+          style={{
+            rotateX: labRotateX,
+            scale: labScale,
+            opacity: labOpacity,
+            transformStyle: 'preserve-3d',
+          }}
+          className="rounded-3xl border border-white/10 bg-[#100f18] p-5 sm:p-8 shadow-2xl space-y-6 ring-1 ring-white/5"
+        >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
@@ -131,7 +165,7 @@ export function PracticeCodeLabSection() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   )
