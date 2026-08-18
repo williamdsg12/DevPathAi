@@ -48,5 +48,9 @@ pnpm-debug.log*
 # Platform / Sandboxes
 .vercel
 .snowflake
+
+# Ignore pnpm lockfiles as project uses npm
+pnpm-lock.yaml
+pnpm-workspace.yaml
 .v0-trash
 __v0_*
