@@ -3,27 +3,55 @@ import type {
   Assessment,
   ContentSource,
   Course,
+  EducationalBackground,
   Exercise,
   ImportLog,
   LearningModule,
   LearningPath,
   Lesson,
   ModuleProject,
+  PortfolioProject,
+  ProfessionalExperience,
   TechnologySource,
+  UserCertificateRecord,
+  UserEvent,
   UserProfile,
   UserProject,
+  UserTechnologyRecord,
   YouTubePlaylist,
 } from './types'
 
 export const mockUser: UserProfile = {
   id: 'user-1',
-  name: 'William Santos',
+  name: 'William',
   email: 'william@devpath.ai',
   createdAt: '2025-01-12T10:00:00Z',
-  bio: 'Em transição de carreira rumo a desenvolvedor Full Stack.',
+  bio: 'Desenvolvedor em formação contínua, focado em JavaScript moderno, React, Node.js e IA aplicada ao desenvolvimento.',
   github: 'williamdev',
-  linkedin: 'william-santos',
+  linkedin: 'william-dev',
   desiredRole: 'Desenvolvedor Full Stack Júnior',
+  cpf: '123.456.789-00',
+  birthDate: '1998-05-15',
+  locationType: 'brasil',
+  phone: '(11) 98765-4321',
+  commercialPhone: '(11) 3456-7890',
+  cep: '01310-100',
+  socialLinks: {
+    linkedin: 'https://linkedin.com/in/william-dev',
+    github: 'https://github.com/williamdev',
+    facebook: 'https://facebook.com/william.dev',
+    instagram: 'https://instagram.com/william.code',
+    pinterest: 'https://pinterest.com/williamdev',
+    youtube: 'https://youtube.com/@williamcode',
+    twitter: 'https://x.com/william_dev',
+    blog: 'https://williamdev.io',
+  },
+  notificationPreferences: {
+    newPrograms: true,
+    contentUpdates: true,
+    activitiesDeadlines: true,
+    aiFeedback: true,
+  },
   onboarded: true,
   placementDone: true,
 }
@@ -2729,3 +2757,139 @@ export const mockAchievements: Achievement[] = [
     xpReward: 500,
   },
 ]
+
+export const defaultProfessionalExperiences: ProfessionalExperience[] = [
+  {
+    id: 'exp-1',
+    role: 'Desenvolvedor Front-end Júnior',
+    company: 'TechSolutions Software',
+    startDate: '2024-03-01',
+    endDate: '',
+    isCurrent: true,
+    description: 'Desenvolvimento de interfaces modernas e responsivas utilizando React, TypeScript, Next.js e Tailwind CSS. Integração com APIs RESTful e foco em experiência do usuário.',
+  },
+  {
+    id: 'exp-2',
+    role: 'Estagiário de Desenvolvimento Web',
+    company: 'Inova Digital Labs',
+    startDate: '2023-06-01',
+    endDate: '2024-02-28',
+    isCurrent: false,
+    description: 'Criação de landing pages, manutenção de sistemas legados em JavaScript e consumo de serviços de autenticação e banco de dados.',
+  },
+]
+
+export const defaultEducationalBackgrounds: EducationalBackground[] = [
+  {
+    id: 'edu-1',
+    institution: 'Universidade de São Paulo (USP) / FIAP',
+    course: 'Análise e Desenvolvimento de Sistemas',
+    level: 'Graduação',
+    startDate: '2023-02-01',
+    endDate: '2025-12-15',
+    status: 'Em Andamento',
+    description: 'Formação superior com ênfase em engenharia de software, modelagem de dados relacionais, algoritmos e arquitetura de microsserviços.',
+  },
+  {
+    id: 'edu-2',
+    institution: 'ETEC - Escola Técnica Estadual',
+    course: 'Técnico em Desenvolvimento de Sistemas',
+    level: 'Técnico',
+    startDate: '2021-02-01',
+    endDate: '2022-12-15',
+    status: 'Concluído',
+    description: 'Fundamentos sólidos de lógica de programação, banco de dados MySQL, POO e desenvolvimento web básico.',
+  },
+]
+
+export const defaultPortfolioProjects: PortfolioProject[] = [
+  {
+    id: 'proj-1',
+    title: 'DevPath AI — Plataforma Educacional de Programação',
+    description: 'Plataforma SaaS educacional com trilhas adaptativas guiadas por IA, laboratório de código no navegador e avaliações pedagógicas automatizadas.',
+    projectUrl: 'https://devpath-ai.vercel.app',
+    repositoryUrl: 'https://github.com/williamdev/devpath-ai',
+    technologies: ['Next.js 16', 'React 19', 'TypeScript', 'Tailwind CSS', 'Supabase'],
+    date: '2025-01-10',
+    status: 'Publicado',
+    coverUrl: '',
+  },
+  {
+    id: 'proj-2',
+    title: 'E-commerce Moderno Full Stack com Stripe',
+    description: 'Aplicação de comércio eletrônico com catálogo dinâmico, carrinho de compras persistente, autenticação JWT e checkout integrado com Stripe.',
+    projectUrl: 'https://ecommerce-demo.williamdev.io',
+    repositoryUrl: 'https://github.com/williamdev/fullstack-ecommerce',
+    technologies: ['React', 'Node.js', 'PostgreSQL', 'Prisma', 'Stripe API'],
+    date: '2024-11-20',
+    status: 'Concluído',
+    coverUrl: '',
+  },
+  {
+    id: 'proj-3',
+    title: 'TaskFlow — Gerenciador Ágil de Tarefas & Kanban',
+    description: 'Painel de produtividade em tempo real com colunas Kanban arrastáveis (drag & drop), notificações push e métricas de desempenho da equipe.',
+    projectUrl: 'https://taskflow.williamdev.io',
+    repositoryUrl: 'https://github.com/williamdev/taskflow-kanban',
+    technologies: ['TypeScript', 'React', 'Zustand', 'Framer Motion'],
+    date: '2024-08-15',
+    status: 'Concluído',
+    coverUrl: '',
+  },
+]
+
+export const defaultUserEvents: UserEvent[] = [
+  {
+    id: 'evt-1',
+    title: 'Next.js Conf Brasil & Latin America 2025',
+    organizer: 'Vercel & Comunidade React Brasil',
+    date: '2025-04-10',
+    location: 'São Paulo, SP / Presencial & Online',
+    speakerRole: 'Participante',
+    description: 'Imersão em React Server Components, App Router avançado, Turbopack e Server Actions em produção.',
+  },
+  {
+    id: 'evt-2',
+    title: 'Hackathon Dev Innovation 2024',
+    organizer: 'Tech Hub Global',
+    date: '2024-10-05',
+    location: 'Online',
+    speakerRole: 'Participante',
+    description: 'Maratona de 48h de desenvolvimento contínuo focada em criar soluções acessíveis com Inteligência Artificial.',
+  },
+]
+
+export const defaultUserCertificates: UserCertificateRecord[] = [
+  {
+    id: 'cert-1',
+    name: 'Formação em Lógica de Programação & Algoritmos',
+    institution: 'DevPath AI — Plataforma Oficial',
+    issueDate: '2025-02-15',
+    validationUrl: 'https://devpath.ai/certificados/validar/cert-logica-992',
+    certificateCode: 'DEVPATH-LOG-2025-9921',
+    isOfficialDevPath: true,
+  },
+  {
+    id: 'cert-2',
+    name: 'Git & GitHub para Desenvolvedores Profissionais',
+    institution: 'DevPath AI Academy',
+    issueDate: '2025-01-20',
+    validationUrl: 'https://devpath.ai/certificados/validar/cert-git-441',
+    certificateCode: 'DEVPATH-GIT-2025-4412',
+    isOfficialDevPath: true,
+  },
+]
+
+export const defaultUserTechnologies: UserTechnologyRecord[] = [
+  { id: 'tech-1', name: 'JavaScript (ES6+)', category: 'Linguagens', proficiencyLevel: 'Avançado' },
+  { id: 'tech-2', name: 'TypeScript', category: 'Linguagens', proficiencyLevel: 'Intermediário' },
+  { id: 'tech-3', name: 'React 19', category: 'Frontend', proficiencyLevel: 'Avançado' },
+  { id: 'tech-4', name: 'Next.js (App Router)', category: 'Frontend', proficiencyLevel: 'Intermediário' },
+  { id: 'tech-5', name: 'Tailwind CSS', category: 'Frontend', proficiencyLevel: 'Avançado' },
+  { id: 'tech-6', name: 'Node.js', category: 'Backend', proficiencyLevel: 'Intermediário' },
+  { id: 'tech-7', name: 'PostgreSQL & SQL', category: 'Banco de Dados', proficiencyLevel: 'Intermediário' },
+  { id: 'tech-8', name: 'Git & GitHub', category: 'Ferramentas', proficiencyLevel: 'Avançado' },
+  { id: 'tech-9', name: 'Docker', category: 'DevOps', proficiencyLevel: 'Iniciante' },
+  { id: 'tech-10', name: 'Python', category: 'Linguagens', proficiencyLevel: 'Iniciante' },
+]
+
