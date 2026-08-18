@@ -73,85 +73,6 @@ export type UserJourneyState =
 
 export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'STUDENT'
 
-export interface SocialLinks {
-  linkedin?: string
-  github?: string
-  facebook?: string
-  instagram?: string
-  pinterest?: string
-  youtube?: string
-  twitter?: string
-  blog?: string
-}
-
-export interface NotificationPreferences {
-  newPrograms: boolean
-  contentUpdates: boolean
-  activitiesDeadlines: boolean
-  aiFeedback: boolean
-}
-
-export interface ProfessionalExperience {
-  id: string
-  role: string
-  company: string
-  startDate: string
-  endDate?: string
-  isCurrent: boolean
-  description: string
-}
-
-export interface EducationalBackground {
-  id: string
-  institution: string
-  course: string
-  level: 'Graduação' | 'Pós-Graduação' | 'Mestrado' | 'Doutorado' | 'Técnico' | 'Tecnólogo' | 'Ensino Médio' | 'Curso Livre'
-  startDate: string
-  endDate?: string
-  status: 'Concluído' | 'Em Andamento' | 'Trancado' | 'Interrompido'
-  description?: string
-}
-
-export interface PortfolioProject {
-  id: string
-  title: string
-  description: string
-  projectUrl?: string
-  repositoryUrl?: string
-  technologies: string[]
-  date: string
-  status: 'Concluído' | 'Em Desenvolvimento' | 'Ideia' | 'Publicado'
-  coverUrl?: string
-}
-
-export interface UserEvent {
-  id: string
-  title: string
-  organizer: string
-  date: string
-  location: string
-  speakerRole: 'Participante' | 'Palestrante' | 'Organizador' | 'Voluntário'
-  description?: string
-}
-
-export interface UserCertificateRecord {
-  id: string
-  name: string
-  institution: string
-  issueDate: string
-  validationUrl?: string
-  certificateCode?: string
-  fileUrl?: string
-  isOfficialDevPath?: boolean
-}
-
-export interface UserTechnologyRecord {
-  id: string
-  name: string
-  category: string
-  proficiencyLevel: 'Iniciante' | 'Intermediário' | 'Avançado' | 'Especialista'
-}
-
 export interface UserProfile {
   id: string
   name: string
@@ -163,14 +84,6 @@ export interface UserProfile {
   linkedin?: string
   desiredRole?: string
   targetTechnologies?: string[]
-  cpf?: string
-  birthDate?: string
-  locationType?: 'brasil' | 'exterior'
-  phone?: string
-  commercialPhone?: string
-  cep?: string
-  socialLinks?: SocialLinks
-  notificationPreferences?: NotificationPreferences
   onboarded: boolean
   placementDone: boolean
   userJourneyState?: UserJourneyState

@@ -3,7 +3,6 @@ import { LandingHeader } from '@/components/landing/landing-header'
 import { HeroSection } from '@/components/landing/hero-section'
 import { TechTicker } from '@/components/landing/tech-ticker'
 import { ProblemSolutionSection } from '@/components/landing/problem-solution-section'
-import { StatsCounterSection } from '@/components/landing/stats-counter-section'
 import { OnboardingInteractiveDemo } from '@/components/landing/onboarding-interactive-demo'
 import { HowItWorksSection } from '@/components/landing/how-it-works-section'
 import { PersonalizedPathSection } from '@/components/landing/personalized-path-section'
@@ -16,7 +15,7 @@ import { PricingPlansSection } from '@/components/landing/pricing-plans-section'
 import { TestimonialsMarqueeSection } from '@/components/landing/testimonials-marquee-section'
 import { FaqSection } from '@/components/landing/faq-section'
 import { FinalCtaSection } from '@/components/landing/final-cta-section'
-import { LandingFooter } from '@/components/landing/landing-footer'
+import { CinematicFooter } from '@/components/ui/motion-footer'
 
 export const metadata = {
   title: 'DEVPATH AI — Pare de estudar programação sem saber para onde ir',
@@ -43,48 +42,45 @@ export default function Page() {
         {/* 3. Problem vs Solution */}
         <ProblemSolutionSection />
 
-        {/* 4. Social Proof & Platform Authority Statistics */}
-        <StatsCounterSection />
-
-        {/* 5. Interactive AI Onboarding Experience Simulator */}
+        {/* 4. Interactive AI Onboarding Experience Simulator */}
         <OnboardingInteractiveDemo />
 
-        {/* 6. Methodology & 6 Pedagogical Steps */}
+        {/* 5. Methodology & 6 Pedagogical Steps */}
         <HowItWorksSection />
 
-        {/* 7. Personalized Path & 5 Career Phases */}
+        {/* 6. Personalized Path & 5 Career Phases */}
         <PersonalizedPathSection />
 
-        {/* 8. DevMentor AI 24/7 Contextual Assistant */}
+        {/* 7. DevMentor AI 24/7 Contextual Assistant */}
         <DevMentorAISection />
 
-        {/* 9. Practical Learning & 5 Completion Criteria & Code Lab */}
+        {/* 8. Practical Learning & 5 Completion Criteria & Code Lab */}
         <PracticeCodeLabSection />
 
-        {/* 10. Official Courses & Modules Catalog */}
+        {/* 9. Official Courses & Modules Catalog */}
         <CoursesShowcase />
 
-        {/* 11. Real Projects for Portfolio (GitHub Evaluated) */}
+        {/* 10. Real Projects for Portfolio (GitHub Evaluated) */}
         <ProjectsShowcase />
 
-        {/* 12. Career Progression Timeline & Interview Simulator */}
+        {/* 11. Career Progression Timeline & Interview Simulator */}
         <CareerProgressSection />
 
-        {/* 13. Transparent Pricing Plans */}
+        {/* 12. Transparent Pricing Plans */}
         <PricingPlansSection />
 
-        {/* 14. Infinite Testimonials Marquee */}
+        {/* 13. Infinite Testimonials Marquee */}
         <TestimonialsMarqueeSection />
 
-        {/* 15. FAQ with Animated Accordion */}
+        {/* 14. FAQ with Animated Accordion */}
         <FaqSection />
 
-        {/* 16. Final Cinematic Call to Action */}
+        {/* 15. Final Cinematic Call to Action */}
         <FinalCtaSection />
       </main>
 
-      {/* Footer */}
-      <LandingFooter />
+      {/* Footer cinematográfico com revelação em cortina */}
+      <CinematicFooter />
     </div>
   )
 }
