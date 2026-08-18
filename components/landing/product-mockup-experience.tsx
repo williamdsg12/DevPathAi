@@ -3,7 +3,6 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Award,
   BarChart3,
   Bot,
   Brain,
@@ -60,126 +59,66 @@ export function ProductMockupExperience({
   ]
 
   return (
-    <div className="relative w-full">
-      {/* =========================================================================
-          FLOATING DEV NOTIFICATION TOASTS (Dev-Native Identity Toasts)
-         ========================================================================= */}
-      
-      {/* Floating Toast 1 (Top Left): npm run dev */}
-      <motion.div
-        animate={{ y: [-4, 4, -4] }}
-        transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
-        className="hidden lg:flex items-center gap-2 absolute -top-7 -left-6 z-30 rounded-2xl border border-violet-500/30 bg-[#0d0c18]/90 backdrop-blur-xl px-3.5 py-2 shadow-2xl shadow-purple-950/50 text-xs font-mono text-violet-300"
-      >
-        <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
-        <Terminal className="size-3.5 text-violet-400" />
-        <span>&gt; npm run dev</span>
-        <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/60 px-1.5 py-0.5 rounded">ready on :3000</span>
-      </motion.div>
-
-      {/* Floating Toast 2 (Top Right): Build Successful */}
-      <motion.div
-        animate={{ y: [4, -4, 4] }}
-        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-        className="hidden lg:flex items-center gap-2 absolute -top-7 -right-6 z-30 rounded-2xl border border-emerald-500/30 bg-[#0d0c18]/90 backdrop-blur-xl px-3.5 py-2 shadow-2xl shadow-emerald-950/50 text-xs font-mono text-emerald-300"
-      >
-        <CheckCircle2 className="size-3.5 text-emerald-400" />
-        <span>&gt; Build successful (0 errors)</span>
-        <span className="text-[10px] text-zinc-400 font-bold">142ms</span>
-      </motion.div>
-
-      {/* Floating Toast 3 (Bottom Left): 87% da Trilha Concluída */}
-      <motion.div
-        animate={{ y: [3, -5, 3] }}
-        transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut' }}
-        className="hidden xl:flex items-center gap-2.5 absolute -bottom-5 -left-8 z-30 rounded-2xl border border-violet-500/30 bg-[#0d0c18]/90 backdrop-blur-xl px-4 py-2.5 shadow-2xl shadow-purple-950/50 text-xs"
-      >
-        <div className="size-7 rounded-xl bg-violet-600/20 text-violet-400 grid place-items-center font-black">
-          ⚡
-        </div>
-        <div>
-          <p className="text-[11px] font-bold text-white">&gt; 87% da Trilha Concluída</p>
-          <p className="text-[10px] text-violet-400">Nível 04: JavaScript Avançado</p>
-        </div>
-      </motion.div>
-
-      {/* Floating Toast 4 (Bottom Right): Projeto Aprovado */}
-      <motion.div
-        animate={{ y: [-5, 3, -5] }}
-        transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut' }}
-        className="hidden xl:flex items-center gap-2.5 absolute -bottom-5 -right-8 z-30 rounded-2xl border border-amber-500/30 bg-[#0d0c18]/90 backdrop-blur-xl px-4 py-2.5 shadow-2xl shadow-amber-950/40 text-xs"
-      >
-        <div className="size-7 rounded-xl bg-amber-500/20 text-amber-400 grid place-items-center font-black">
-          🏆
-        </div>
-        <div>
-          <p className="text-[11px] font-bold text-white">&gt; Projeto Aprovado pelo DevMentor</p>
-          <p className="text-[10px] text-amber-300">+250 XP • Badge Conquistada</p>
-        </div>
-      </motion.div>
-
-      {/* Main SaaS Window */}
-      <div className="w-full bg-gradient-to-b from-[#141220] to-[#0d0c14] rounded-[20px] sm:rounded-[28px] overflow-hidden border border-white/10 shadow-2xl">
-        {/* SaaS Window Top Navigation Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/5 bg-black/40 px-3 sm:px-5 py-3">
-          {/* Window dots & URL badge */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="flex items-center gap-1.5">
-              <span className="size-3 rounded-full bg-rose-500/80 inline-block" />
-              <span className="size-3 rounded-full bg-amber-500/80 inline-block" />
-              <span className="size-3 rounded-full bg-emerald-500/80 inline-block" />
-            </div>
-            <span className="text-[11px] font-mono text-zinc-400 bg-white/[0.04] px-2.5 py-0.5 rounded-lg border border-white/5 hidden sm:inline">
-              devpath.ai/app/{mode}
-            </span>
+    <div className="w-full bg-gradient-to-b from-[#141220] to-[#0d0c14] rounded-[20px] sm:rounded-[28px] overflow-hidden border border-white/10 shadow-2xl">
+      {/* SaaS Window Top Navigation Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/5 bg-black/40 px-3 sm:px-5 py-3">
+        {/* Window dots & URL badge */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5">
+            <span className="size-3 rounded-full bg-rose-500/80 inline-block" />
+            <span className="size-3 rounded-full bg-amber-500/80 inline-block" />
+            <span className="size-3 rounded-full bg-emerald-500/80 inline-block" />
           </div>
+          <span className="text-[11px] font-mono text-zinc-400 bg-white/[0.04] px-2.5 py-0.5 rounded-lg border border-white/5 hidden sm:inline">
+            devpath.ai/app/{mode}
+          </span>
+        </div>
 
-          {/* Live Interactive Navigation Tabs */}
-          <div className="flex items-center gap-1 bg-white/[0.03] p-1 rounded-xl border border-white/5 overflow-x-auto max-w-full">
-            {tabs.map((tab) => {
-              const Icon = tab.icon
-              const isActive = mode === tab.id
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setMode(tab.id)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
-                    isActive
-                      ? 'bg-violet-600 text-white shadow-md shadow-violet-600/30'
-                      : 'text-zinc-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <Icon className="size-3.5" />
-                  <span className="hidden md:inline">{tab.label}</span>
-                  <span className="md:hidden">{tab.label.split(' ')[0]}</span>
-                </button>
-              )
-            })}
+        {/* Live Interactive Navigation Tabs */}
+        <div className="flex items-center gap-1 bg-white/[0.03] p-1 rounded-xl border border-white/5 overflow-x-auto max-w-full">
+          {tabs.map((tab) => {
+            const Icon = tab.icon
+            const isActive = mode === tab.id
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setMode(tab.id)}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 ${
+                  isActive
+                    ? 'bg-violet-600 text-white shadow-md shadow-violet-600/30'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Icon className="size-3.5" />
+                <span className="hidden md:inline">{tab.label}</span>
+                <span className="md:hidden">{tab.label.split(' ')[0]}</span>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* User Stats: Streak & XP */}
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-amber-400 bg-amber-950/40 border border-amber-500/30 px-2 py-0.5 rounded-lg">
+            <Flame className="size-3 fill-amber-400" />
+            <span>7d streak</span>
           </div>
-
-          {/* User Stats: Streak & XP */}
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="flex items-center gap-1 text-[11px] font-bold text-amber-400 bg-amber-950/40 border border-amber-500/30 px-2 py-0.5 rounded-lg">
-              <Flame className="size-3 fill-amber-400" />
-              <span>7d streak</span>
-            </div>
-            <div className="flex items-center gap-1 text-[11px] font-bold text-violet-300 bg-violet-950/40 border border-violet-500/30 px-2 py-0.5 rounded-lg">
-              <Trophy className="size-3" />
-              <span>1.820 XP</span>
-            </div>
+          <div className="flex items-center gap-1 text-[11px] font-bold text-violet-300 bg-violet-950/40 border border-violet-500/30 px-2 py-0.5 rounded-lg">
+            <Trophy className="size-3" />
+            <span>1.820 XP</span>
           </div>
         </div>
+      </div>
 
-        {/* Main Dynamic Viewport with AnimatePresence */}
-        <div className="p-3 sm:p-6 min-h-[380px] sm:min-h-[440px] flex flex-col justify-center">
-          <AnimatePresence mode="wait">
-            {mode === 'dashboard' && <DashboardView key="dashboard" />}
-            {mode === 'trilha' && <TrilhaView key="trilha" />}
-            {mode === 'aula' && <AulaView key="aula" />}
-            {mode === 'codelab' && <CodeLabView key="codelab" />}
-          </AnimatePresence>
-        </div>
+      {/* Main Dynamic Viewport with AnimatePresence */}
+      <div className="p-3 sm:p-6 min-h-[380px] sm:min-h-[440px] flex flex-col justify-center">
+        <AnimatePresence mode="wait">
+          {mode === 'dashboard' && <DashboardView key="dashboard" />}
+          {mode === 'trilha' && <TrilhaView key="trilha" />}
+          {mode === 'aula' && <AulaView key="aula" />}
+          {mode === 'codelab' && <CodeLabView key="codelab" />}
+        </AnimatePresence>
       </div>
     </div>
   )
@@ -199,64 +138,91 @@ function DashboardView() {
     >
       {/* Left 8 Cols: Welcome & Weekly Progress */}
       <div className="lg:col-span-8 space-y-4">
-        <div className="rounded-2xl border border-violet-500/20 bg-gradient-to-r from-violet-950/40 via-[#171526] to-transparent p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-violet-400">
-              Jornada Full Stack JavaScript
-            </span>
-            <h3 className="text-base sm:text-lg font-bold text-white">
-              Olá, William 👋 Vamos continuar sua jornada?
-            </h3>
-            <p className="text-xs text-zinc-400">
-              Meta de hoje: 25 minutos • Módulo ativo: JavaScript Assíncrono & Promises
-            </p>
+        <div className="p-4 sm:p-5 rounded-2xl border border-white/5 bg-black/40 space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-violet-400">
+                Seu Ponto de Estudo Atual
+              </span>
+              <h3 className="text-base sm:text-lg font-bold text-white">
+                Módulo 03: JavaScript Moderno & Assincronismo
+              </h3>
+            </div>
+            <Badge className="bg-violet-950 text-violet-300 border-violet-500/30 text-xs font-bold font-mono">
+              Nível 4 • Júnior
+            </Badge>
           </div>
-          <Button size="sm" className="bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs gap-1.5 shrink-0 rounded-xl shadow-lg shadow-purple-600/30">
-            <Play className="size-3.5 fill-white" /> Continuar Aula
-          </Button>
+
+          <div className="space-y-1.5 pt-1">
+            <div className="flex items-center justify-between text-xs text-zinc-400">
+              <span>Progresso geral da trilha</span>
+              <strong className="text-white font-mono">68% concluído</strong>
+            </div>
+            <Progress value={68} className="h-2 bg-white/10" />
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 pt-2">
+            <div className="p-2.5 rounded-xl border border-white/5 bg-white/[0.02]">
+              <span className="text-[10px] text-zinc-500 font-medium">Aulas Assistidas</span>
+              <p className="text-sm font-bold text-white font-mono mt-0.5">34 / 50</p>
+            </div>
+            <div className="p-2.5 rounded-xl border border-white/5 bg-white/[0.02]">
+              <span className="text-[10px] text-zinc-500 font-medium">Atividades Feitas</span>
+              <p className="text-sm font-bold text-emerald-400 font-mono mt-0.5">28 aprovadas</p>
+            </div>
+            <div className="p-2.5 rounded-xl border border-white/5 bg-white/[0.02]">
+              <span className="text-[10px] text-zinc-500 font-medium">Projetos GitHub</span>
+              <p className="text-sm font-bold text-violet-400 font-mono mt-0.5">3 entregues</p>
+            </div>
+          </div>
         </div>
 
-        {/* Current Lesson in Progress Spotlight */}
-        <div className="rounded-2xl border border-white/5 bg-[#12111d] p-4 flex items-center justify-between gap-4">
+        {/* Up next recommendation */}
+        <div className="p-3.5 rounded-2xl border border-violet-500/20 bg-violet-950/20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="grid size-11 place-items-center rounded-xl bg-violet-600/20 text-violet-400 border border-violet-500/30">
-              <PlayCircle className="size-5" />
-            </div>
+            <span className="grid size-9 place-items-center rounded-xl bg-violet-600 text-white shrink-0">
+              <Play className="size-4 fill-white" />
+            </span>
             <div>
-              <span className="text-[10px] uppercase font-bold text-zinc-500">Próxima Aula</span>
-              <h4 className="text-xs sm:text-sm font-bold text-white">Aula 07 — Promises, Async/Await e Try/Catch</h4>
-              <p className="text-[11px] text-zinc-400">22 min • Exercício Prático no Code Lab incluso</p>
+              <span className="text-[10px] font-bold text-violet-300 uppercase">Próxima Aula Recomendada</span>
+              <p className="text-xs font-bold text-white">Promises, Async/Await e Tratamento de Erros</p>
             </div>
           </div>
-          <div className="text-right hidden sm:block">
-            <span className="text-xs font-mono font-bold text-violet-400">75% Concluído</span>
-            <div className="w-24 h-1.5 rounded-full bg-white/5 mt-1 overflow-hidden">
-              <div className="w-3/4 h-full bg-violet-500 rounded-full" />
-            </div>
-          </div>
+          <Badge className="bg-violet-600 text-white text-[10px] font-bold hidden sm:inline-flex">
+            Continuar Aula
+          </Badge>
         </div>
       </div>
 
-      {/* Right 4 Cols: DevMentor AI Mini Feed */}
-      <div className="lg:col-span-4 rounded-2xl border border-violet-500/20 bg-gradient-to-b from-violet-950/30 to-[#12111d] p-4 space-y-3">
-        <div className="flex items-center justify-between border-b border-white/5 pb-2">
-          <div className="flex items-center gap-1.5">
-            <Bot className="size-4 text-violet-400" />
-            <span className="text-xs font-bold text-white">DevMentor AI</span>
+      {/* Right 4 Cols: DevMentor Snapshot & AI Status */}
+      <div className="lg:col-span-4 space-y-4">
+        <div className="p-4 rounded-2xl border border-white/5 bg-black/40 space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="grid size-7 place-items-center rounded-lg bg-emerald-950 border border-emerald-500/30 text-emerald-400">
+              <Sparkles className="size-3.5" />
+            </span>
+            <div>
+              <h4 className="text-xs font-bold text-white">Diagnóstico da IA</h4>
+              <p className="text-[10px] text-zinc-400">Atualizado após o último exercício</p>
+            </div>
           </div>
-          <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded-full">
-            Online 24/7
-          </span>
-        </div>
-        <div className="rounded-xl bg-black/40 p-3 text-[11px] text-zinc-300 space-y-1.5 leading-relaxed">
-          <p className="text-violet-300 font-semibold">&gt; Diagnóstico Pedagógico:</p>
-          <p>
-            &quot;William, seu aproveitamento em manipulação do DOM está excelente (92%). Na aula de Promises, preste atenção em encadeamento de métodos .then() vs async/await.&quot;
+
+          <p className="text-xs text-zinc-300 leading-relaxed bg-white/[0.02] p-3 rounded-xl border border-white/5">
+            &quot;Você dominou manipulação de arrays e métodos funcionais (.map, .filter). Próxima meta: estruturar requisições assíncronas com tratamento de erros robusto.&quot;
           </p>
-        </div>
-        <div className="flex items-center justify-between text-[10px] text-zinc-500 pt-1">
-          <span>Pronto para tirar dúvidas</span>
-          <span className="text-violet-400 font-semibold cursor-pointer">Abrir Chat &rarr;</span>
+
+          <div className="space-y-1.5 text-xs font-medium text-zinc-400">
+            <div className="flex items-center justify-between text-[11px]">
+              <span>Lógica & Sintaxe</span>
+              <span className="text-emerald-400 font-bold">92%</span>
+            </div>
+            <Progress value={92} className="h-1.5 bg-white/10" />
+            <div className="flex items-center justify-between text-[11px] pt-1">
+              <span>Assincronismo</span>
+              <span className="text-violet-400 font-bold">64%</span>
+            </div>
+            <Progress value={64} className="h-1.5 bg-white/10" />
+          </div>
         </div>
       </div>
     </motion.div>
@@ -264,16 +230,16 @@ function DashboardView() {
 }
 
 /* =========================================================================
-   MODE 2: TRILHA & ROADMAP VIEW
+   MODE 2: TRILHA IA INTERATIVA VIEW
    ========================================================================= */
 function TrilhaView() {
   const steps = [
-    { title: 'Fundamentos & Algoritmos', status: 'Concluído', score: '98%', icon: CheckCircle2, active: false, done: true },
-    { title: 'Git, GitHub & Workflow Dev', status: 'Concluído', score: '95%', icon: CheckCircle2, active: false, done: true },
-    { title: 'HTML5 Semântico & CSS3 Moderno', status: 'Concluído', score: '92%', icon: CheckCircle2, active: false, done: true },
-    { title: 'JavaScript Moderno (ES6+)', status: 'Em Andamento', score: '87%', icon: Zap, active: true, done: false },
-    { title: 'React 19 & Next.js App Router', status: 'Próxima Missão', score: 'Bloqueado', icon: Lock, active: false, done: false },
-    { title: 'Node.js, Express & APIs RESTful', status: 'Bloqueado', score: 'Bloqueado', icon: Lock, active: false, done: false },
+    { label: '01. Lógica de Programação & Algoritmos', status: 'done', score: 'Nota 9.5', xp: '+150 XP' },
+    { label: '02. Estrutura de Dados & Arrays em JS', status: 'done', score: 'Nota 9.0', xp: '+180 XP' },
+    { label: '03. JavaScript Moderno & Funções Assíncronas', status: 'current', score: 'Em andamento', xp: '+220 XP' },
+    { label: '04. React, Hooks, Context & Tailwind CSS', status: 'locked', score: 'Bloqueado', xp: '+250 XP' },
+    { label: '05. Node.js, Express, PostgreSQL & Prisma', status: 'locked', score: 'Bloqueado', xp: '+300 XP' },
+    { label: '06. Projeto Integrador Full Stack & Deploy', status: 'locked', score: 'Bloqueado', xp: '+500 XP' },
   ]
 
   return (
@@ -284,53 +250,68 @@ function TrilhaView() {
       transition={{ duration: 0.3 }}
       className="space-y-4 w-full text-left"
     >
-      <div className="flex items-center justify-between border-b border-white/5 pb-2">
+      <div className="flex items-center justify-between border-b border-white/5 pb-3">
         <div>
-          <h3 className="text-sm font-bold text-white">Trilha Adaptativa — Formação Full Stack Developer</h3>
-          <p className="text-xs text-zinc-400">Progresso calculado segundo rubricas e avaliações por IA</p>
+          <span className="text-[11px] font-extrabold uppercase tracking-wider text-violet-400">
+            Árvore de Aprendizado Personalizada
+          </span>
+          <h3 className="text-base font-bold text-white">Trilha: Full Stack Web Developer</h3>
         </div>
-        <Badge className="bg-violet-600 text-white text-xs font-bold font-mono">
-          Progresso Global: 64%
+        <Badge className="bg-emerald-950 text-emerald-300 border-emerald-500/30 text-xs font-mono font-bold">
+          Calculada para 8h/semana
         </Badge>
       </div>
 
-      <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-        {steps.map((s, i) => (
-          <div
-            key={s.title}
-            className={`p-3.5 rounded-2xl border transition-all ${
-              s.active
-                ? 'border-violet-500 bg-violet-950/40 shadow-lg shadow-purple-950/40 ring-1 ring-violet-400/50'
-                : s.done
-                ? 'border-emerald-500/30 bg-[#12111d]'
-                : 'border-white/5 bg-white/[0.01] opacity-60'
-            }`}
-          >
-            <div className="flex items-center justify-between text-xs mb-1.5">
-              <span className="font-mono text-[10px] text-zinc-500">Nível 0{i + 1}</span>
-              <Badge
-                variant="secondary"
-                className={`text-[9px] font-bold ${
-                  s.done ? 'bg-emerald-950 text-emerald-300' : s.active ? 'bg-violet-600 text-white' : 'bg-white/5 text-zinc-500'
-                }`}
-              >
-                {s.status}
-              </Badge>
+      <div className="grid gap-2.5">
+        {steps.map((step) => {
+          const isDone = step.status === 'done'
+          const isCurrent = step.status === 'current'
+          return (
+            <div
+              key={step.label}
+              className={`flex items-center justify-between p-3 sm:p-3.5 rounded-xl border text-xs transition-all ${
+                isCurrent
+                  ? 'border-violet-500/60 bg-violet-950/30 shadow-lg shadow-violet-950/20'
+                  : isDone
+                  ? 'border-emerald-500/20 bg-black/30 text-zinc-300'
+                  : 'border-white/5 bg-black/20 text-zinc-500'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                {isDone && <CheckCircle2 className="size-4.5 text-emerald-400 shrink-0" />}
+                {isCurrent && (
+                  <span className="grid size-5 place-items-center rounded-full bg-violet-600 text-white shrink-0 animate-pulse">
+                    <Play className="size-2.5 fill-white" />
+                  </span>
+                )}
+                {step.status === 'locked' && <Lock className="size-4.5 text-zinc-600 shrink-0" />}
+
+                <div>
+                  <p className={`font-bold ${isCurrent ? 'text-white' : ''}`}>{step.label}</p>
+                  <p className="text-[10px] text-zinc-500">{step.score}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className={`text-[11px] font-mono font-bold ${isCurrent ? 'text-violet-300' : isDone ? 'text-emerald-400' : 'text-zinc-600'}`}>
+                  {step.xp}
+                </span>
+                {isCurrent && (
+                  <Badge className="bg-violet-600 text-white text-[10px] font-bold">
+                    Estudar Agora
+                  </Badge>
+                )}
+              </div>
             </div>
-            <h4 className="text-xs font-bold text-white truncate">{s.title}</h4>
-            <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5 text-[10px]">
-              <span className="text-zinc-500">Mastery Score:</span>
-              <span className={s.done ? 'text-emerald-400 font-bold font-mono' : 'text-zinc-400 font-mono'}>{s.score}</span>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </motion.div>
   )
 }
 
 /* =========================================================================
-   MODE 3: ÁREA DE AULA & MENTOR VIEW
+   MODE 3: ÁREA DE AULA & DEVMENTOR VIEW
    ========================================================================= */
 function AulaView() {
   return (
@@ -341,37 +322,54 @@ function AulaView() {
       transition={{ duration: 0.3 }}
       className="grid gap-4 lg:grid-cols-12 w-full text-left"
     >
-      {/* Video Player Mockup */}
-      <div className="lg:col-span-8 space-y-2">
-        <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-white/10 flex items-center justify-center group shadow-xl">
-          <div className="size-14 rounded-full bg-violet-600 text-white grid place-items-center shadow-2xl shadow-purple-600/60 group-hover:scale-110 transition-transform">
-            <Play className="size-6 fill-white ml-0.5" />
+      {/* Video Player Simulator */}
+      <div className="lg:col-span-7 rounded-2xl border border-white/5 bg-black/60 p-4 space-y-3">
+        <div className="relative aspect-video rounded-xl bg-gradient-to-tr from-violet-950/80 via-black to-[#1a1728] border border-white/10 flex items-center justify-center group overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.15)_0%,transparent_70%)]" />
+          <div className="grid size-12 place-items-center rounded-full bg-violet-600 text-white shadow-xl shadow-violet-600/50 group-hover:scale-110 transition-transform cursor-pointer">
+            <Play className="size-5 fill-white ml-0.5" />
           </div>
-          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-white/90 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
-            <span className="font-mono">14:32 / 22:10</span>
-            <span className="text-[11px] font-bold text-violet-300">Aula 07: JavaScript Assíncrono</span>
-            <span className="font-mono text-emerald-400">1080p HD</span>
+          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-[11px] text-zinc-300 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/5">
+            <span>08:42 / 18:20</span>
+            <span className="text-violet-400 font-bold font-mono">1080p HD • Transcrição Ativa</span>
           </div>
+        </div>
+
+        <div className="space-y-1">
+          <span className="text-[10px] font-extrabold uppercase text-violet-400">Aula #04</span>
+          <h4 className="text-sm font-bold text-white">Dominando Async/Await e Requisições REST em JS</h4>
         </div>
       </div>
 
-      {/* Lesson Notes & DevMentor Chat Sync */}
-      <div className="lg:col-span-4 rounded-2xl border border-white/5 bg-[#12111d] p-3.5 space-y-2.5 flex flex-col justify-between">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between border-b border-white/5 pb-2">
-            <span className="text-xs font-bold text-white">Notas & Dúvidas Rápidas</span>
-            <span className="text-[10px] text-violet-400 font-mono">IA Sincronizada</span>
+      {/* DevMentor AI Contextual Chat */}
+      <div className="lg:col-span-5 rounded-2xl border border-violet-500/30 bg-[#12111a] p-4 space-y-3 flex flex-col justify-between">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+            <div className="grid size-7 place-items-center rounded-lg bg-violet-600 text-white">
+              <Bot className="size-4" />
+            </div>
+            <div>
+              <h5 className="text-xs font-bold text-white">DevMentor AI</h5>
+              <p className="text-[10px] text-emerald-400 font-medium">● Sincronizado com o minuto 08:42</p>
+            </div>
           </div>
-          <div className="rounded-xl bg-black/40 p-2.5 text-[11px] text-zinc-300 space-y-1">
-            <p className="font-bold text-white">Dica Pedagógica da Aula:</p>
-            <p className="text-zinc-400 leading-relaxed">
-              O loop de eventos (Event Loop) prioriza microtasks (Promises) antes de macrotasks (setTimeout).
-            </p>
+
+          <div className="space-y-2 text-xs">
+            <div className="p-2.5 rounded-xl bg-white/[0.03] text-zinc-300 font-medium">
+              &quot;O professor acabou de demonstrar o bloco <code className="text-violet-300 font-mono">try/catch</code>. Ele é fundamental para capturar erros de rede sem quebrar a sua aplicação.&quot;
+            </div>
+
+            <div className="p-2.5 rounded-xl bg-black/80 border border-white/10 font-mono text-[11px] text-emerald-300">
+              <p className="text-zinc-500">// Experimente mentalizar o fluxo:</p>
+              <p><span className="text-violet-400">try</span> &#123;</p>
+              <p className="pl-3"><span className="text-violet-400">const</span> res = <span className="text-violet-400">await</span> api.get();</p>
+              <p>&#125; <span className="text-violet-400">catch</span> (err) &#123; <span className="text-zinc-500">/* trate o erro */</span> &#125;</p>
+            </div>
           </div>
         </div>
 
-        <Button size="sm" className="w-full text-xs font-bold bg-violet-600 hover:bg-violet-500 text-white rounded-xl">
-          <Code2 className="size-3.5 mr-1" /> Ir para Exercício no Code Lab
+        <Button size="sm" className="w-full bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold rounded-xl gap-1.5">
+          <MessageSquare className="size-3.5" /> Fazer uma pergunta ao Mentor
         </Button>
       </div>
     </motion.div>

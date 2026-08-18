@@ -71,18 +71,11 @@ export default function LessonPlayerPage({ params }: { params: Promise<{ lessonI
     activityAttempts,
   } = useAppStore()
 
-  const lesson: Lesson =
-    allLessons.find((l) => l.id === lessonId) ||
-    allLessons.find((l) => l.id === 'l-logica-1') ||
-    allLessons[0]
-  const currentModule =
-    allModules.find((m) => m.id === lesson.moduleId || m.lessonIds.includes(lesson.id)) ||
-    allModules.find((m) => m.id === 'mod-logica') ||
-    allModules[0]
-  const currentCourse =
-    allCourses.find((c) => c.id === currentModule?.courseId || (lesson.playlistId && c.playlistId === lesson.playlistId)) ||
-    allCourses.find((c) => c.id === 'crs-logica') ||
-    allCourses[0]
+  const lesson: Lesson = allLessons.find((l) => l.id === lessonId) || allLessons[0]
+  const currentModule = allModules.find((m) => m.id === lesson.moduleId || m.lessonIds.includes(lesson.id)) || allModules[0]
+  const currentCourse = currentModule
+    ? allCourses.find((c) => c.id === currentModule.courseId || c.category === currentModule.phase) || allCourses[0]
+    : allCourses[0]
 
   const moduleLessons = allLessons
     .filter((l) => currentModule.lessonIds.includes(l.id) || l.moduleId === currentModule.id)

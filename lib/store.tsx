@@ -21,22 +21,15 @@ import {
 import { getSupabaseClient, isSupabaseConfigured } from './supabase/client'
 import {
   defaultContentSources,
-  defaultEducationalBackgrounds,
   defaultLearningActivities,
   defaultOfficialCourses,
   defaultOfficialLessons,
   defaultOfficialModules,
-  defaultPortfolioProjects,
-  defaultProfessionalExperiences,
   defaultTechnologySources,
-  defaultUserCertificates,
-  defaultUserEvents,
-  defaultUserTechnologies,
   mockAchievements,
   mockAssessments,
   mockPath,
   mockProjects,
-  mockUser,
 } from './mock-data'
 import { learningPathEngine } from './ai/learning-path-engine'
 import { activityEngine } from './ai/activity-engine'
@@ -56,7 +49,6 @@ import type {
   DailyStudyPlan,
   DailyStudyRecord,
   Difficulty,
-  EducationalBackground,
   ImportLog,
   IngestionReport,
   InterviewReport,
@@ -74,22 +66,15 @@ import type {
   ModuleReflection,
   ModuleStatus,
   NotificationItem,
-  NotificationPreferences,
   OnboardingData,
   PlacementResult,
-  PortfolioProject,
-  ProfessionalExperience,
   ProjectSubmission,
   RecoveryPlan,
-  SocialLinks,
   SpacedReviewItem,
   TechnologySource,
   TrailAdaptationNotice,
-  UserCertificateRecord,
-  UserEvent,
   UserProfile,
   UserProject,
-  UserTechnologyRecord,
   YouTubePlaylist,
   YouTubeVideo,
 } from './types'
@@ -119,13 +104,6 @@ interface PersistedState {
   moduleReflections: Record<string, ModuleReflection>
   skillMasteryMap: Record<string, { skillName: string; score: number; attemptsCount: number }>
   projects: UserProject[]
-  // Curriculum, Portfolio & Experience Records
-  professionalExperiences: ProfessionalExperience[]
-  educationalBackgrounds: EducationalBackground[]
-  portfolioProjects: PortfolioProject[]
-  userEvents: UserEvent[]
-  userCertificates: UserCertificateRecord[]
-  userTechnologies: UserTechnologyRecord[]
   achievements: Achievement[]
   difficulties: Difficulty[]
   streak: number
@@ -199,8 +177,8 @@ function createCleanInitialState(): PersistedState {
   })
 
   return {
-    profile: mockUser,
-    authed: true,
+    profile: null,
+    authed: false,
     learningProfile: null,
     onboarding: null,
     placement: null,
@@ -220,12 +198,6 @@ function createCleanInitialState(): PersistedState {
     moduleReflections: {},
     skillMasteryMap: {},
     projects: [],
-    professionalExperiences: defaultProfessionalExperiences,
-    educationalBackgrounds: defaultEducationalBackgrounds,
-    portfolioProjects: defaultPortfolioProjects,
-    userEvents: defaultUserEvents,
-    userCertificates: defaultUserCertificates,
-    userTechnologies: defaultUserTechnologies,
     achievements: createInitialAchievements(),
     difficulties: [],
     streak: 0,
@@ -365,31 +337,6 @@ export interface AppStoreValue extends PersistedState {
   issueCertificate: (certificate: CertificateData) => void
   markNotificationAsRead: (id: string) => void
   clearAllNotifications: () => void
-  // Profile, Personal Data, Curriculum & Portfolio Actions
-  updateProfile: (patch: Partial<UserProfile>) => void
-  updatePersonalData: (data: Partial<UserProfile>) => void
-  updateSocialLinks: (links: Partial<SocialLinks>) => void
-  updateNotificationPreferences: (prefs: Partial<NotificationPreferences>) => void
-  addProfessionalExperience: (exp: Omit<ProfessionalExperience, 'id'>) => void
-  updateProfessionalExperience: (id: string, exp: Partial<ProfessionalExperience>) => void
-  deleteProfessionalExperience: (id: string) => void
-  addEducationalBackground: (edu: Omit<EducationalBackground, 'id'>) => void
-  updateEducationalBackground: (id: string, edu: Partial<EducationalBackground>) => void
-  deleteEducationalBackground: (id: string) => void
-  addPortfolioProject: (proj: Omit<PortfolioProject, 'id'>) => void
-  updatePortfolioProject: (id: string, proj: Partial<PortfolioProject>) => void
-  deletePortfolioProject: (id: string) => void
-  addUserEvent: (event: Omit<UserEvent, 'id'>) => void
-  updateUserEvent: (id: string, event: Partial<UserEvent>) => void
-  deleteUserEvent: (id: string) => void
-  addUserCertificate: (cert: Omit<UserCertificateRecord, 'id'>) => void
-  updateUserCertificate: (id: string, cert: Partial<UserCertificateRecord>) => void
-  deleteUserCertificate: (id: string) => void
-  setUserTechnologies: (techs: UserTechnologyRecord[]) => void
-  addUserTechnology: (tech: Omit<UserTechnologyRecord, 'id'>) => void
-  removeUserTechnology: (id: string) => void
-  uploadProfileAvatar: (avatarUrl: string) => void
-  removeProfileAvatar: () => void
   // Derived state & progression engine
   moduleStatus: (moduleId: string) => ModuleStatus
   isModuleUnlocked: (moduleId: string) => boolean
@@ -422,71 +369,21 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
             }
           : null
 
-        // Merge official catalog to ensure defaultOfficialCourses/Modules/Lessons are ALWAYS present and ordered first
-        const officialCourseIds = new Set(defaultOfficialCourses.map((c) => c.id))
-        const userCourses = Array.isArray(parsed.courses)
-          ? parsed.courses.filter((c: Course) => !officialCourseIds.has(c.id))
-          : []
-        const mergedCourses = [...defaultOfficialCourses, ...userCourses]
-
-        const officialModuleIds = new Set(defaultOfficialModules.map((m) => m.id))
-        const userModules = Array.isArray(parsed.customModules)
-          ? parsed.customModules.filter((m: LearningModule) => !officialModuleIds.has(m.id))
-          : []
-        const mergedModules = [...defaultOfficialModules, ...userModules]
-
-        const officialLessonIds = new Set(defaultOfficialLessons.map((l) => l.id))
-        const userLessons = Array.isArray(parsed.customLessons)
-          ? parsed.customLessons.filter((l: Lesson) => !officialLessonIds.has(l.id))
-          : []
-        const mergedLessons = [...defaultOfficialLessons, ...userLessons]
-
+        const loadedCourses = Array.isArray(parsed.courses) && parsed.courses.length ? parsed.courses : defaultOfficialCourses
+        const loadedModules = Array.isArray(parsed.customModules) && parsed.customModules.length ? parsed.customModules : defaultOfficialModules
+        const loadedLessons = Array.isArray(parsed.customLessons) && parsed.customLessons.length ? parsed.customLessons : defaultOfficialLessons
         const loadedActivities = Array.isArray(parsed.activities) && parsed.activities.length ? parsed.activities : defaultLearningActivities
         const loadedProjects = parsed.moduleProjects && Object.keys(parsed.moduleProjects).length ? parsed.moduleProjects : createCleanInitialState().moduleProjects
         const loadedAssessments = parsed.assessments && Object.keys(parsed.assessments).length ? parsed.assessments : createCleanInitialState().assessments
 
-        // Ensure activePath always starts with mandatory logic foundation (mod-logica) for beginners
-        let loadedActivePath = parsed.activePath
-        const hasValidLogicPhase = loadedActivePath?.items?.some((it: LearningPathItem) => it.moduleId === 'mod-logica')
-        if (!loadedActivePath?.items?.length || !hasValidLogicPhase) {
-          const generated = learningPathEngine.generateAdaptiveTrail(
-            loadedProfile,
-            parsed.onboarding || null,
-            parsed.placement || null,
-            mergedCourses,
-            mergedModules,
-            mergedLessons,
-          )
-          loadedActivePath = generated.path
-        }
-
-        const loadedExperiences = Array.isArray(parsed.professionalExperiences) && parsed.professionalExperiences.length
-          ? parsed.professionalExperiences
-          : defaultProfessionalExperiences
-        const loadedEducations = Array.isArray(parsed.educationalBackgrounds) && parsed.educationalBackgrounds.length
-          ? parsed.educationalBackgrounds
-          : defaultEducationalBackgrounds
-        const loadedPortfolioProjects = Array.isArray(parsed.portfolioProjects) && parsed.portfolioProjects.length
-          ? parsed.portfolioProjects
-          : defaultPortfolioProjects
-        const loadedEvents = Array.isArray(parsed.userEvents) && parsed.userEvents.length
-          ? parsed.userEvents
-          : defaultUserEvents
-        const loadedCertificates = Array.isArray(parsed.userCertificates) && parsed.userCertificates.length
-          ? parsed.userCertificates
-          : defaultUserCertificates
-        const loadedTechnologies = Array.isArray(parsed.userTechnologies) && parsed.userTechnologies.length
-          ? parsed.userTechnologies
-          : defaultUserTechnologies
-
         setState((prev) => ({
           ...prev,
           ...parsed,
-          profile: loadedProfile || prev.profile || mockUser,
+          profile: loadedProfile,
           contentSources: parsed.contentSources?.length ? parsed.contentSources : defaultContentSources,
-          courses: mergedCourses,
-          customModules: mergedModules,
-          customLessons: mergedLessons,
+          courses: loadedCourses,
+          customModules: loadedModules,
+          customLessons: loadedLessons,
           activities: loadedActivities,
           activityAttempts: parsed.activityAttempts || {},
           completedActivities: Array.isArray(parsed.completedActivities) ? parsed.completedActivities : parsed.completedExercises || [],
@@ -496,13 +393,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
           assessmentAttempts: parsed.assessmentAttempts || {},
           moduleReflections: parsed.moduleReflections || {},
           skillMasteryMap: parsed.skillMasteryMap || {},
-          professionalExperiences: loadedExperiences,
-          educationalBackgrounds: loadedEducations,
-          portfolioProjects: loadedPortfolioProjects,
-          userEvents: loadedEvents,
-          userCertificates: loadedCertificates,
-          userTechnologies: loadedTechnologies,
-          activePath: loadedActivePath || prev.activePath,
+          activePath: parsed.activePath?.items?.length ? parsed.activePath : prev.activePath,
           technologySources: parsed.technologySources?.length ? parsed.technologySources : defaultTechnologySources,
         }))
       }
@@ -2167,190 +2058,6 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     }))
   }, [])
 
-  const updatePersonalData = useCallback((data: Partial<UserProfile>) => {
-    setState((s) => ({
-      ...s,
-      profile: s.profile ? { ...s.profile, ...data } : null,
-    }))
-  }, [])
-
-  const updateSocialLinks = useCallback((links: Partial<SocialLinks>) => {
-    setState((s) => ({
-      ...s,
-      profile: s.profile
-        ? {
-            ...s.profile,
-            socialLinks: { ...s.profile.socialLinks, ...links },
-          }
-        : null,
-    }))
-  }, [])
-
-  const updateNotificationPreferences = useCallback((prefs: Partial<NotificationPreferences>) => {
-    setState((s) => ({
-      ...s,
-      profile: s.profile
-        ? {
-            ...s.profile,
-            notificationPreferences: {
-              newPrograms: true,
-              contentUpdates: true,
-              activitiesDeadlines: true,
-              aiFeedback: true,
-              ...s.profile.notificationPreferences,
-              ...prefs,
-            },
-          }
-        : null,
-    }))
-  }, [])
-
-  const addProfessionalExperience = useCallback((exp: Omit<ProfessionalExperience, 'id'>) => {
-    const newExp: ProfessionalExperience = { ...exp, id: `exp-${Date.now()}` }
-    setState((s) => ({
-      ...s,
-      professionalExperiences: [newExp, ...s.professionalExperiences],
-    }))
-  }, [])
-
-  const updateProfessionalExperience = useCallback((id: string, exp: Partial<ProfessionalExperience>) => {
-    setState((s) => ({
-      ...s,
-      professionalExperiences: s.professionalExperiences.map((e) => (e.id === id ? { ...e, ...exp } : e)),
-    }))
-  }, [])
-
-  const deleteProfessionalExperience = useCallback((id: string) => {
-    setState((s) => ({
-      ...s,
-      professionalExperiences: s.professionalExperiences.filter((e) => e.id !== id),
-    }))
-  }, [])
-
-  const addEducationalBackground = useCallback((edu: Omit<EducationalBackground, 'id'>) => {
-    const newEdu: EducationalBackground = { ...edu, id: `edu-${Date.now()}` }
-    setState((s) => ({
-      ...s,
-      educationalBackgrounds: [newEdu, ...s.educationalBackgrounds],
-    }))
-  }, [])
-
-  const updateEducationalBackground = useCallback((id: string, edu: Partial<EducationalBackground>) => {
-    setState((s) => ({
-      ...s,
-      educationalBackgrounds: s.educationalBackgrounds.map((e) => (e.id === id ? { ...e, ...edu } : e)),
-    }))
-  }, [])
-
-  const deleteEducationalBackground = useCallback((id: string) => {
-    setState((s) => ({
-      ...s,
-      educationalBackgrounds: s.educationalBackgrounds.filter((e) => e.id !== id),
-    }))
-  }, [])
-
-  const addPortfolioProject = useCallback((proj: Omit<PortfolioProject, 'id'>) => {
-    const newProj: PortfolioProject = { ...proj, id: `proj-${Date.now()}` }
-    setState((s) => ({
-      ...s,
-      portfolioProjects: [newProj, ...s.portfolioProjects],
-    }))
-  }, [])
-
-  const updatePortfolioProject = useCallback((id: string, proj: Partial<PortfolioProject>) => {
-    setState((s) => ({
-      ...s,
-      portfolioProjects: s.portfolioProjects.map((p) => (p.id === id ? { ...p, ...proj } : p)),
-    }))
-  }, [])
-
-  const deletePortfolioProject = useCallback((id: string) => {
-    setState((s) => ({
-      ...s,
-      portfolioProjects: s.portfolioProjects.filter((p) => p.id !== id),
-    }))
-  }, [])
-
-  const addUserEvent = useCallback((event: Omit<UserEvent, 'id'>) => {
-    const newEvt: UserEvent = { ...event, id: `evt-${Date.now()}` }
-    setState((s) => ({
-      ...s,
-      userEvents: [newEvt, ...s.userEvents],
-    }))
-  }, [])
-
-  const updateUserEvent = useCallback((id: string, event: Partial<UserEvent>) => {
-    setState((s) => ({
-      ...s,
-      userEvents: s.userEvents.map((e) => (e.id === id ? { ...e, ...event } : e)),
-    }))
-  }, [])
-
-  const deleteUserEvent = useCallback((id: string) => {
-    setState((s) => ({
-      ...s,
-      userEvents: s.userEvents.filter((e) => e.id !== id),
-    }))
-  }, [])
-
-  const addUserCertificate = useCallback((cert: Omit<UserCertificateRecord, 'id'>) => {
-    const newCert: UserCertificateRecord = { ...cert, id: `cert-${Date.now()}` }
-    setState((s) => ({
-      ...s,
-      userCertificates: [newCert, ...s.userCertificates],
-    }))
-  }, [])
-
-  const updateUserCertificate = useCallback((id: string, cert: Partial<UserCertificateRecord>) => {
-    setState((s) => ({
-      ...s,
-      userCertificates: s.userCertificates.map((c) => (c.id === id ? { ...c, ...cert } : c)),
-    }))
-  }, [])
-
-  const deleteUserCertificate = useCallback((id: string) => {
-    setState((s) => ({
-      ...s,
-      userCertificates: s.userCertificates.filter((c) => c.id !== id),
-    }))
-  }, [])
-
-  const setUserTechnologies = useCallback((techs: UserTechnologyRecord[]) => {
-    setState((s) => ({
-      ...s,
-      userTechnologies: techs,
-    }))
-  }, [])
-
-  const addUserTechnology = useCallback((tech: Omit<UserTechnologyRecord, 'id'>) => {
-    const newTech: UserTechnologyRecord = { ...tech, id: `tech-${Date.now()}` }
-    setState((s) => ({
-      ...s,
-      userTechnologies: [...s.userTechnologies, newTech],
-    }))
-  }, [])
-
-  const removeUserTechnology = useCallback((id: string) => {
-    setState((s) => ({
-      ...s,
-      userTechnologies: s.userTechnologies.filter((t) => t.id !== id && t.name !== id),
-    }))
-  }, [])
-
-  const uploadProfileAvatar = useCallback((avatarUrl: string) => {
-    setState((s) => ({
-      ...s,
-      profile: s.profile ? { ...s.profile, avatarUrl } : null,
-    }))
-  }, [])
-
-  const removeProfileAvatar = useCallback(() => {
-    setState((s) => ({
-      ...s,
-      profile: s.profile ? { ...s.profile, avatarUrl: undefined } : null,
-    }))
-  }, [])
-
   const markNotificationAsRead = useCallback((id: string) => {
     setState((s) => ({
       ...s,
@@ -2585,29 +2292,6 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     generateCertificate,
     issueCertificate,
     updateProfile,
-    updatePersonalData,
-    updateSocialLinks,
-    updateNotificationPreferences,
-    addProfessionalExperience,
-    updateProfessionalExperience,
-    deleteProfessionalExperience,
-    addEducationalBackground,
-    updateEducationalBackground,
-    deleteEducationalBackground,
-    addPortfolioProject,
-    updatePortfolioProject,
-    deletePortfolioProject,
-    addUserEvent,
-    updateUserEvent,
-    deleteUserEvent,
-    addUserCertificate,
-    updateUserCertificate,
-    deleteUserCertificate,
-    setUserTechnologies,
-    addUserTechnology,
-    removeUserTechnology,
-    uploadProfileAvatar,
-    removeProfileAvatar,
     markNotificationAsRead,
     clearAllNotifications,
     moduleStatus,

@@ -9,8 +9,6 @@ import {
   Clock,
   Code2,
   Flame,
-  GraduationCap,
-  Layers,
   Pause,
   Play,
   Repeat,
@@ -18,7 +16,6 @@ import {
   Sparkles,
   Target,
   Trophy,
-  Volume2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import confetti from 'canvas-confetti'
@@ -36,13 +33,6 @@ export default function StudyPlanPage() {
     recordStudySession,
     nextPendingLessonId,
     streak,
-    allCourses,
-    allModules,
-    allLessons,
-    completedLessons,
-    completedExercises,
-    activities,
-    moduleProgress,
   } = useAppStore()
 
   // Daily Study Breakdown Items
@@ -81,7 +71,7 @@ export default function StudyPlanPage() {
     },
     {
       id: 'it-5',
-      title: 'Quiz Rápido de Fixação de Lógica',
+      title: 'Quiz Rápido de Fixação',
       durationMinutes: 5,
       type: 'quiz',
       completed: false,
@@ -89,17 +79,7 @@ export default function StudyPlanPage() {
     },
   ])
 
-  // Technical Competency Matrix
-  const competencies = [
-    { name: 'HTML5 Semântico & Estrutura', mastery: 100, color: 'from-orange-500 to-amber-500' },
-    { name: 'CSS3, Flexbox & CSS Grid', mastery: 85, color: 'from-blue-500 to-cyan-500' },
-    { name: 'JavaScript Moderno (ES6+) & DOM', mastery: 65, color: 'from-amber-400 to-yellow-500' },
-    { name: 'React 19 & Next.js App Router', mastery: 40, color: 'from-cyan-400 to-blue-600' },
-    { name: 'Node.js, Express & APIs RESTful', mastery: 25, color: 'from-emerald-500 to-teal-500' },
-    { name: 'Banco de Dados SQL & Modelagem', mastery: 35, color: 'from-purple-500 to-indigo-600' },
-  ]
-
-  // Focus Pomodoro Timer state
+  // Focus Timer state
   const [timerDuration, setTimerDuration] = useState(25 * 60)
   const [timeLeft, setTimeLeft] = useState(25 * 60)
   const [isRunning, setIsRunning] = useState(false)
@@ -113,9 +93,9 @@ export default function StudyPlanPage() {
       setIsRunning(false)
       const minutesSpent = Math.round(timerDuration / 60)
       recordStudySession(minutesSpent)
-      toast.success(`🎉 Ciclo Pomodoro concluído! +${minutesSpent} minutos registrados na sua meta diária.`)
+      toast.success(`Sessão de estudos concluída! +${minutesSpent} minutos registrados.`)
       try {
-        confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } })
+        confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } })
       } catch {}
     }
     return () => clearInterval(interval)
@@ -140,258 +120,159 @@ export default function StudyPlanPage() {
   const totalTargetMinutes = 90
   const progressPercent = Math.min(100, Math.round((todayStudiedMinutes / totalTargetMinutes) * 100))
 
-  // Pomodoro Circular Progress math
-  const timerRadius = 88
-  const circumference = 2 * Math.PI * timerRadius
-  const timerProgress = 1 - timeLeft / timerDuration
-  const strokeDashoffset = circumference * (1 - timerProgress)
-
   return (
     <AppShell
-      title="Meu Progresso & Métricas"
-      subtitle="Organização do tempo de estudo, cronômetro Pomodoro de foco e mapa de competências técnicas"
+      title="Plano de Estudo Diário"
+      subtitle="Organização inteligente do tempo de estudo com cronômetro de foco e metas"
     >
-      <div className="space-y-10 pb-16">
+      <div className="space-y-8">
         {/* Daily Goal Overview Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-3xl border border-violet-500/20 bg-gradient-to-r from-violet-950/40 via-[#12111d] to-[#0a0910] p-6 sm:p-8 shadow-xl">
-          <div className="space-y-1.5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-3xl border border-primary/20 bg-gradient-to-r from-primary/10 via-card to-card p-6 shadow-xl shadow-primary/5">
+          <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <Badge className="bg-violet-950/80 border border-violet-500/30 text-violet-300 font-bold text-xs">
-                Meta do Dia
-              </Badge>
-              <Badge className="bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-xs gap-1">
-                <Flame className="size-3.5 fill-amber-400" /> {streak} dias seguidos
+              <Badge className="bg-primary text-primary-foreground font-bold">Meta de Hoje</Badge>
+              <Badge className="bg-warning/15 text-warning font-bold gap-1">
+                <Flame className="size-3.5 fill-warning" /> {streak} dias seguidos
               </Badge>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-white">
-              {todayStudiedMinutes} min <span className="text-sm font-semibold text-zinc-400">de {totalTargetMinutes} min planejados</span>
+            <h2 className="text-2xl font-black text-foreground">
+              {todayStudiedMinutes} min <span className="text-sm font-semibold text-muted-foreground">de {totalTargetMinutes} min planejados</span>
             </h2>
-            <p className="text-xs text-zinc-400">
-              {completedCount} de {items.length} blocos de estudo completados hoje.
+            <p className="text-xs text-muted-foreground">
+              {completedCount} de {items.length} blocos completados hoje.
             </p>
           </div>
 
-          <div className="w-full sm:w-64 space-y-2">
+          <div className="w-full sm:w-56 space-y-1.5">
             <div className="flex justify-between text-xs font-bold">
-              <span className="text-zinc-400">Progresso da Meta</span>
-              <span className="text-violet-400 font-mono">{progressPercent}%</span>
+              <span>Progresso da Meta</span>
+              <span className="text-primary">{progressPercent}%</span>
             </div>
-            <div className="h-2.5 w-full rounded-full bg-white/5 overflow-hidden">
-              <div
-                style={{ width: `${progressPercent}%` }}
-                className="h-full bg-gradient-to-r from-violet-600 to-indigo-500 rounded-full transition-all duration-300"
-              />
-            </div>
+            <Progress value={progressPercent} className="h-2.5" />
           </div>
         </div>
 
-        {/* 2 Cols: Pomodoro Circular Timer (Left) + AI Daily Schedule (Right) */}
-        <div className="grid gap-8 lg:grid-cols-12 items-start">
-          {/* Pomodoro Focus Timer Card */}
-          <Card className="lg:col-span-5 border-white/10 bg-[#12111d] shadow-2xl rounded-3xl p-6 sm:p-8 space-y-6 text-center">
-            <div className="flex items-center justify-between border-b border-white/5 pb-4">
-              <span className="text-xs font-black uppercase tracking-wider text-violet-400 flex items-center gap-1.5">
-                <Clock className="size-4" /> Timer Pomodoro
-              </span>
-              <Badge variant="outline" className="text-[10px] border-white/10 text-zinc-300">
-                {selectedSessionType}
-              </Badge>
-            </div>
-
-            {/* Circular Progress Display */}
-            <div className="relative mx-auto size-56 sm:size-60 flex items-center justify-center">
-              <svg className="size-full -rotate-90" viewBox="0 0 200 200">
-                {/* Background Ring */}
-                <circle
-                  cx="100"
-                  cy="100"
-                  r={timerRadius}
-                  stroke="rgba(255, 255, 255, 0.05)"
-                  strokeWidth="10"
-                  fill="transparent"
-                />
-                {/* Active Progress Ring */}
-                <circle
-                  cx="100"
-                  cy="100"
-                  r={timerRadius}
-                  stroke="url(#purpleGradient)"
-                  strokeWidth="10"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={strokeDashoffset}
-                  strokeLinecap="round"
-                  fill="transparent"
-                  className="transition-all duration-500"
-                />
-                <defs>
-                  <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#8B5CF6" />
-                    <stop offset="100%" stopColor="#6366F1" />
-                  </linearGradient>
-                </defs>
-              </svg>
-
-              <div className="absolute inset-0 flex flex-col items-center justify-center space-y-1">
-                <span className="font-mono text-4xl sm:text-5xl font-black text-white tracking-tight">
-                  {minutes.toString().padStart(2, '0')}:{seconds.toString().padStart(2, '0')}
-                </span>
-                <span className="text-[11px] font-bold text-violet-300">
-                  {isRunning ? 'Sessão em Andamento' : 'Pausado'}
-                </span>
+        {/* Workspace: Timer & Checklist */}
+        <div className="grid gap-8 lg:grid-cols-3 items-start">
+          {/* Left Column: Focus Study Timer */}
+          <div className="space-y-6">
+            <Card className="border-border/80 shadow-xl shadow-primary/5 text-center p-6 space-y-6">
+              <div>
+                <Badge variant="secondary" className="text-xs font-bold mb-2">
+                  {selectedSessionType}
+                </Badge>
+                <div className="font-mono text-5xl sm:text-6xl font-black tracking-tight text-foreground">
+                  {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+                </div>
               </div>
-            </div>
 
-            {/* Timer Presets */}
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { mins: 25, label: 'Foco (25 min)' },
-                { mins: 50, label: 'Intenso (50 min)' },
-                { mins: 5, label: 'Pausa (5 min)' },
-              ].map((p) => (
-                <button
-                  key={p.mins}
-                  type="button"
-                  onClick={() => handleSetTimer(p.mins, p.label)}
-                  className={`p-2 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
-                    timerDuration === p.mins * 60
-                      ? 'border-violet-500 bg-violet-950/60 text-white'
-                      : 'border-white/5 bg-white/[0.02] text-zinc-400 hover:text-white'
+              {/* Timer Quick Selectors */}
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { m: 15, label: '15 min (Sprint)' },
+                  { m: 25, label: '25 min (Foco)' },
+                  { m: 50, label: '50 min (Imersão)' },
+                ].map((preset) => (
+                  <button
+                    key={preset.m}
+                    type="button"
+                    onClick={() => handleSetTimer(preset.m, preset.label)}
+                    className={`rounded-xl border p-2 text-xs font-bold transition-all ${
+                      timerDuration === preset.m * 60
+                        ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary'
+                        : 'border-border bg-card text-muted-foreground hover:border-primary/40'
+                    }`}
+                  >
+                    {preset.m}m
+                  </button>
+                ))}
+              </div>
+
+              {/* Timer Controls */}
+              <div className="flex items-center justify-center gap-3">
+                <Button
+                  size="lg"
+                  onClick={() => setIsRunning((r) => !r)}
+                  className={`gap-2 px-8 font-bold shadow-lg ${
+                    isRunning ? 'bg-warning hover:bg-warning/90 text-warning-foreground' : 'shadow-primary/25'
                   }`}
                 >
-                  {p.mins}m
-                </button>
-              ))}
-            </div>
+                  {isRunning ? <Pause className="size-5" /> : <Play className="size-5 fill-current" />}
+                  {isRunning ? 'Pausar' : 'Iniciar Foco'}
+                </Button>
 
-            {/* Controls */}
-            <div className="flex items-center justify-center gap-3 pt-2">
-              <Button
-                size="lg"
-                onClick={() => setIsRunning(!isRunning)}
-                className={`gap-2 font-black text-xs sm:text-sm px-8 py-5 rounded-2xl shadow-xl cursor-pointer ${
-                  isRunning
-                    ? 'bg-amber-500 hover:bg-amber-600 text-black shadow-amber-500/20'
-                    : 'bg-violet-600 hover:bg-violet-500 text-white shadow-purple-600/30'
-                }`}
-              >
-                {isRunning ? (
-                  <>
-                    <Pause className="size-4" /> Pausar
-                  </>
-                ) : (
-                  <>
-                    <Play className="size-4 fill-white" /> Iniciar Foco
-                  </>
-                )}
-              </Button>
-
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => {
-                  setIsRunning(false)
-                  setTimeLeft(timerDuration)
-                }}
-                className="size-12 rounded-2xl border-white/10 hover:bg-white/5 text-zinc-400 hover:text-white cursor-pointer"
-                title="Reiniciar Timer"
-              >
-                <RotateCcw className="size-4" />
-              </Button>
-            </div>
-          </Card>
-
-          {/* AI Recommended Daily Study Plan */}
-          <div className="lg:col-span-7 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Sparkles className="size-4 text-violet-400" /> Cronograma Recomendado pela IA
-                </h3>
-                <p className="text-xs text-zinc-400">Atividades sequenciais priorizadas para hoje</p>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    setIsRunning(false)
+                    setTimeLeft(timerDuration)
+                  }}
+                  title="Reiniciar cronômetro"
+                >
+                  <RotateCcw className="size-4" />
+                </Button>
               </div>
-              <Badge className="bg-violet-950/80 border border-violet-500/30 text-violet-300 text-xs font-bold">
-                Otimizado
-              </Badge>
+            </Card>
+          </div>
+
+          {/* Right 2 Columns: Structured Study Blocks */}
+          <div className="lg:col-span-2 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                Cronograma Recomendado da IA para Hoje
+              </h3>
             </div>
 
             <div className="space-y-3">
-              {items.map((item, idx) => (
-                <div
+              {items.map((item) => (
+                <Card
                   key={item.id}
-                  className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
+                  className={`border transition-all ${
                     item.completed
-                      ? 'border-emerald-500/30 bg-emerald-950/20 opacity-75'
-                      : 'border-white/5 bg-[#12111d] hover:border-violet-500/30'
+                      ? 'border-success/30 bg-success/[0.03]'
+                      : 'border-border/80 bg-card hover:border-primary/40'
                   }`}
                 >
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <button
-                      type="button"
-                      onClick={() => toggleItem(item.id)}
-                      className={`grid size-6 place-items-center rounded-lg border transition-colors cursor-pointer ${
-                        item.completed
-                          ? 'border-emerald-500 bg-emerald-600 text-white'
-                          : 'border-white/20 bg-black/40 hover:border-violet-500'
-                      }`}
-                    >
-                      {item.completed && <CheckCircle2 className="size-4" />}
-                    </button>
-
-                    <div className="min-w-0">
-                      <h4
-                        className={`text-xs sm:text-sm font-bold truncate ${
-                          item.completed ? 'line-through text-zinc-400' : 'text-white'
+                  <div className="flex items-center justify-between p-4 gap-4">
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <button
+                        type="button"
+                        onClick={() => toggleItem(item.id)}
+                        className={`grid size-6 shrink-0 place-items-center rounded-full border transition-all ${
+                          item.completed
+                            ? 'border-success bg-success text-success-foreground'
+                            : 'border-muted-foreground/40 hover:border-primary'
                         }`}
                       >
-                        {idx + 1}. {item.title}
-                      </h4>
-                      <span className="text-[11px] text-zinc-400 flex items-center gap-1.5 font-medium">
-                        <Clock className="size-3 text-violet-400" /> {item.durationMinutes} minutos estimados
-                      </span>
-                    </div>
-                  </div>
+                        {item.completed ? <CheckCircle2 className="size-4" /> : null}
+                      </button>
 
-                  <Link href={item.actionUrl || '/trilha'}>
-                    <Button size="sm" variant="ghost" className="text-xs text-violet-400 hover:text-violet-300 font-bold gap-1">
-                      Iniciar <ArrowRight className="size-3" />
-                    </Button>
-                  </Link>
-                </div>
+                      <div className="min-w-0">
+                        <p
+                          className={`text-sm font-bold truncate ${
+                            item.completed ? 'text-muted-foreground line-through' : 'text-foreground'
+                          }`}
+                        >
+                          {item.title}
+                        </p>
+                        <span className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                          <Clock className="size-3" /> {item.durationMinutes} minutos recomendados
+                        </span>
+                      </div>
+                    </div>
+
+                    <Link href={item.actionUrl}>
+                      <Button variant="outline" size="sm" className="gap-1.5 text-xs font-semibold shrink-0">
+                        Acessar <ArrowRight className="size-3" />
+                      </Button>
+                    </Link>
+                  </div>
+                </Card>
               ))}
             </div>
           </div>
         </div>
-
-        {/* =========================================================================
-            MAPA VISUAL DE COMPETÊNCIAS TÉCNICAS (CURRÍCULO EDUCACIONAL)
-           ========================================================================= */}
-        <section className="rounded-3xl border border-white/5 bg-[#12111d] p-6 sm:p-8 space-y-6 shadow-xl">
-          <div className="border-b border-white/5 pb-4">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Layers className="size-4.5 text-violet-400" /> Matriz de Competências Técnicas
-            </h3>
-            <p className="text-xs text-zinc-400">
-              Nível de domínio consolidado a partir das avaliações e projetos concluídos
-            </p>
-          </div>
-
-          <div className="grid gap-5 sm:grid-cols-2">
-            {competencies.map((comp) => (
-              <div key={comp.name} className="space-y-2 p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-white">{comp.name}</span>
-                  <span className="font-mono font-bold text-violet-400">{comp.mastery}%</span>
-                </div>
-                <div className="h-2 w-full rounded-full bg-white/5 overflow-hidden">
-                  <div
-                    style={{ width: `${comp.mastery}%` }}
-                    className={`h-full bg-gradient-to-r ${comp.color} rounded-full transition-all duration-500`}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
       </div>
     </AppShell>
   )
