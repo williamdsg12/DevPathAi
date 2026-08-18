@@ -22,12 +22,12 @@ import {
   Edit2,
   Trash2,
   ExternalLink,
-  Github,
   Calendar,
   Check,
   AlertCircle,
   Tag,
 } from 'lucide-react'
+import { GithubIcon } from '@/components/icons'
 import { toast } from 'sonner'
 
 export function ProjectsTab() {
@@ -246,7 +246,7 @@ export function ProjectsTab() {
                           size="sm"
                           className="w-full text-xs font-bold gap-1.5 border-white/10 bg-white/[0.02] text-zinc-300 hover:text-white hover:border-white/20"
                         >
-                          <Github className="size-3.5" /> Código
+                          <GithubIcon className="size-3.5" /> Código
                         </Button>
                       </a>
                     ) : null}

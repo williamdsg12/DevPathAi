@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { useAppStore } from '@/lib/store'
-import { Check, RefreshCw, Share2, ExternalLink, Globe, Youtube, Twitter, Instagram, Linkedin, Github } from 'lucide-react'
+import { Check, RefreshCw, Share2, ExternalLink, Globe } from 'lucide-react'
+import { LinkedinIcon, GithubIcon, YoutubeIcon, TwitterIcon, InstagramIcon } from '@/components/icons'
 import { toast } from 'sonner'
 
 export function SocialLinksTab() {
@@ -62,7 +63,7 @@ export function SocialLinksTab() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-                  <Linkedin className="size-4 text-blue-400" /> LinkedIn
+                  <LinkedinIcon className="size-4 text-blue-400" /> LinkedIn
                 </Label>
                 {linkedin && (
                   <a href={linkedin} target="_blank" rel="noreferrer" className="text-[11px] text-cyan-400 hover:underline flex items-center gap-0.5">
@@ -82,7 +83,7 @@ export function SocialLinksTab() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-                  <Github className="size-4 text-zinc-300" /> GitHub
+                  <GithubIcon className="size-4 text-zinc-300" /> GitHub
                 </Label>
                 {github && (
                   <a href={github.startsWith('http') ? github : `https://github.com/${github}`} target="_blank" rel="noreferrer" className="text-[11px] text-cyan-400 hover:underline flex items-center gap-0.5">
@@ -102,7 +103,7 @@ export function SocialLinksTab() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-                  <Youtube className="size-4 text-red-500" /> YouTube
+                  <YoutubeIcon className="size-4 text-red-500" /> YouTube
                 </Label>
                 {youtube && (
                   <a href={youtube} target="_blank" rel="noreferrer" className="text-[11px] text-cyan-400 hover:underline flex items-center gap-0.5">
@@ -122,7 +123,7 @@ export function SocialLinksTab() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-                  <Instagram className="size-4 text-pink-400" /> Instagram
+                  <InstagramIcon className="size-4 text-pink-400" /> Instagram
                 </Label>
                 {instagram && (
                   <a href={instagram} target="_blank" rel="noreferrer" className="text-[11px] text-cyan-400 hover:underline flex items-center gap-0.5">
@@ -142,7 +143,7 @@ export function SocialLinksTab() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-                  <Twitter className="size-4 text-sky-400" /> Twitter / X
+                  <TwitterIcon className="size-4 text-sky-400" /> Twitter / X
                 </Label>
                 {twitter && (
                   <a href={twitter} target="_blank" rel="noreferrer" className="text-[11px] text-cyan-400 hover:underline flex items-center gap-0.5">
