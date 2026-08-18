@@ -1,14 +1,16 @@
 'use client'
 
-import { Suspense, useEffect, useRef, useState } from 'react'
+import React, { Suspense, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowRight,
   Bot,
   Brain,
+  Check,
   CheckCircle2,
   Code2,
+  Copy,
   HelpCircle,
   Lightbulb,
   MessageSquare,
@@ -27,6 +29,57 @@ import { Badge } from '@/components/ui/badge'
 import { useAppStore } from '@/lib/store'
 import { aiService } from '@/lib/ai/provider'
 import type { ChatMessage } from '@/lib/types'
+
+function CodeBlock({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="relative my-3 rounded-2xl border border-white/10 bg-[#090812] overflow-hidden text-left font-mono text-xs">
+      <div className="flex items-center justify-between border-b border-white/5 bg-white/[0.03] px-3.5 py-2">
+        <span className="text-[10px] font-bold text-zinc-400">código / snippet</span>
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1 text-[10px] text-zinc-400 hover:text-white transition-colors"
+        >
+          {copied ? <Check className="size-3 text-emerald-400" /> : <Copy className="size-3" />}
+          <span>{copied ? 'Copiado!' : 'Copiar'}</span>
+        </button>
+      </div>
+      <pre className="p-3.5 text-violet-200 overflow-x-auto leading-relaxed scrollbar-thin">
+        {code}
+      </pre>
+    </div>
+  )
+}
+
+function FormattedMessageContent({ content }: { content: string }) {
+  // Simple markdown-style code block splitting
+  const parts = content.split(/(```[\s\S]*?```)/g)
+
+  return (
+    <div className="space-y-2 text-xs sm:text-sm leading-relaxed font-medium">
+      {parts.map((part, idx) => {
+        if (part.startsWith('```') && part.endsWith('```')) {
+          const lines = part.slice(3, -3).trim()
+          // Strip optional language identifier from first line if present
+          const code = lines.replace(/^[a-zA-Z0-9_-]+\n/, '')
+          return <CodeBlock key={idx} code={code || lines} />
+        }
+        return (
+          <p key={idx} className="whitespace-pre-wrap">
+            {part}
+          </p>
+        )
+      })}
+    </div>
+  )
+}
 
 function MentorChatContent() {
   const searchParams = useSearchParams()
@@ -67,7 +120,7 @@ function MentorChatContent() {
 
   useEffect(() => {
     scrollToBottom()
-  }, [messages])
+  }, [messages, loading])
 
   useEffect(() => {
     if (initialQuery && initialQuery.trim()) {
@@ -115,40 +168,61 @@ function MentorChatContent() {
 
   const quickPrompts = [
     `Explique o conceito central da aula "${currentLesson.title}"`,
-    `Como funciona a lógica de resolução do módulo ${currentModule.title}?`,
-    `O que preciso fazer para atingir 100% de Mastery no módulo ${currentModule.title}?`,
-    'Pode me dar um exemplo prático e simplificado de código?',
+    `Como resolver desafios práticos no módulo ${currentModule.title}?`,
+    `Dê um exemplo de código funcional em JavaScript com boas práticas.`,
+    `O que preciso dominar para passar na avaliação deste módulo?`,
   ]
 
   return (
-    <div className="grid gap-6 lg:grid-cols-4 items-start">
+    <div className="grid gap-6 lg:grid-cols-4 items-start pb-16">
       {/* Left 3 Cols: Chat Interface */}
       <div className="lg:col-span-3 space-y-4">
-        <Card className="border-border/80 shadow-xl shadow-primary/5 min-h-[560px] flex flex-col justify-between overflow-hidden">
+        {/* Pinned Lesson Context Synced Card */}
+        <div className="flex items-center justify-between p-4 rounded-3xl border border-violet-500/30 bg-gradient-to-r from-violet-950/40 via-[#12111d] to-[#12111d] shadow-lg">
+          <div className="flex items-center gap-3">
+            <span className="grid size-9 place-items-center rounded-2xl bg-violet-600/20 border border-violet-500/40 text-violet-300">
+              <PlayCircle className="size-5" />
+            </span>
+            <div>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-violet-400">Contexto Sincronizado</span>
+              <h4 className="text-xs sm:text-sm font-bold text-white truncate max-w-sm sm:max-w-md">
+                Aula {currentLesson.order}: {currentLesson.title}
+              </h4>
+            </div>
+          </div>
+          <Link href={`/aulas/${currentLesson.id}`}>
+            <Button size="sm" variant="outline" className="text-xs font-bold border-violet-500/30 text-violet-300 hover:bg-violet-950/40">
+              Ver Aula <ArrowRight className="size-3.5 ml-1" />
+            </Button>
+          </Link>
+        </div>
+
+        <Card className="border-white/10 bg-[#12111d] shadow-2xl rounded-3xl min-h-[580px] flex flex-col justify-between overflow-hidden">
           {/* Chat Header */}
-          <div className="border-b border-border/60 bg-muted/20 p-4 flex items-center justify-between">
+          <div className="border-b border-white/5 bg-black/40 p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="grid size-10 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-md shadow-primary/20">
+              <div className="grid size-10 place-items-center rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-md shadow-purple-600/30">
                 <Bot className="size-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-sm font-bold text-foreground">DevMentor AI</h2>
-                  <span className="inline-flex size-2 rounded-full bg-success animate-pulse" />
+                  <h2 className="text-sm font-bold text-white">DevMentor AI</h2>
+                  <span className="inline-flex size-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[10px] font-bold text-emerald-400">Online 24/7</span>
                 </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Contextualizado no módulo: <strong>{currentModule.title}</strong>
+                <p className="text-[11px] text-zinc-400">
+                  Módulo ativo: <strong className="text-zinc-200">{currentModule.title}</strong>
                 </p>
               </div>
             </div>
 
-            <Badge variant="outline" className="text-[10px] font-bold border-primary/30 text-primary">
+            <Badge className="bg-violet-950/80 border border-violet-500/30 text-violet-300 text-xs font-bold">
               Nível {level}
             </Badge>
           </div>
 
           {/* Messages Feed */}
-          <CardContent className="p-4 space-y-4 flex-1 overflow-y-auto max-h-[500px]">
+          <CardContent className="p-4 sm:p-6 space-y-4 flex-1 overflow-y-auto max-h-[520px] scrollbar-thin">
             {messages.map((m) => {
               const isUser = m.role === 'user'
               return (
@@ -157,23 +231,23 @@ function MentorChatContent() {
                   className={`flex gap-3 ${isUser ? 'justify-end' : 'justify-start'}`}
                 >
                   {!isUser && (
-                    <div className="grid size-8 place-items-center rounded-xl bg-primary/10 text-primary shrink-0">
+                    <div className="grid size-8 place-items-center rounded-xl bg-violet-600/20 text-violet-400 shrink-0 border border-violet-500/30">
                       <Bot className="size-4" />
                     </div>
                   )}
 
                   <div
-                    className={`max-w-[85%] rounded-2xl p-4 text-xs leading-relaxed ${
+                    className={`max-w-[88%] rounded-3xl p-4 sm:p-5 shadow-md ${
                       isUser
-                        ? 'bg-primary text-primary-foreground font-medium shadow-md shadow-primary/20'
-                        : 'border border-border/70 bg-card text-foreground whitespace-pre-wrap'
+                        ? 'bg-violet-600 text-white font-medium shadow-purple-600/20'
+                        : 'border border-white/5 bg-[#171524] text-zinc-200'
                     }`}
                   >
-                    {m.content}
+                    <FormattedMessageContent content={m.content} />
                   </div>
 
                   {isUser && (
-                    <div className="grid size-8 place-items-center rounded-xl bg-primary text-primary-foreground shrink-0 text-xs font-bold">
+                    <div className="grid size-8 place-items-center rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white shrink-0 text-xs font-bold shadow-md">
                       {profile?.name?.slice(0, 1) || 'U'}
                     </div>
                   )}
@@ -181,26 +255,32 @@ function MentorChatContent() {
               )
             })}
 
+            {/* Animated Typing Indicator */}
             {loading && (
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <div className="grid size-8 place-items-center rounded-xl bg-primary/10 text-primary animate-spin">
-                  <Sparkles className="size-4" />
+              <div className="flex items-center gap-3 text-xs text-zinc-400 bg-white/[0.02] p-3 rounded-2xl border border-white/5 w-fit">
+                <div className="grid size-7 place-items-center rounded-xl bg-violet-600/20 text-violet-400">
+                  <Sparkles className="size-3.5 animate-spin" />
                 </div>
-                <span>DevMentor está analisando seu contexto e gerando resposta...</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-semibold text-zinc-300">DevMentor analisando e redigindo resposta</span>
+                  <span className="inline-flex size-1.5 rounded-full bg-violet-400 animate-bounce" />
+                  <span className="inline-flex size-1.5 rounded-full bg-violet-400 animate-bounce [animation-delay:0.2s]" />
+                  <span className="inline-flex size-1.5 rounded-full bg-violet-400 animate-bounce [animation-delay:0.4s]" />
+                </div>
               </div>
             )}
             <div ref={messagesEndRef} />
           </CardContent>
 
           {/* Quick Prompts & Chat Input */}
-          <div className="border-t border-border/60 p-4 bg-muted/10 space-y-3">
+          <div className="border-t border-white/5 p-4 bg-black/30 space-y-3">
             {/* Quick Context Prompt Chips */}
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-2">
               {quickPrompts.map((q) => (
                 <button
                   key={q}
                   onClick={() => handleSendMessage(q)}
-                  className="rounded-lg border border-border/70 bg-card px-2.5 py-1 text-[11px] font-medium text-muted-foreground hover:border-primary hover:text-foreground transition-colors truncate max-w-full"
+                  className="rounded-xl border border-white/10 bg-white/[0.02] hover:bg-violet-950/40 hover:border-violet-500/40 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:text-white transition-all truncate max-w-full cursor-pointer"
                 >
                   💡 {q}
                 </button>
@@ -213,21 +293,21 @@ function MentorChatContent() {
                 e.preventDefault()
                 handleSendMessage()
               }}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 pt-1"
             >
               <Input
-                placeholder="Pergunte sobre código, conceitos da aula, dúvidas teóricas ou carreira..."
+                placeholder="Pergunte sobre código, conceitos da aula, depuração ou carreira..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 disabled={loading}
-                className="bg-background text-xs"
+                className="bg-black/50 border-white/10 rounded-2xl text-xs sm:text-sm h-11 text-white placeholder:text-zinc-500 focus-visible:ring-violet-500/50"
               />
               <Button
                 type="submit"
                 disabled={loading || !input.trim()}
-                className="gap-1.5 font-bold text-xs shrink-0"
+                className="gap-1.5 font-bold text-xs h-11 px-5 rounded-2xl bg-violet-600 hover:bg-violet-500 text-white shadow-lg shadow-purple-600/30 shrink-0 cursor-pointer"
               >
-                <Send className="size-3.5" /> Enviar
+                <Send className="size-4" /> Enviar
               </Button>
             </form>
           </div>
@@ -236,41 +316,42 @@ function MentorChatContent() {
 
       {/* Right Col: Active Student Context Radar */}
       <div className="space-y-4">
-        <Card className="border-border/80 shadow-lg shadow-primary/5">
-          <CardHeader className="pb-3 border-b border-border/60">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Contexto do Aluno</span>
-            <CardTitle className="text-sm font-bold">Dados Sincronizados com a IA</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 pt-4 text-xs">
+        <Card className="border-white/10 bg-[#12111d] shadow-2xl rounded-3xl p-5 space-y-4">
+          <div className="border-b border-white/5 pb-3 space-y-1">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-violet-400">Contexto em Tempo Real</span>
+            <h3 className="text-sm font-bold text-white">Dados Sincronizados com a IA</h3>
+          </div>
+
+          <div className="space-y-4 text-xs">
             <div className="space-y-1">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground">Módulo Atual</span>
-              <p className="font-bold text-foreground">{currentModule.title}</p>
-              <p className="text-[11px] text-muted-foreground">Mastery Score: {currentMastery.totalMastery}%</p>
+              <span className="text-[10px] uppercase font-bold text-zinc-500">Módulo Atual</span>
+              <p className="font-bold text-white">{currentModule.title}</p>
+              <p className="text-[11px] text-violet-400 font-mono">Mastery Score: {currentMastery.totalMastery}%</p>
             </div>
 
             <div className="space-y-1">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground">Aula Pendente</span>
-              <p className="font-semibold text-foreground">{currentLesson.title}</p>
-              <Link href={`/aulas/${currentLesson.id}`} className="text-primary text-[11px] hover:underline flex items-center gap-1 font-bold">
-                <PlayCircle className="size-3" /> Acessar Aula
+              <span className="text-[10px] uppercase font-bold text-zinc-500">Aula Pendente</span>
+              <p className="font-semibold text-zinc-200">{currentLesson.title}</p>
+              <Link href={`/aulas/${currentLesson.id}`} className="text-violet-400 text-[11px] hover:underline flex items-center gap-1 font-bold pt-0.5">
+                <PlayCircle className="size-3.5" /> Ir para a Aula
               </Link>
             </div>
 
-            <div className="space-y-1 pt-2 border-t border-border/60">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground">Dificuldades Monitoradas</span>
+            <div className="space-y-2 pt-2 border-t border-white/5">
+              <span className="text-[10px] uppercase font-bold text-zinc-500">Tópicos Monitorados</span>
               {difficulties.length === 0 ? (
-                <p className="text-[11px] text-muted-foreground italic">Nenhuma dificuldade crítica registrada.</p>
+                <p className="text-[11px] text-zinc-400 italic">Nenhuma dificuldade crítica registrada.</p>
               ) : (
-                <div className="space-y-1 pt-1">
+                <div className="flex flex-wrap gap-1">
                   {difficulties.map((d) => (
-                    <span key={d.topic} className="inline-block rounded-md bg-warning/15 px-2 py-0.5 text-[10px] font-bold text-warning mr-1 mb-1">
+                    <span key={d.topic} className="rounded-lg bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 text-[10px] font-bold text-amber-300">
                       {d.topic}
                     </span>
                   ))}
                 </div>
               )}
             </div>
-          </CardContent>
+          </div>
         </Card>
       </div>
     </div>
@@ -283,7 +364,7 @@ export default function MentorPage() {
       title="DevMentor AI — Tutor Individual 24/7"
       subtitle="Tire dúvidas conceituais, depure código e receba orientações personalizadas para sua formação"
     >
-      <Suspense fallback={<div className="p-8 text-center text-xs text-muted-foreground">Carregando Mentor IA...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-xs text-zinc-400">Carregando DevMentor AI...</div>}>
         <MentorChatContent />
       </Suspense>
     </AppShell>

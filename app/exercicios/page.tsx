@@ -3,25 +3,25 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import {
+  AlertCircle,
   ArrowRight,
+  BookOpen,
   Brain,
+  Check,
   CheckCircle2,
+  ChevronRight,
   Code2,
   Filter,
+  Flame,
   HelpCircle,
   Lightbulb,
   Play,
+  RefreshCw,
   RotateCcw,
   Sparkles,
   Target,
   Trophy,
   XCircle,
-  BookOpen,
-  ChevronRight,
-  Flame,
-  Check,
-  AlertCircle,
-  RefreshCw,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import confetti from 'canvas-confetti'
@@ -183,12 +183,12 @@ export default function ExercisesPage() {
   return (
     <AppShell
       title="Atividades Pedagógicas"
-      subtitle="Exercícios práticos, desafios de código e fixação profunda vinculados a cada aula"
+      subtitle="Exercícios práticos, desafios de código e fixação profunda vinculados a cada módulo"
     >
       <div className="space-y-8 pb-16">
         {/* Banner Hero */}
-        <div className="relative overflow-hidden rounded-3xl border border-violet-500/20 bg-gradient-to-r from-[#141226] via-[#100f1c] to-[#0d0c17] p-6 sm:p-8 shadow-2xl">
-          <div className="absolute -right-16 -top-16 size-72 rounded-full bg-violet-600/10 blur-3xl pointer-events-none" />
+        <div className="relative overflow-hidden rounded-3xl border border-violet-500/20 bg-gradient-to-r from-violet-950/50 via-[#12111d] to-[#0a0910] p-6 sm:p-8 shadow-2xl">
+          <div className="absolute -right-16 -top-16 size-72 rounded-full bg-violet-600/15 blur-3xl pointer-events-none" />
           <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div className="space-y-2 max-w-2xl">
               <div className="flex items-center gap-2">
@@ -221,7 +221,7 @@ export default function ExercisesPage() {
         {/* Filters and Search Bar */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           {/* Status Tabs */}
-          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-[#12111a] border border-white/10 w-fit">
+          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-[#12111d] border border-white/10 w-fit">
             {[
               { id: 'all', label: 'Todas as Atividades' },
               { id: 'pending', label: 'Pendentes' },
@@ -232,7 +232,7 @@ export default function ExercisesPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setTabFilter(tab.id as 'all' | 'pending' | 'completed')}
-                className={`text-xs font-bold rounded-xl px-4 transition-all ${
+                className={`text-xs font-bold rounded-xl px-4 transition-all cursor-pointer ${
                   tabFilter === tab.id
                     ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/30'
                     : 'text-zinc-400 hover:text-white hover:bg-white/5'
@@ -243,14 +243,14 @@ export default function ExercisesPage() {
             ))}
           </div>
 
-          {/* Module, Difficulty & Type Dropdowns */}
+          {/* Module, Difficulty & Type Dropdowns (Exclusively Clean Programming Topics) */}
           <div className="flex flex-wrap items-center gap-3">
             <select
               value={selectedModule}
               onChange={(e) => setSelectedModule(e.target.value)}
-              className="h-10 px-3 rounded-xl bg-[#12111a] border border-white/10 text-xs font-bold text-zinc-300 focus:outline-none focus:border-violet-500"
+              className="h-10 px-3 rounded-xl bg-[#12111d] border border-white/10 text-xs font-bold text-zinc-300 focus:outline-none focus:border-violet-500"
             >
-              <option value="all">Todos os Módulos</option>
+              <option value="all">Todos os Módulos de Programação</option>
               {allModules.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.title}
@@ -261,7 +261,7 @@ export default function ExercisesPage() {
             <select
               value={selectedDifficulty}
               onChange={(e) => setSelectedDifficulty(e.target.value)}
-              className="h-10 px-3 rounded-xl bg-[#12111a] border border-white/10 text-xs font-bold text-zinc-300 focus:outline-none focus:border-violet-500"
+              className="h-10 px-3 rounded-xl bg-[#12111d] border border-white/10 text-xs font-bold text-zinc-300 focus:outline-none focus:border-violet-500"
             >
               <option value="all">Todas Dificuldades</option>
               <option value="facil">Fácil</option>
@@ -272,7 +272,7 @@ export default function ExercisesPage() {
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="h-10 px-3 rounded-xl bg-[#12111a] border border-white/10 text-xs font-bold text-zinc-300 focus:outline-none focus:border-violet-500"
+              className="h-10 px-3 rounded-xl bg-[#12111d] border border-white/10 text-xs font-bold text-zinc-300 focus:outline-none focus:border-violet-500"
             >
               <option value="all">Todos os Tipos</option>
               <option value="multiple_choice">Múltipla Escolha</option>
@@ -289,7 +289,7 @@ export default function ExercisesPage() {
           {/* Left Column: List of Activities */}
           <div className="lg:col-span-4 space-y-3 max-h-[820px] overflow-y-auto pr-2 scrollbar-thin">
             {filteredActivities.length === 0 ? (
-              <div className="rounded-2xl border border-white/10 bg-[#12111a] p-8 text-center space-y-3">
+              <div className="rounded-3xl border border-white/10 bg-[#12111d] p-8 text-center space-y-3">
                 <Target className="size-8 text-zinc-500 mx-auto" />
                 <p className="text-sm font-bold text-zinc-400">Nenhuma atividade encontrada com estes filtros.</p>
                 <Button
@@ -318,13 +318,13 @@ export default function ExercisesPage() {
                     onClick={() => handleSelectActivity(act.id)}
                     className={`group cursor-pointer rounded-2xl border p-4 transition-all duration-200 ${
                       isSelected
-                        ? 'border-violet-500 bg-violet-950/30 ring-1 ring-violet-500/50 shadow-lg shadow-violet-950/50'
-                        : 'border-white/5 bg-[#12111a] hover:border-violet-500/30 hover:bg-[#151422]'
+                        ? 'border-violet-500 bg-violet-950/40 ring-1 ring-violet-500/50 shadow-lg shadow-violet-950/50'
+                        : 'border-white/5 bg-[#12111d] hover:border-violet-500/30 hover:bg-[#161424]'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-[10px] font-extrabold uppercase text-violet-400 tracking-wider">
-                        {act.technology || 'Lógica'}
+                        {act.technology || 'Lógica & Algoritmos'}
                       </span>
                       <div className="flex items-center gap-1.5">
                         <Badge
@@ -361,7 +361,7 @@ export default function ExercisesPage() {
           {/* Right Column: Interactive Pedagogical Solver */}
           {currentActivity ? (
             <div className="lg:col-span-8 space-y-6">
-              <Card className="border-white/10 bg-[#12111a] shadow-2xl rounded-3xl p-6 sm:p-8 space-y-6">
+              <Card className="border-white/10 bg-[#12111d] shadow-2xl rounded-3xl p-6 sm:p-8 space-y-6">
                 {/* Header Information */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-5">
                   <div className="space-y-1.5">
@@ -381,230 +381,171 @@ export default function ExercisesPage() {
                         </span>
                       )}
                     </div>
-                    <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+
+                    <h2 className="text-lg sm:text-xl font-bold text-white leading-snug">
                       {currentActivity.title}
-                    </h3>
+                    </h2>
                   </div>
 
                   {isAlreadyDone && (
-                    <Badge className="bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-bold text-xs gap-1.5 py-1 px-3">
-                      <CheckCircle2 className="size-4" /> Concluída
+                    <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-bold gap-1">
+                      <CheckCircle2 className="size-3.5" /> Concluído
                     </Badge>
                   )}
                 </div>
 
-                {/* Origin Lesson Reference */}
-                {relatedLesson && (
-                  <div className="flex items-center justify-between p-3 rounded-2xl bg-black/40 border border-white/5 text-xs text-zinc-400">
-                    <div className="flex items-center gap-2">
-                      <BookOpen className="size-4 text-violet-400" />
-                      <span>
-                        Aula Relacionada: <strong className="text-zinc-200">{relatedLesson.title}</strong>
-                      </span>
-                    </div>
-                    <Link
-                      href={`/aulas/${relatedLesson.id}`}
-                      className="text-violet-400 hover:text-violet-300 font-bold inline-flex items-center gap-1"
-                    >
-                      Ver Aula <ChevronRight className="size-3.5" />
-                    </Link>
-                  </div>
-                )}
-
-                {/* Pedagogical Statement & Objective */}
+                {/* Enunciado da Questão */}
                 <div className="space-y-3">
-                  <div className="p-4 rounded-2xl bg-[#161424] border border-violet-500/20 text-zinc-200 text-sm leading-relaxed whitespace-pre-wrap font-medium">
-                    <h5 className="text-[11px] font-extrabold uppercase text-violet-400 tracking-wider mb-1">
-                      Enunciado da Atividade
-                    </h5>
+                  <p className="text-xs sm:text-sm text-zinc-200 leading-relaxed font-medium">
                     {currentActivity.statement}
-                  </div>
+                  </p>
 
-                  {currentActivity.objective && (
-                    <p className="text-xs text-zinc-400 flex items-center gap-1.5 font-medium">
-                      <Target className="size-3.5 text-violet-400 flex-shrink-0" />
-                      <strong>Objetivo de Aprendizagem:</strong> {currentActivity.objective}
-                    </p>
+                  {/* Contextual Code Block if present */}
+                  {currentActivity.codeContext && (
+                    <div className="rounded-2xl border border-white/10 bg-black/60 p-4 font-mono text-xs text-violet-200 overflow-x-auto shadow-inner">
+                      <pre>{currentActivity.codeContext}</pre>
+                    </div>
                   )}
                 </div>
 
-                {/* Solver Interface based on Type */}
-                {currentActivity.type === 'multiple_choice' || currentActivity.type === 'true_false' ? (
-                  /* Multiple Choice / True False Options */
-                  <div className="space-y-3 pt-2">
-                    <h5 className="text-xs font-extrabold uppercase text-zinc-400 tracking-wider">
-                      Selecione a alternativa correta:
-                    </h5>
+                {/* Multiple Choice Options */}
+                {(currentActivity.type === 'multiple_choice' || currentActivity.type === 'true_false') &&
+                  currentActivity.options && (
                     <div className="space-y-2.5">
-                      {(currentActivity.options || []).map((opt, idx) => {
-                        const isSelected = selectedOption === idx
-                        return (
-                          <div
-                            key={idx}
-                            onClick={() => handleOptionClick(idx)}
-                            className={`flex items-center gap-3 p-4 rounded-2xl border cursor-pointer transition-all ${
-                              isSelected
-                                ? 'border-violet-500 bg-violet-950/40 ring-1 ring-violet-500 shadow-md text-white'
-                                : 'border-white/5 bg-black/30 hover:border-white/20 text-zinc-300'
-                            }`}
-                          >
-                            <div
-                              className={`size-6 rounded-full border flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                                isSelected
-                                  ? 'border-violet-500 bg-violet-600 text-white'
-                                  : 'border-white/20 bg-white/5 text-zinc-400'
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">
+                        Selecione a alternativa correta:
+                      </label>
+                      <div className="space-y-2">
+                        {currentActivity.options.map((opt, idx) => {
+                          const isPicked = selectedOption === idx
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => handleOptionClick(idx)}
+                              className={`w-full flex items-center justify-between p-4 rounded-2xl border text-left text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                                isPicked
+                                  ? 'border-violet-500 bg-violet-950/60 text-white ring-1 ring-violet-400/40 shadow-lg shadow-violet-950/40'
+                                  : 'border-white/5 bg-black/30 text-zinc-300 hover:text-white hover:bg-white/[0.03]'
                               }`}
                             >
-                              {String.fromCharCode(65 + idx)}
-                            </div>
-                            <span className="text-xs sm:text-sm font-medium leading-relaxed">{opt}</span>
-                          </div>
-                        )
-                      })}
+                              <div className="flex items-center gap-3">
+                                <span
+                                  className={`grid size-6 place-items-center rounded-lg text-xs font-bold font-mono ${
+                                    isPicked ? 'bg-violet-600 text-white' : 'bg-white/5 text-zinc-400'
+                                  }`}
+                                >
+                                  {String.fromCharCode(65 + idx)}
+                                </span>
+                                <span>{opt}</span>
+                              </div>
+                              {isPicked && <Check className="size-4 text-violet-400" />}
+                            </button>
+                          )
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  /* Code Practice / Bug Fix / Mini Challenge Editor */
-                  <div className="space-y-3 pt-2">
+                  )}
+
+                {/* Code Editor solver for coding challenges */}
+                {(currentActivity.type === 'code' ||
+                  currentActivity.type === 'write_code' ||
+                  currentActivity.type === 'fix_code' ||
+                  currentActivity.type === 'find_bug') && (
+                  <div className="space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <h5 className="text-xs font-extrabold uppercase text-zinc-400 tracking-wider flex items-center gap-1.5">
-                        <Code2 className="size-3.5 text-violet-400" /> Editor de Código da Atividade
-                      </h5>
-                      <Button
-                        size="sm"
-                        variant="ghost"
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                        Sua Solução de Código:
+                      </label>
+                      <button
+                        type="button"
                         onClick={handleResetCode}
-                        className="text-[11px] font-bold text-zinc-400 hover:text-white rounded-lg h-7 gap-1"
+                        className="text-[11px] text-zinc-400 hover:text-white flex items-center gap-1"
                       >
-                        <RotateCcw className="size-3" /> Restaurar Inicial
-                      </Button>
+                        <RotateCcw className="size-3" /> Restaurar Código Inicial
+                      </button>
                     </div>
-
-                    <div className="rounded-2xl border border-white/10 bg-black/70 p-1">
-                      <Textarea
-                        value={codeAnswer || currentActivity.codeStarter || ''}
-                        onChange={(e) => setCodeAnswer(e.target.value)}
-                        placeholder="// Escreva sua solução em código aqui..."
-                        className="font-mono text-xs sm:text-sm text-emerald-300 min-h-[220px] bg-transparent border-0 focus-visible:ring-0 resize-y p-3"
-                      />
-                    </div>
+                    <Textarea
+                      rows={8}
+                      value={codeAnswer}
+                      onChange={(e) => setCodeAnswer(e.target.value)}
+                      placeholder="// Digite sua solução de código aqui..."
+                      className="font-mono text-xs bg-black/60 border-white/10 rounded-2xl text-violet-200 leading-relaxed"
+                      spellCheck={false}
+                    />
                   </div>
                 )}
 
-                {/* Progressive Hints & Feedback Section */}
-                {showHintLevel >= 1 && currentActivity.hint && (
-                  <div className="p-4 rounded-2xl bg-amber-950/30 border border-amber-500/30 text-amber-200 text-xs space-y-1.5 animate-in fade-in">
-                    <div className="flex items-center gap-1.5 font-bold text-amber-400">
-                      <Lightbulb className="size-4" /> Dica Pedagógica (Tentativa 1)
-                    </div>
-                    <p className="leading-relaxed font-medium">{currentActivity.hint}</p>
-                  </div>
-                )}
-
-                {showHintLevel >= 2 && currentActivity.detailedGuidance && (
-                  <div className="p-4 rounded-2xl bg-violet-950/30 border border-violet-500/30 text-violet-200 text-xs space-y-1.5 animate-in fade-in">
-                    <div className="flex items-center gap-1.5 font-bold text-violet-400">
-                      <Sparkles className="size-4" /> Orientação Guiada (Tentativa 2+)
-                    </div>
-                    <p className="leading-relaxed font-medium">{currentActivity.detailedGuidance}</p>
-                  </div>
-                )}
-
+                {/* Hints and Feedback Drawer */}
                 {lastSubmissionResult && (
                   <div
-                    className={`p-4 rounded-2xl border text-xs leading-relaxed space-y-1.5 ${
+                    className={`p-4 rounded-2xl border text-xs leading-relaxed space-y-2 ${
                       lastSubmissionResult.isCorrect
-                        ? 'bg-emerald-950/30 border-emerald-500/30 text-emerald-200'
-                        : 'bg-rose-950/30 border-rose-500/30 text-rose-200'
+                        ? 'border-emerald-500/30 bg-emerald-950/30 text-emerald-200'
+                        : 'border-rose-500/30 bg-rose-950/30 text-rose-200'
                     }`}
                   >
-                    <div className="flex items-center gap-1.5 font-bold">
+                    <div className="flex items-center gap-2 font-bold text-sm">
                       {lastSubmissionResult.isCorrect ? (
                         <>
-                          <CheckCircle2 className="size-4 text-emerald-400" /> Resposta Correta!
+                          <CheckCircle2 className="size-4.5 text-emerald-400" />
+                          <span>Resposta Correta! +{lastSubmissionResult.xpEarned} XP</span>
                         </>
                       ) : (
                         <>
-                          <AlertCircle className="size-4 text-rose-400" /> Tente Novamente
+                          <XCircle className="size-4.5 text-rose-400" />
+                          <span>Resposta Incorreta</span>
                         </>
                       )}
                     </div>
-                    <p className="font-medium">{lastSubmissionResult.feedback}</p>
-                    {lastSubmissionResult.isCorrect && currentActivity.explanation && (
-                      <div className="pt-2 border-t border-emerald-500/20 text-[11px] text-emerald-300">
-                        <strong>Explicação Conceitual:</strong> {currentActivity.explanation}
-                      </div>
-                    )}
+                    <p className="text-zinc-300 font-medium">{lastSubmissionResult.feedback}</p>
                   </div>
                 )}
 
-                {/* Actions Footer */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-white/5">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowHintLevel((lvl) => (lvl >= 2 ? 0 : lvl + 1))}
-                      className="rounded-xl border-white/10 text-xs font-bold gap-1.5 text-zinc-300 hover:text-white"
-                    >
-                      <Lightbulb className="size-3.5 text-amber-400" />
-                      {showHintLevel === 0 ? 'Ver Dica' : showHintLevel === 1 ? 'Ver Guia Avançado' : 'Ocultar Dicas'}
-                    </Button>
+                {/* Pedagogical Hint Progressive System */}
+                {showHintLevel > 0 && currentActivity.hints && (
+                  <div className="p-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 text-amber-200 text-xs space-y-1.5">
+                    <div className="flex items-center gap-2 font-bold">
+                      <Lightbulb className="size-4 text-amber-400" />
+                      <span>Dica Pedagógica da IA (Nível {showHintLevel}):</span>
+                    </div>
+                    <p className="text-zinc-300 leading-relaxed font-medium">
+                      {currentActivity.hints[showHintLevel - 1] || currentActivity.hints[0]}
+                    </p>
+                  </div>
+                )}
 
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      disabled={isGenerating}
-                      onClick={handleGenerateMoreActivities}
-                      className="rounded-xl text-xs font-bold text-violet-400 hover:text-violet-300 hover:bg-violet-950/40 gap-1.5"
-                    >
-                      <RefreshCw className={`size-3.5 ${isGenerating ? 'animate-spin' : ''}`} />
-                      Gerar Mais com IA
-                    </Button>
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-white/5">
+                  <div className="flex items-center gap-2">
+                    {currentActivity.hints && currentActivity.hints.length > 0 && showHintLevel < currentActivity.hints.length && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowHintLevel((l) => l + 1)}
+                        className="text-xs font-bold border-amber-500/30 text-amber-300 hover:bg-amber-500/10"
+                      >
+                        <Lightbulb className="size-3.5 mr-1" /> Pedir Dica ({showHintLevel}/{currentActivity.hints.length})
+                      </Button>
+                    )}
                   </div>
 
                   <Button
                     onClick={handleSubmit}
-                    className="rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-black text-xs px-6 py-5 shadow-lg shadow-violet-600/30 hover:scale-[1.02] active:scale-[0.98] transition-all gap-2"
+                    className="w-full sm:w-auto bg-violet-600 hover:bg-violet-500 text-white font-bold px-8 py-5 rounded-xl shadow-lg shadow-purple-600/30"
                   >
-                    <Play className="size-4 fill-white" /> Enviar Resposta
+                    <span>Enviar Resposta</span>
+                    <ArrowRight className="size-4 ml-1.5" />
                   </Button>
                 </div>
-
-                {/* Attempts History */}
-                {currentAttempts.length > 0 && (
-                  <div className="pt-4 border-t border-white/5 space-y-2">
-                    <h6 className="text-[10px] font-extrabold uppercase text-zinc-500 tracking-wider">
-                      Histórico de Tentativas nesta Atividade ({currentAttempts.length})
-                    </h6>
-                    <div className="space-y-1.5">
-                      {currentAttempts.map((att, i) => (
-                        <div
-                          key={att.id || i}
-                          className="flex items-center justify-between p-2.5 rounded-xl bg-black/40 border border-white/5 text-[11px]"
-                        >
-                          <div className="flex items-center gap-2">
-                            {att.isCorrect ? (
-                              <Check className="size-3.5 text-emerald-400" />
-                            ) : (
-                              <XCircle className="size-3.5 text-rose-400" />
-                            )}
-                            <span className="font-bold text-zinc-300">Tentativa {att.attemptNumber}</span>
-                            <span className="text-zinc-500 font-medium truncate max-w-[300px]">
-                              {typeof att.answer === 'number' ? `Opção ${String.fromCharCode(65 + att.answer)}` : att.answer}
-                            </span>
-                          </div>
-                          <span className="font-mono text-[10px] text-zinc-500">
-                            {new Date(att.submittedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </Card>
             </div>
-          ) : null}
+          ) : (
+            <div className="lg:col-span-8 p-12 text-center text-zinc-500">
+              Selecione uma atividade à esquerda para começar.
+            </div>
+          )}
         </div>
       </div>
     </AppShell>

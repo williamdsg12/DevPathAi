@@ -3,6 +3,7 @@ import { LandingHeader } from '@/components/landing/landing-header'
 import { HeroSection } from '@/components/landing/hero-section'
 import { TechTicker } from '@/components/landing/tech-ticker'
 import { ProblemSolutionSection } from '@/components/landing/problem-solution-section'
+import { StatsCounterSection } from '@/components/landing/stats-counter-section'
 import { OnboardingInteractiveDemo } from '@/components/landing/onboarding-interactive-demo'
 import { HowItWorksSection } from '@/components/landing/how-it-works-section'
 import { PersonalizedPathSection } from '@/components/landing/personalized-path-section'
@@ -42,40 +43,43 @@ export default function Page() {
         {/* 3. Problem vs Solution */}
         <ProblemSolutionSection />
 
-        {/* 4. Interactive AI Onboarding Experience Simulator */}
+        {/* 4. Social Proof & Platform Authority Statistics */}
+        <StatsCounterSection />
+
+        {/* 5. Interactive AI Onboarding Experience Simulator */}
         <OnboardingInteractiveDemo />
 
-        {/* 5. Methodology & 6 Pedagogical Steps */}
+        {/* 6. Methodology & 6 Pedagogical Steps */}
         <HowItWorksSection />
 
-        {/* 6. Personalized Path & 5 Career Phases */}
+        {/* 7. Personalized Path & 5 Career Phases */}
         <PersonalizedPathSection />
 
-        {/* 7. DevMentor AI 24/7 Contextual Assistant */}
+        {/* 8. DevMentor AI 24/7 Contextual Assistant */}
         <DevMentorAISection />
 
-        {/* 8. Practical Learning & 5 Completion Criteria & Code Lab */}
+        {/* 9. Practical Learning & 5 Completion Criteria & Code Lab */}
         <PracticeCodeLabSection />
 
-        {/* 9. Official Courses & Modules Catalog */}
+        {/* 10. Official Courses & Modules Catalog */}
         <CoursesShowcase />
 
-        {/* 10. Real Projects for Portfolio (GitHub Evaluated) */}
+        {/* 11. Real Projects for Portfolio (GitHub Evaluated) */}
         <ProjectsShowcase />
 
-        {/* 11. Career Progression Timeline & Interview Simulator */}
+        {/* 12. Career Progression Timeline & Interview Simulator */}
         <CareerProgressSection />
 
-        {/* 12. Transparent Pricing Plans */}
+        {/* 13. Transparent Pricing Plans */}
         <PricingPlansSection />
 
-        {/* 13. Infinite Testimonials Marquee */}
+        {/* 14. Infinite Testimonials Marquee */}
         <TestimonialsMarqueeSection />
 
-        {/* 14. FAQ with Animated Accordion */}
+        {/* 15. FAQ with Animated Accordion */}
         <FaqSection />
 
-        {/* 15. Final Cinematic Call to Action */}
+        {/* 16. Final Cinematic Call to Action */}
         <FinalCtaSection />
       </main>
 

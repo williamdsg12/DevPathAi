@@ -11,6 +11,7 @@ import {
   Clock,
   Code2,
   ExternalLink,
+  Eye,
   Flame,
   FolderGit2,
   GraduationCap,
@@ -52,6 +53,7 @@ export default function ProfilePage() {
     certificates,
     currentModuleId,
     getModuleMastery,
+    completedLessons,
   } = useAppStore()
 
   const [name, setName] = useState(profile?.name || '')
@@ -62,6 +64,7 @@ export default function ProfilePage() {
     profile?.desiredRole || 'Desenvolvedor Full Stack Júnior'
   )
   const [isSaving, setIsSaving] = useState(false)
+  const [activeTab, setActiveTab] = useState<'profile' | 'skills' | 'preview'>('profile')
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault()
@@ -75,56 +78,53 @@ export default function ProfilePage() {
     })
     setTimeout(() => {
       setIsSaving(false)
-      toast.success('Perfil atualizado com sucesso!')
+      toast.success('Perfil profissional atualizado com sucesso!')
     }, 400)
   }
 
   const displayName = name || profile?.name || 'Desenvolvedor'
-  const username = github || 'dev'
+  const username = github || 'williamdev'
   const currentMod = allModules.find((m) => m.id === currentModuleId) || allModules[0]
   const currentMastery = getModuleMastery(currentMod?.id || 'mod-logica')
 
-  // Default fallback skills if none recorded yet
-  const skillMasteryMap = activePath.skillMastery || {
-    'Lógica de Programação': 60,
-    'Algoritmos & Estruturas': 45,
-    'Git & GitHub': 40,
-    'HTML5 Semântico': 35,
-    'CSS3 & Layouts': 30,
-    'JavaScript Moderno': 25,
-    'React & Next.js': 10,
-    'Node.js & APIs': 10,
-    'Banco de Dados & SQL': 15,
-    'Arquitetura de Software': 10,
-  }
+  const skillMasteryList = [
+    { skill: 'Lógica de Programação & Algoritmos', score: 92, level: 'Dominado' },
+    { skill: 'Estruturas de Dados & Complexidade', score: 78, level: 'Avançado' },
+    { skill: 'Git & GitHub Workflow', score: 85, level: 'Avançado' },
+    { skill: 'HTML5 Semântico & CSS3 Moderno', score: 80, level: 'Avançado' },
+    { skill: 'JavaScript Moderno (ES6+)', score: 70, level: 'Intermediário' },
+    { skill: 'React 19 & Next.js App Router', score: 65, level: 'Intermediário' },
+    { skill: 'Node.js & APIs RESTful', score: 60, level: 'Intermediário' },
+    { skill: 'Banco de Dados Relacional & SQL', score: 55, level: 'Em Desenvolvimento' },
+  ]
 
   return (
     <AppShell
       title="Meu Perfil Profissional"
-      subtitle="Gerencie suas competências técnicas, histórico de formação, projetos e certificações"
+      subtitle="Gerencie suas competências técnicas, portfólio público para recrutadores e histórico de evolução"
     >
-      <div className="space-y-8">
+      <div className="space-y-8 pb-16">
         {/* Profile Hero Header */}
-        <section className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/15 via-card to-card p-6 sm:p-8 shadow-xl shadow-primary/5">
+        <section className="relative overflow-hidden rounded-3xl border border-violet-500/20 bg-gradient-to-br from-violet-950/40 via-[#12111d] to-[#0a0910] p-6 sm:p-8 shadow-2xl">
           <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4 sm:gap-6">
-              <div className="grid size-20 place-items-center rounded-3xl bg-primary text-primary-foreground text-3xl font-black shadow-xl shadow-primary/30 ring-4 ring-primary/20">
+              <div className="grid size-20 place-items-center rounded-3xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 text-white text-3xl font-black shadow-xl shadow-purple-600/30 ring-4 ring-violet-500/20">
                 {displayName.slice(0, 2).toUpperCase()}
               </div>
 
               <div className="space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-2xl sm:text-3xl font-black text-foreground">{displayName}</h1>
-                  <Badge className="bg-primary text-primary-foreground text-xs font-bold">
+                  <h1 className="text-2xl sm:text-3xl font-black text-white">{displayName}</h1>
+                  <Badge className="bg-violet-600 text-white text-xs font-bold">
                     Nível {level}
                   </Badge>
-                  <Badge variant="secondary" className="gap-1 font-semibold text-xs text-warning">
-                    <Flame className="size-3.5 fill-warning" /> {streak} {streak === 1 ? 'dia' : 'dias'}
+                  <Badge variant="secondary" className="gap-1 font-bold text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                    <Flame className="size-3.5 fill-amber-400" /> {streak} {streak === 1 ? 'dia' : 'dias'}
                   </Badge>
                 </div>
 
-                <p className="text-sm font-semibold text-primary">{desiredRole}</p>
-                <p className="text-xs text-muted-foreground max-w-md">
+                <p className="text-xs sm:text-sm font-bold text-violet-300">{desiredRole}</p>
+                <p className="text-xs text-zinc-400 max-w-md">
                   {bio || 'Estudante dedicado na formação adaptativa DevPath AI.'}
                 </p>
               </div>
@@ -132,345 +132,166 @@ export default function ProfilePage() {
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
               <Link href={`/u/${username}`}>
-                <Button variant="outline" size="sm" className="gap-2 text-xs font-bold w-full sm:w-auto">
+                <Button variant="outline" size="sm" className="gap-2 text-xs font-bold border-white/10 text-white hover:bg-white/5 w-full sm:w-auto">
                   <ExternalLink className="size-3.5" /> Portfólio Público (/u/{username})
-                </Button>
-              </Link>
-              <Link href="/trilha">
-                <Button size="sm" className="gap-2 text-xs font-bold bg-primary text-primary-foreground shadow-md shadow-primary/20 w-full sm:w-auto">
-                  <Layers className="size-3.5" /> Minha Trilha
                 </Button>
               </Link>
             </div>
           </div>
         </section>
 
-        {/* 4 Summary Metric Indicators */}
-        <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          <Card className="border-border/70">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Progresso da Trilha</span>
-              <GraduationCap className="size-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl sm:text-3xl font-extrabold text-foreground">{overallProgress}%</div>
-              <Progress value={overallProgress} className="h-1.5 mt-2" />
-              <p className="text-[11px] text-muted-foreground mt-2">{activePath.title}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/70">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Mastery do Módulo</span>
-              <Brain className="size-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl sm:text-3xl font-extrabold text-foreground">{currentMastery.totalMastery}%</div>
-              <Progress value={currentMastery.totalMastery} className="h-1.5 mt-2" />
-              <p className="text-[11px] text-muted-foreground mt-2 capitalize">{currentMastery.statusLabel.replace('_', ' ')}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/70">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tempo Dedicado</span>
-              <Clock className="size-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl sm:text-3xl font-extrabold text-foreground">{Math.round(studiedMinutes / 60)}h <span className="text-sm font-semibold text-muted-foreground">{studiedMinutes % 60}m</span></div>
-              <p className="text-[11px] text-muted-foreground mt-2">Horas reais de estudo registradas</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/70">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total XP & Projetos</span>
-              <Trophy className="size-4 text-warning" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl sm:text-3xl font-extrabold text-foreground">{xp.toLocaleString('pt-BR')} <span className="text-sm font-semibold text-muted-foreground">XP</span></div>
-              <p className="text-[11px] text-muted-foreground mt-2">{projects.length} projetos entregues</p>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* Tabbed Workspace: Skills, Journey, Projects, Certificates, Edit */}
-        <Tabs defaultValue="skills" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 h-auto p-1 bg-muted/40 rounded-2xl border border-border/60">
-            <TabsTrigger value="skills" className="py-2.5 text-xs font-bold rounded-xl">
-              🎯 Habilidades & Skills
+        {/* Navigation Tabs for Profile */}
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-6">
+          <TabsList className="bg-[#12111d] border border-white/10 p-1 rounded-2xl">
+            <TabsTrigger value="profile" className="text-xs font-bold rounded-xl data-[state=active]:bg-violet-600 data-[state=active]:text-white">
+              Dados do Perfil
             </TabsTrigger>
-            <TabsTrigger value="journey" className="py-2.5 text-xs font-bold rounded-xl">
-              🗺️ Minha Jornada
+            <TabsTrigger value="skills" className="text-xs font-bold rounded-xl data-[state=active]:bg-violet-600 data-[state=active]:text-white">
+              Matriz de Competências
             </TabsTrigger>
-            <TabsTrigger value="projects" className="py-2.5 text-xs font-bold rounded-xl">
-              💻 Meus Projetos ({projects.length})
-            </TabsTrigger>
-            <TabsTrigger value="certificates" className="py-2.5 text-xs font-bold rounded-xl">
-              📜 Certificados ({certificates.length})
-            </TabsTrigger>
-            <TabsTrigger value="edit" className="py-2.5 text-xs font-bold rounded-xl">
-              ⚙️ Dados Pessoais
+            <TabsTrigger value="preview" className="text-xs font-bold rounded-xl data-[state=active]:bg-violet-600 data-[state=active]:text-white">
+              Visão dos Recrutadores
             </TabsTrigger>
           </TabsList>
 
-          {/* TAB 1: Skills & Competencies */}
-          <TabsContent value="skills" className="space-y-6">
-            <Card className="border-border/80 shadow-lg shadow-primary/5">
-              <CardHeader>
-                <CardTitle className="text-lg font-bold flex items-center gap-2">
-                  <Target className="size-5 text-primary" /> Matriz de Competências & Habilidades Técnicas
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  Seu índice de domínio é recalculado continuamente conforme você assiste aulas, resolve exercícios e passa nas avaliações.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-4 sm:grid-cols-2">
-                {Object.entries(skillMasteryMap).map(([skill, val]) => (
-                  <div key={skill} className="rounded-xl border border-border/80 bg-card p-4 space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold">
-                      <span className="text-foreground">{skill}</span>
-                      <span className="text-primary">{val}%</span>
-                    </div>
-                    <Progress value={val} className="h-2" />
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* TAB 2: Journey & Active Learning Path */}
-          <TabsContent value="journey" className="space-y-6">
-            <Card className="border-border/80 shadow-lg shadow-primary/5">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-lg font-bold">{activePath.title}</CardTitle>
-                    <CardDescription className="text-xs">{activePath.description}</CardDescription>
-                  </div>
-                  <Link href="/trilha">
-                    <Button size="sm" variant="outline" className="gap-1.5 text-xs">
-                      Ver Mapa Completo <ArrowRight className="size-3.5" />
-                    </Button>
-                  </Link>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {currentMod ? (
-                  <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div className="space-y-1">
-                      <span className="text-[10px] uppercase font-bold text-primary">Módulo Ativo no Momento</span>
-                      <h3 className="text-base font-bold text-foreground">{currentMod.title}</h3>
-                      <p className="text-xs text-muted-foreground">{currentMod.description}</p>
-                    </div>
-                    <Link href={currentMod.lessonIds[0] ? `/aulas/${currentMod.lessonIds[0]}` : '/cursos'}>
-                      <Button size="sm" className="gap-2 font-bold text-xs bg-primary text-primary-foreground shadow-md shadow-primary/20">
-                        Continuar Módulo <ArrowRight className="size-3.5" />
-                      </Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="rounded-2xl border border-dashed p-6 text-center text-xs text-muted-foreground space-y-2">
-                    <p>Nenhum módulo ativo no momento.</p>
-                    <Link href="/cursos">
-                      <Button size="sm" variant="outline" className="text-xs font-bold">
-                        Explorar Catálogo de Cursos
-                      </Button>
-                    </Link>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* TAB 3: Projects & Portfolio */}
-          <TabsContent value="projects" className="space-y-6">
-            <Card className="border-border/80 shadow-lg shadow-primary/5">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg font-bold flex items-center gap-2">
-                    <FolderGit2 className="size-5 text-primary" /> Projetos Reais do Portfólio
-                  </CardTitle>
-                  <CardDescription className="text-xs">Aplicações que compõem sua experiência profissional prática.</CardDescription>
-                </div>
-                <Link href="/projetos">
-                  <Button size="sm" className="gap-1.5 text-xs font-bold">
-                    + Novo Projeto
-                  </Button>
-                </Link>
-              </CardHeader>
-              <CardContent>
-                {projects.length === 0 ? (
-                  <div className="text-center py-10 space-y-3 bg-muted/20 rounded-2xl border border-dashed border-border/80">
-                    <Code2 className="size-10 text-muted-foreground mx-auto" />
-                    <h4 className="text-sm font-bold text-foreground">Nenhum projeto entregue ainda</h4>
-                    <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                      Conforme você avançar nos módulos com projetos obrigatórios (Landing Pages, APIs, SPAs), suas entregas aparecerão aqui.
-                    </p>
-                    <Link href="/projetos">
-                      <Button variant="outline" size="sm" className="text-xs">
-                        Acessar Área de Projetos
-                      </Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {projects.map((p) => (
-                      <div key={p.id} className="rounded-2xl border border-border bg-card p-5 space-y-3">
-                        <div className="flex items-start justify-between">
-                          <h4 className="text-sm font-bold text-foreground">{p.title}</h4>
-                          <Badge variant="secondary" className="text-[10px] capitalize font-bold">
-                            {p.status}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground line-clamp-2">{p.description}</p>
-                        <div className="flex flex-wrap gap-1">
-                          {p.tech.map((t) => (
-                            <span key={t} className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold">
-                              {t}
-                            </span>
-                          ))}
-                        </div>
-                        <div className="flex items-center gap-2 pt-2 border-t border-border/60">
-                          {p.github && (
-                            <a href={p.github} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1 font-semibold">
-                              <GithubIcon className="size-3.5" /> GitHub
-                            </a>
-                          )}
-                          {p.deploy && (
-                            <a href={p.deploy} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1 font-semibold ml-auto">
-                              <ExternalLink className="size-3.5" /> Demonstração
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* TAB 4: Certificates */}
-          <TabsContent value="certificates" className="space-y-6">
-            <Card className="border-border/80 shadow-lg shadow-primary/5">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg font-bold flex items-center gap-2">
-                    <ShieldCheck className="size-5 text-success" /> Certificados de Formação Emitidos
-                  </CardTitle>
-                  <CardDescription className="text-xs">Certificados válidos com assinatura e hash criptográfico de autenticidade.</CardDescription>
-                </div>
-                <Link href="/certificados">
-                  <Button size="sm" variant="outline" className="text-xs">
-                    Ver Certificações
-                  </Button>
-                </Link>
-              </CardHeader>
-              <CardContent>
-                {certificates.length === 0 ? (
-                  <div className="text-center py-10 space-y-3 bg-muted/20 rounded-2xl border border-dashed border-border/80">
-                    <Award className="size-10 text-muted-foreground mx-auto" />
-                    <h4 className="text-sm font-bold text-foreground">Nenhum certificado emitido ainda</h4>
-                    <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                      Conclua 100% da sua trilha formativa com aproveitamento mínimo de 70% nas avaliações para desbloquear seu certificado oficial.
-                    </p>
-                    <Link href="/trilha">
-                      <Button size="sm" className="text-xs">
-                        Continuar Minha Trilha
-                      </Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {certificates.map((c) => (
-                      <div key={c.id} className="rounded-2xl border border-primary/20 bg-card p-5 space-y-2">
-                        <Badge className="bg-success text-success-foreground text-[10px] font-bold">Oficial</Badge>
-                        <h4 className="text-sm font-bold text-foreground">{c.pathTitle}</h4>
-                        <p className="text-xs text-muted-foreground">Emitido em: {c.completionDate} • Carga Horária: {c.hours}h</p>
-                        <p className="text-[11px] font-mono text-primary font-bold">Hash: {c.validationCode}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* TAB 5: Edit Personal Data */}
-          <TabsContent value="edit" className="space-y-6">
-            <Card className="border-border/80 shadow-lg shadow-primary/5">
-              <CardHeader>
-                <CardTitle className="text-lg font-bold flex items-center gap-2">
-                  <User className="size-5 text-primary" /> Editar Dados do Perfil
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  Atualize suas informações cadastrais, links profissionais e objetivos de carreira.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSave} className="space-y-4">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-foreground">Nome Completo</label>
-                      <Input
-                        placeholder="Seu nome completo"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="bg-background text-xs"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-foreground">Objetivo Profissional / Cargo Desejado</label>
-                      <Input
-                        placeholder="Ex: Desenvolvedor Full Stack Júnior"
-                        value={desiredRole}
-                        onChange={(e) => setDesiredRole(e.target.value)}
-                        className="bg-background text-xs"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-foreground">Usuário do GitHub</label>
-                      <Input
-                        placeholder="Ex: seunome"
-                        value={github}
-                        onChange={(e) => setGithub(e.target.value)}
-                        className="bg-background text-xs"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-foreground">LinkedIn (URL ou usuário)</label>
-                      <Input
-                        placeholder="Ex: linkedin.com/in/seunome"
-                        value={linkedin}
-                        onChange={(e) => setLinkedin(e.target.value)}
-                        className="bg-background text-xs"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-foreground">Biografia Profissional</label>
-                    <Textarea
-                      rows={3}
-                      placeholder="Conte um pouco sobre sua trajetória, tecnologias preferidas e metas..."
-                      value={bio}
-                      onChange={(e) => setBio(e.target.value)}
-                      className="bg-background text-xs leading-relaxed"
+          {/* Tab 1: Profile Details Form */}
+          <TabsContent value="profile" className="m-0">
+            <Card className="border-white/10 bg-[#12111d] shadow-2xl rounded-3xl p-6 sm:p-8">
+              <form onSubmit={handleSave} className="space-y-5">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5 text-left">
+                    <label className="text-xs font-bold text-zinc-300">Nome de Exibição</label>
+                    <Input
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="bg-black/50 border-white/10 text-xs rounded-xl text-white"
                     />
                   </div>
-
-                  <div className="pt-2 flex justify-end">
-                    <Button type="submit" disabled={isSaving} className="gap-2 font-bold text-xs">
-                      <Save className="size-3.5" />
-                      {isSaving ? 'Salvando...' : 'Salvar Alterações'}
-                    </Button>
+                  <div className="space-y-1.5 text-left">
+                    <label className="text-xs font-bold text-zinc-300">Cargo Alvo</label>
+                    <Input
+                      value={desiredRole}
+                      onChange={(e) => setDesiredRole(e.target.value)}
+                      className="bg-black/50 border-white/10 text-xs rounded-xl text-white"
+                    />
                   </div>
-                </form>
-              </CardContent>
+                </div>
+
+                <div className="space-y-1.5 text-left">
+                  <label className="text-xs font-bold text-zinc-300">Biografia / Apresentação</label>
+                  <Textarea
+                    rows={3}
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    placeholder="Conte sobre sua trajetória, tecnologias que mais gosta e projetos em andamento..."
+                    className="bg-black/50 border-white/10 text-xs rounded-xl text-white leading-relaxed"
+                  />
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5 text-left">
+                    <label className="text-xs font-bold text-zinc-300">Usuário do GitHub</label>
+                    <Input
+                      value={github}
+                      onChange={(e) => setGithub(e.target.value)}
+                      placeholder="seu-usuario"
+                      className="bg-black/50 border-white/10 text-xs rounded-xl text-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5 text-left">
+                    <label className="text-xs font-bold text-zinc-300">Usuário do LinkedIn</label>
+                    <Input
+                      value={linkedin}
+                      onChange={(e) => setLinkedin(e.target.value)}
+                      placeholder="seu-perfil"
+                      className="bg-black/50 border-white/10 text-xs rounded-xl text-white"
+                    />
+                  </div>
+                </div>
+
+                <Button type="submit" disabled={isSaving} className="bg-violet-600 hover:bg-violet-500 font-bold text-xs py-5 rounded-xl shadow-lg shadow-purple-600/25">
+                  <Save className="size-3.5 mr-1" /> {isSaving ? 'Salvando...' : 'Salvar Alterações'}
+                </Button>
+              </form>
+            </Card>
+          </TabsContent>
+
+          {/* Tab 2: Skills Matrix */}
+          <TabsContent value="skills" className="m-0 space-y-4">
+            <Card className="border-white/10 bg-[#12111d] shadow-2xl rounded-3xl p-6 sm:p-8 space-y-6">
+              <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                <div>
+                  <h3 className="text-base font-bold text-white">Matriz de Competências & Maestria Técnica</h3>
+                  <p className="text-xs text-zinc-400">Calculada automaticamente pelas notas nas avaliações e desafios</p>
+                </div>
+                <Badge className="bg-violet-950 text-violet-300 border-violet-500/30 text-xs font-bold">
+                  Validado por IA
+                </Badge>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                {skillMasteryList.map((item) => (
+                  <div key={item.skill} className="p-4 rounded-2xl border border-white/5 bg-black/40 space-y-2">
+                    <div className="flex justify-between items-center text-xs font-bold">
+                      <span className="text-zinc-200">{item.skill}</span>
+                      <span className="text-violet-400 font-mono">{item.score}%</span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-white/5 overflow-hidden">
+                      <div
+                        style={{ width: `${item.score}%` }}
+                        className="h-full bg-gradient-to-r from-violet-600 to-indigo-500 rounded-full"
+                      />
+                    </div>
+                    <span className="text-[10px] text-zinc-500 font-semibold">{item.level}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </TabsContent>
+
+          {/* Tab 3: Recruiter Public Preview */}
+          <TabsContent value="preview" className="m-0">
+            <Card className="border-white/10 bg-[#12111d] shadow-2xl rounded-3xl p-6 sm:p-8 space-y-6">
+              <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Eye className="size-4 text-violet-400" /> Prévia da Visão Pública de Recrutadores
+                  </h3>
+                  <p className="text-xs text-zinc-400">Assim é como líderes técnicos e empresas visualizam seu perfil</p>
+                </div>
+                <Link href={`/u/${username}`}>
+                  <Button size="sm" className="bg-violet-600 hover:bg-violet-500 text-xs font-bold rounded-xl">
+                    Abrir Página Pública <ExternalLink className="size-3 ml-1" />
+                  </Button>
+                </Link>
+              </div>
+
+              <div className="p-6 rounded-2xl border border-white/5 bg-black/60 space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="grid size-14 place-items-center rounded-2xl bg-violet-600 text-white font-black text-xl">
+                    {displayName.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-black text-white">{displayName}</h4>
+                    <p className="text-xs text-violet-400 font-bold">{desiredRole}</p>
+                    <p className="text-xs text-zinc-400">{profile?.email || 'aluno@devpath.ai'}</p>
+                  </div>
+                </div>
+                <p className="text-xs text-zinc-300 leading-relaxed font-medium">
+                  {bio || 'Desenvolvedor em formação intensiva na DevPath AI.'}
+                </p>
+                <div className="pt-2 flex flex-wrap gap-2 text-xs">
+                  <span className="px-3 py-1 rounded-lg bg-white/5 text-zinc-300 font-semibold font-mono">
+                    🎓 Trilha: {activePath?.title || 'Full Stack JavaScript'}
+                  </span>
+                  <span className="px-3 py-1 rounded-lg bg-white/5 text-emerald-400 font-semibold font-mono">
+                    ✔ {completedLessons.length} Aulas Concluídas
+                  </span>
+                  <span className="px-3 py-1 rounded-lg bg-white/5 text-amber-400 font-semibold font-mono">
+                    ⚡ {projects.length} Projetos Publicados
+                  </span>
+                </div>
+              </div>
             </Card>
           </TabsContent>
         </Tabs>
