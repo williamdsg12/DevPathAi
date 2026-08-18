@@ -19,6 +19,7 @@ import {
   LogOut,
   Map,
   Repeat,
+  RotateCcw,
   Settings,
   ShieldCheck,
   Sparkles,
@@ -42,24 +43,29 @@ interface NavItem {
 
 const navSections: { title: string; items: NavItem[] }[] = [
   {
-    title: 'PLATAFORMA',
+    title: 'PRINCIPAL',
     items: [
       { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-      { href: '/trilha', label: 'Minha Trilha', icon: Map },
+      { href: '/trilha', label: 'Minha Jornada', icon: Map },
       { href: '/cursos', label: 'Cursos', icon: BookOpen },
-      { href: '/projetos', label: 'Projetos', icon: FolderGit2 },
       { href: '/exercicios', label: 'Atividades', icon: CheckCircle2 },
-      { href: '/avaliacoes/mod-logica', label: 'Avaliações', icon: Target },
+      { href: '/avaliacoes', label: 'Avaliações', icon: Target },
+      { href: '/projetos', label: 'Projetos', icon: FolderGit2 },
       { href: '/estudo', label: 'Meu Progresso', icon: GraduationCap },
-      { href: '/certificados', label: 'Conquistas', icon: Trophy },
     ],
   },
   {
-    title: 'MENTORIA & FERRAMENTAS',
+    title: 'RECURSOS',
     items: [
-      { href: '/mentor', label: 'DevMentor AI', icon: Bot, badge: 'AI' },
-      { href: '/code-lab', label: 'Code Lab', icon: Code2, badge: 'IDE' },
-      { href: '/perfil', label: 'Perfil', icon: User },
+      { href: '/mentor', label: 'Mentor IA', icon: Bot, badge: 'IA' },
+      { href: '/code-lab', label: 'Laboratório (Code Lab)', icon: Code2, badge: 'IDE' },
+      { href: '/revisoes', label: 'Revisões & Biblioteca', icon: RotateCcw },
+    ],
+  },
+  {
+    title: 'CONTA',
+    items: [
+      { href: '/perfil', label: 'Meu Perfil', icon: User },
       { href: '/configuracoes', label: 'Configurações', icon: Settings },
       { href: '/cursos/importar', label: 'Importar YouTube', icon: YoutubeIcon, adminOnly: true },
       { href: '/admin', label: 'Painel Admin', icon: ShieldCheck, adminOnly: true },
@@ -81,7 +87,7 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <aside
       className={cn(
-        'relative flex h-full flex-col border-r border-white/5 bg-[#0a0910]/95 backdrop-blur-2xl text-foreground transition-all duration-300',
+        'relative flex h-full flex-col border-r border-white/5 bg-[#0a0910] text-foreground transition-all duration-300',
         collapsed ? 'w-20' : 'w-64'
       )}
     >
@@ -97,11 +103,11 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
           )}
         </Link>
 
-        {/* Collapse toggle (Desktop only) */}
+        {/* Collapse toggle button */}
         <button
           type="button"
           onClick={() => setCollapsed(!collapsed)}
-          className="hidden lg:grid size-7 place-items-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
+          className="hidden lg:grid size-7 place-items-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
           title={collapsed ? 'Expandir barra lateral' : 'Recolher barra lateral'}
         >
           {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
@@ -110,17 +116,17 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
 
       {/* User Progress Mini Card */}
       {!collapsed && (
-        <div className="p-3.5 border-b border-white/5">
-          <div className="flex items-center justify-between gap-2 rounded-2xl border border-violet-500/20 bg-gradient-to-r from-violet-950/40 via-purple-950/20 to-transparent p-3 shadow-inner">
+        <div className="p-3 border-b border-white/5">
+          <div className="flex items-center justify-between gap-2 rounded-2xl border border-white/5 bg-white/[0.02] p-3 shadow-inner">
             <div className="space-y-0.5">
               <div className="flex items-center gap-1.5">
                 <span className="size-2 rounded-full bg-violet-400 animate-pulse" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-violet-300">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
                   Nível {level}
                 </span>
               </div>
-              <p className="text-sm font-black text-white">
-                {xp.toLocaleString('pt-BR')} <span className="text-xs font-semibold text-violet-400/80">XP</span>
+              <p className="text-sm font-black text-white font-mono">
+                {xp.toLocaleString('pt-BR')} <span className="text-xs font-semibold text-zinc-400">XP</span>
               </p>
             </div>
             <div className="flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-400">
@@ -132,7 +138,7 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
       )}
 
       {/* Navigation Sections */}
-      <nav className="flex-1 space-y-6 overflow-y-auto p-3 scrollbar-thin">
+      <nav className="flex-1 space-y-5 overflow-y-auto p-3 scrollbar-thin">
         {navSections
           .map((section) => ({
             ...section,
@@ -140,7 +146,7 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
           }))
           .filter((section) => section.items.length > 0)
           .map((section) => (
-            <div key={section.title} className="space-y-1.5">
+            <div key={section.title} className="space-y-1">
               {!collapsed && (
                 <p className="px-3 pb-1 text-[10px] font-extrabold uppercase tracking-widest text-zinc-500">
                   {section.title}
@@ -158,10 +164,10 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
                         onClick={onNavigate}
                         title={collapsed ? item.label : undefined}
                         className={cn(
-                          'group relative flex items-center rounded-xl py-2.5 font-semibold text-xs sm:text-sm transition-all duration-200',
+                          'group relative flex items-center rounded-xl py-2.5 text-xs sm:text-sm font-semibold transition-all duration-200',
                           collapsed ? 'justify-center px-0' : 'justify-between px-3',
                           isActive
-                            ? 'bg-gradient-to-r from-violet-600/90 to-purple-600/90 text-white shadow-lg shadow-purple-600/20 border border-violet-400/30 font-bold'
+                            ? 'bg-violet-600 text-white font-bold shadow-lg shadow-purple-600/20'
                             : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-100'
                         )}
                       >
@@ -222,7 +228,7 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
             {!collapsed && (
               <div className="min-w-0 flex-1 truncate text-left">
                 <p className="truncate text-xs font-bold text-zinc-100">{profile?.name || 'Desenvolvedor'}</p>
-                <p className="truncate text-[10px] text-zinc-400">{profile?.email || 'aluno@devpath.ai'}</p>
+                <p className="truncate text-[10px] text-zinc-400 font-mono">Nível {level}</p>
               </div>
             )}
           </Link>

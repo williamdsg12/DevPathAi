@@ -369,21 +369,52 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
             }
           : null
 
-        const loadedCourses = Array.isArray(parsed.courses) && parsed.courses.length ? parsed.courses : defaultOfficialCourses
-        const loadedModules = Array.isArray(parsed.customModules) && parsed.customModules.length ? parsed.customModules : defaultOfficialModules
-        const loadedLessons = Array.isArray(parsed.customLessons) && parsed.customLessons.length ? parsed.customLessons : defaultOfficialLessons
+        // Merge official catalog to ensure defaultOfficialCourses/Modules/Lessons are ALWAYS present and ordered first
+        const officialCourseIds = new Set(defaultOfficialCourses.map((c) => c.id))
+        const userCourses = Array.isArray(parsed.courses)
+          ? parsed.courses.filter((c: Course) => !officialCourseIds.has(c.id))
+          : []
+        const mergedCourses = [...defaultOfficialCourses, ...userCourses]
+
+        const officialModuleIds = new Set(defaultOfficialModules.map((m) => m.id))
+        const userModules = Array.isArray(parsed.customModules)
+          ? parsed.customModules.filter((m: LearningModule) => !officialModuleIds.has(m.id))
+          : []
+        const mergedModules = [...defaultOfficialModules, ...userModules]
+
+        const officialLessonIds = new Set(defaultOfficialLessons.map((l) => l.id))
+        const userLessons = Array.isArray(parsed.customLessons)
+          ? parsed.customLessons.filter((l: Lesson) => !officialLessonIds.has(l.id))
+          : []
+        const mergedLessons = [...defaultOfficialLessons, ...userLessons]
+
         const loadedActivities = Array.isArray(parsed.activities) && parsed.activities.length ? parsed.activities : defaultLearningActivities
         const loadedProjects = parsed.moduleProjects && Object.keys(parsed.moduleProjects).length ? parsed.moduleProjects : createCleanInitialState().moduleProjects
         const loadedAssessments = parsed.assessments && Object.keys(parsed.assessments).length ? parsed.assessments : createCleanInitialState().assessments
+
+        // Ensure activePath always starts with mandatory logic foundation (mod-logica) for beginners
+        let loadedActivePath = parsed.activePath
+        const hasValidLogicPhase = loadedActivePath?.items?.some((it: LearningPathItem) => it.moduleId === 'mod-logica')
+        if (!loadedActivePath?.items?.length || !hasValidLogicPhase) {
+          const generated = learningPathEngine.generateAdaptiveTrail(
+            loadedProfile,
+            parsed.onboarding || null,
+            parsed.placement || null,
+            mergedCourses,
+            mergedModules,
+            mergedLessons,
+          )
+          loadedActivePath = generated.path
+        }
 
         setState((prev) => ({
           ...prev,
           ...parsed,
           profile: loadedProfile,
           contentSources: parsed.contentSources?.length ? parsed.contentSources : defaultContentSources,
-          courses: loadedCourses,
-          customModules: loadedModules,
-          customLessons: loadedLessons,
+          courses: mergedCourses,
+          customModules: mergedModules,
+          customLessons: mergedLessons,
           activities: loadedActivities,
           activityAttempts: parsed.activityAttempts || {},
           completedActivities: Array.isArray(parsed.completedActivities) ? parsed.completedActivities : parsed.completedExercises || [],
@@ -393,7 +424,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
           assessmentAttempts: parsed.assessmentAttempts || {},
           moduleReflections: parsed.moduleReflections || {},
           skillMasteryMap: parsed.skillMasteryMap || {},
-          activePath: parsed.activePath?.items?.length ? parsed.activePath : prev.activePath,
+          activePath: loadedActivePath || prev.activePath,
           technologySources: parsed.technologySources?.length ? parsed.technologySources : defaultTechnologySources,
         }))
       }

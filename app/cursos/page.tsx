@@ -177,6 +177,14 @@ export default function CoursesPage() {
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filteredCourses.map((course) => {
             const courseLessons = allLessons.filter((l) => (course.skills || []).some(() => true))
+            const courseModule = allModules.find(
+              (m) => m.courseId === course.id || m.id === `mod-${course.id.replace('crs-', '')}` || m.title.toLowerCase().includes(course.title.toLowerCase().split(' ')[0]),
+            )
+            const firstLessonId =
+              courseModule?.lessonIds?.[0] ||
+              allLessons.find((l) => l.moduleId === courseModule?.id || l.playlistId === course.playlistId)?.id ||
+              'l-logica-1'
+
             const techKey = Object.keys(TECH_COLORS).find((k) =>
               course.title.toLowerCase().includes(k.toLowerCase()) || (course.technology || '').toLowerCase().includes(k.toLowerCase())
             )
@@ -204,7 +212,7 @@ export default function CoursesPage() {
                       </div>
                     )}
                     <span className="absolute bottom-2 right-2 px-2.5 py-0.5 rounded-lg bg-black/80 text-[10px] font-bold text-white font-mono">
-                      {course.durationHours || 12}h de conteúdo
+                      {course.totalHours || course.durationHours || 12}h de conteúdo
                     </span>
                   </div>
 
@@ -228,11 +236,11 @@ export default function CoursesPage() {
 
                 <div className="pt-3 border-t border-white/5 flex items-center justify-between">
                   <span className="text-[11px] text-zinc-400 font-semibold">
-                    {course.modulesCount || 4} módulos estruturados
+                    {course.lessonsCount || courseModule?.lessonIds?.length || 10} aulas oficiais
                   </span>
-                  <Link href="/trilha">
-                    <Button size="sm" variant="ghost" className="text-xs text-violet-400 hover:text-violet-300 font-bold gap-1 p-0">
-                      Acessar Curso <ArrowRight className="size-3.5" />
+                  <Link href={`/aulas/${firstLessonId}`}>
+                    <Button size="sm" variant="ghost" className="text-xs text-violet-400 hover:text-violet-300 font-bold gap-1 p-0 cursor-pointer">
+                      Assistir Curso <ArrowRight className="size-3.5" />
                     </Button>
                   </Link>
                 </div>

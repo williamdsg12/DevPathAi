@@ -19,6 +19,7 @@ import {
   Sparkles,
   Target,
   User,
+  Zap,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { AppShell } from '@/components/layout/app-shell'
@@ -29,6 +30,16 @@ import { Badge } from '@/components/ui/badge'
 import { useAppStore } from '@/lib/store'
 import { aiService } from '@/lib/ai/provider'
 import type { ChatMessage } from '@/lib/types'
+
+const socraticModes = [
+  { id: 'explain', label: 'Me explique', prompt: 'Explique detalhadamente o conceito principal desta aula com analogias claras.' },
+  { id: 'hint', label: 'Me dê uma dica', prompt: 'Me dê uma dica pedagógica para resolver o exercício atual sem me dar a resposta direta.' },
+  { id: 'debug', label: 'Onde estou errando?', prompt: 'Analise o seguinte raciocínio/código e me aponte onde está o erro conceitual ou de sintaxe.' },
+  { id: 'review', label: 'Revise meu código', prompt: 'Faça um code review focado em boas práticas, Clean Code e padrões modernos.' },
+  { id: 'teacher', label: 'Como um professor', prompt: 'Explique este tópico como um professor sênior de engenharia de software estruturando o raciocínio.' },
+  { id: 'challenge', label: 'Exercício similar', prompt: 'Crie um desafio prático de código semelhante ao da aula para eu treinar agora.' },
+  { id: 'quiz', label: 'Teste meu conhecimento', prompt: 'Faça 2 perguntas objetivas para testar se realmente dominei o conteúdo desta aula.' },
+]
 
 function CodeBlock({ code }: { code: string }) {
   const [copied, setCopied] = useState(false)
@@ -45,7 +56,7 @@ function CodeBlock({ code }: { code: string }) {
         <span className="text-[10px] font-bold text-zinc-400">código / snippet</span>
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1 text-[10px] text-zinc-400 hover:text-white transition-colors"
+          className="flex items-center gap-1 text-[10px] text-zinc-400 hover:text-white transition-colors cursor-pointer"
         >
           {copied ? <Check className="size-3 text-emerald-400" /> : <Copy className="size-3" />}
           <span>{copied ? 'Copiado!' : 'Copiar'}</span>
@@ -59,7 +70,6 @@ function CodeBlock({ code }: { code: string }) {
 }
 
 function FormattedMessageContent({ content }: { content: string }) {
-  // Simple markdown-style code block splitting
   const parts = content.split(/(```[\s\S]*?```)/g)
 
   return (
@@ -67,7 +77,6 @@ function FormattedMessageContent({ content }: { content: string }) {
       {parts.map((part, idx) => {
         if (part.startsWith('```') && part.endsWith('```')) {
           const lines = part.slice(3, -3).trim()
-          // Strip optional language identifier from first line if present
           const code = lines.replace(/^[a-zA-Z0-9_-]+\n/, '')
           return <CodeBlock key={idx} code={code || lines} />
         }
@@ -105,7 +114,7 @@ function MentorChatContent() {
     {
       id: 'm1',
       role: 'assistant',
-      content: `Olá, **${profile?.name?.split(' ')[0] || 'Desenvolvedor'}**! Sou o seu **DevMentor AI** 🤖\n\nEstou acompanhando você em tempo real no módulo **${currentModule.title}** (Mastery Score: ${currentMastery.totalMastery}%).\n\nVocê pode me perguntar qualquer dúvida sobre a aula **"${currentLesson.title}"**, pedir exemplos práticos em código, entender onde errou em exercícios ou simular dúvidas técnicas. Como posso te guiar agora?`,
+      content: `Olá, **${profile?.name?.split(' ')[0] || 'Desenvolvedor'}**! Sou o seu **DevMentor AI** 🤖\n\nEstou acompanhando seu progresso em tempo real no módulo **${currentModule.title}** (Mastery Score: ${currentMastery.totalMastery}%).\n\nVocê pode escolher um dos modos de mentoria abaixo ou me perguntar qualquer dúvida sobre a aula **"${currentLesson.title}"**. Como posso te guiar agora?`,
       createdAt: new Date().toISOString(),
     },
   ])
@@ -166,13 +175,6 @@ function MentorChatContent() {
     }
   }
 
-  const quickPrompts = [
-    `Explique o conceito central da aula "${currentLesson.title}"`,
-    `Como resolver desafios práticos no módulo ${currentModule.title}?`,
-    `Dê um exemplo de código funcional em JavaScript com boas práticas.`,
-    `O que preciso dominar para passar na avaliação deste módulo?`,
-  ]
-
   return (
     <div className="grid gap-6 lg:grid-cols-4 items-start pb-16">
       {/* Left 3 Cols: Chat Interface */}
@@ -184,7 +186,7 @@ function MentorChatContent() {
               <PlayCircle className="size-5" />
             </span>
             <div>
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-violet-400">Contexto Sincronizado</span>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-violet-400 font-mono">Contexto da Aula Ativa</span>
               <h4 className="text-xs sm:text-sm font-bold text-white truncate max-w-sm sm:max-w-md">
                 Aula {currentLesson.order}: {currentLesson.title}
               </h4>
@@ -222,7 +224,7 @@ function MentorChatContent() {
           </div>
 
           {/* Messages Feed */}
-          <CardContent className="p-4 sm:p-6 space-y-4 flex-1 overflow-y-auto max-h-[520px] scrollbar-thin">
+          <CardContent className="p-4 sm:p-6 space-y-4 flex-1 overflow-y-auto max-h-[500px] scrollbar-thin">
             {messages.map((m) => {
               const isUser = m.role === 'user'
               return (
@@ -262,7 +264,7 @@ function MentorChatContent() {
                   <Sparkles className="size-3.5 animate-spin" />
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="font-semibold text-zinc-300">DevMentor analisando e redigindo resposta</span>
+                  <span className="font-semibold text-zinc-300">DevMentor redigindo resposta</span>
                   <span className="inline-flex size-1.5 rounded-full bg-violet-400 animate-bounce" />
                   <span className="inline-flex size-1.5 rounded-full bg-violet-400 animate-bounce [animation-delay:0.2s]" />
                   <span className="inline-flex size-1.5 rounded-full bg-violet-400 animate-bounce [animation-delay:0.4s]" />
@@ -272,17 +274,19 @@ function MentorChatContent() {
             <div ref={messagesEndRef} />
           </CardContent>
 
-          {/* Quick Prompts & Chat Input */}
+          {/* Socratic Modes Bar & Chat Input */}
           <div className="border-t border-white/5 p-4 bg-black/30 space-y-3">
-            {/* Quick Context Prompt Chips */}
-            <div className="flex flex-wrap gap-2">
-              {quickPrompts.map((q) => (
+            {/* 7 Modos de Ensino Socrático Chips */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              <span className="text-[10px] font-bold uppercase text-zinc-500 shrink-0">Modos:</span>
+              {socraticModes.map((mode) => (
                 <button
-                  key={q}
-                  onClick={() => handleSendMessage(q)}
-                  className="rounded-xl border border-white/10 bg-white/[0.02] hover:bg-violet-950/40 hover:border-violet-500/40 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:text-white transition-all truncate max-w-full cursor-pointer"
+                  key={mode.id}
+                  type="button"
+                  onClick={() => handleSendMessage(mode.prompt)}
+                  className="rounded-xl border border-white/10 bg-white/[0.02] hover:bg-violet-950/60 hover:border-violet-500/40 px-3 py-1 text-xs font-semibold text-zinc-300 hover:text-white transition-all whitespace-nowrap shrink-0 cursor-pointer"
                 >
-                  💡 {q}
+                  💡 {mode.label}
                 </button>
               ))}
             </div>
@@ -318,13 +322,13 @@ function MentorChatContent() {
       <div className="space-y-4">
         <Card className="border-white/10 bg-[#12111d] shadow-2xl rounded-3xl p-5 space-y-4">
           <div className="border-b border-white/5 pb-3 space-y-1">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-violet-400">Contexto em Tempo Real</span>
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-violet-400 font-mono">Contexto em Tempo Real</span>
             <h3 className="text-sm font-bold text-white">Dados Sincronizados com a IA</h3>
           </div>
 
           <div className="space-y-4 text-xs">
             <div className="space-y-1">
-              <span className="text-[10px] uppercase font-bold text-zinc-500">Módulo Atual</span>
+              <span className="text-[10px] uppercase font-bold text-zinc-500">Módulo Ativo</span>
               <p className="font-bold text-white">{currentModule.title}</p>
               <p className="text-[11px] text-violet-400 font-mono">Mastery Score: {currentMastery.totalMastery}%</p>
             </div>

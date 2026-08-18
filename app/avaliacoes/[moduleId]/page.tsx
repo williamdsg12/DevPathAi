@@ -35,14 +35,39 @@ export default function ModuleAssessmentPage({ params }: { params: Promise<{ mod
   const resolvedParams = use(params)
   const moduleId = resolvedParams.moduleId
 
-  const { allModules, submitAssessment, recordDifficulty, submitModuleReflection, moduleReflections } = useAppStore()
+  const {
+    allModules,
+    allLessons,
+    allCourses,
+    assessments,
+    completedLessons,
+    submitAssessment,
+    recordDifficulty,
+    submitModuleReflection,
+    moduleReflections,
+    moduleProgress,
+  } = useAppStore()
+
   const currentModule = allModules.find((m) => m.id === moduleId) || allModules[0]
+  const currentCourse = allCourses.find((c) => c.id === currentModule.courseId || c.category === currentModule.phase) || allCourses[0]
+
+  // Module Lessons & Completion Check
+  const moduleLessons = allLessons
+    .filter((l) => l.moduleId === currentModule.id || currentModule.lessonIds.includes(l.id))
+    .sort((a, b) => a.order - b.order)
+
+  const completedModuleLessons = moduleLessons.filter((l) => completedLessons.includes(l.id))
+  const totalModuleLessons = moduleLessons.length || currentModule.lessonIds.length || 1
+  const lessonsProgressPercent = Math.min(100, Math.round((completedModuleLessons.length / totalModuleLessons) * 100))
+  const isModuleFullyCompleted = totalModuleLessons > 0 && completedModuleLessons.length >= totalModuleLessons
+  const nextPendingLesson = moduleLessons.find((l) => !completedLessons.includes(l.id)) || moduleLessons[0]
 
   // Use the assessment questions for the module or fallback to mock
+  const rawAssessment = assessments[currentModule.id] || mockAssessments.find((a) => a.moduleId === currentModule.id) || mockAssessments[0]
   const assessment: Assessment = {
-    ...mockAssessment,
-    moduleId: currentModule?.id || moduleId,
-    title: currentModule ? `Avaliação Oficial — ${currentModule.title}` : 'Avaliação do Módulo',
+    ...rawAssessment,
+    moduleId: currentModule.id,
+    title: `Avaliação Oficial — ${currentModule.title}`,
   }
 
   const [currentIdx, setCurrentIdx] = useState(0)
@@ -64,10 +89,10 @@ export default function ModuleAssessmentPage({ params }: { params: Promise<{ mod
 
   // Timer countdown
   useEffect(() => {
-    if (isSubmitted || timeLeft <= 0) return
+    if (!isModuleFullyCompleted || isSubmitted || timeLeft <= 0) return
     const timer = setInterval(() => setTimeLeft((t) => t - 1), 1000)
     return () => clearInterval(timer)
-  }, [isSubmitted, timeLeft])
+  }, [isModuleFullyCompleted, isSubmitted, timeLeft])
 
   const currentQ: AssessmentQuestion = assessment.questions[currentIdx] || assessment.questions[0]
   const totalQ = assessment.questions.length
@@ -151,27 +176,153 @@ export default function ModuleAssessmentPage({ params }: { params: Promise<{ mod
     setRecoveryPlan(null)
   }
 
+  // =========================================================================
+  // GATEKEEPER: TELA DE BLOQUEIO QUANDO AS AULAS NÃO FORAM TODAS CONCLUÍDAS
+  // =========================================================================
+  if (!isModuleFullyCompleted) {
+    return (
+      <AppShell
+        title={`Avaliação Oficial — ${currentModule.title}`}
+        subtitle="Prova oficial de certificação e nivelamento pedagógico"
+      >
+        <div className="mx-auto max-w-4xl space-y-8 pb-16">
+          {/* Breadcrumb de Voltar */}
+          <div className="flex items-center justify-between">
+            <Link
+              href="/trilha"
+              className="flex items-center gap-1.5 text-xs font-semibold text-zinc-400 hover:text-white transition-colors"
+            >
+              <ArrowLeft className="size-3.5" /> Voltar para Minha Trilha
+            </Link>
+
+            <Badge variant="outline" className="bg-amber-500/10 text-amber-300 border-amber-500/30 text-xs font-bold gap-1.5 px-3 py-1">
+              <Clock className="size-3.5" /> Pré-requisito Obrigatório
+            </Badge>
+          </div>
+
+          {/* Card Principal de Bloqueio com Design Premium */}
+          <div className="relative overflow-hidden rounded-3xl border border-violet-500/20 bg-gradient-to-b from-[#161426] via-[#100f1c] to-[#0a0912] p-8 sm:p-12 shadow-2xl space-y-8">
+            {/* Background Glow */}
+            <div className="absolute top-0 right-0 -mr-24 -mt-24 size-80 rounded-full bg-violet-600/10 blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 -ml-24 -mb-24 size-80 rounded-full bg-purple-600/10 blur-3xl pointer-events-none" />
+
+            <div className="text-center space-y-4 max-w-2xl mx-auto">
+              {/* Ícone de Cadeado Iluminado */}
+              <div className="mx-auto grid size-20 place-items-center rounded-3xl bg-gradient-to-br from-violet-600/20 to-purple-900/30 border border-violet-500/40 text-violet-400 shadow-xl shadow-violet-950/50">
+                <Target className="size-10 text-violet-300 animate-pulse" />
+              </div>
+
+              <div className="space-y-2">
+                <Badge className="bg-violet-950/80 border border-violet-500/30 text-violet-300 font-bold px-3 py-0.5 text-xs">
+                  Banca Examinadora do Mentor Dev
+                </Badge>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white">
+                  Avaliação Oficial Bloqueada
+                </h1>
+                <p className="text-sm sm:text-base text-zinc-300 leading-relaxed font-medium">
+                  Para liberar a prova avaliativa e testar seu domínio com a inteligência artificial da plataforma, é obrigatório concluir <span className="text-violet-300 font-bold">100% das aulas</span> do módulo <span className="text-white font-bold">{currentModule.title}</span>.
+                </p>
+              </div>
+            </div>
+
+            {/* Painel de Progresso das Aulas */}
+            <div className="rounded-2xl border border-white/10 bg-black/40 p-6 sm:p-8 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs sm:text-sm">
+                <span className="font-bold text-white flex items-center gap-2">
+                  <CheckCircle2 className="size-4 text-violet-400" />
+                  Progresso das Aulas do Módulo:
+                </span>
+                <span className="font-mono font-bold text-violet-300">
+                  {completedModuleLessons.length} de {totalModuleLessons} aulas concluídas ({lessonsProgressPercent}%)
+                </span>
+              </div>
+
+              <div className="h-3 w-full rounded-full bg-white/5 overflow-hidden p-0.5 border border-white/5">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-violet-600 to-purple-500 transition-all duration-500 shadow-md shadow-violet-600/40"
+                  style={{ width: `${Math.max(5, lessonsProgressPercent)}%` }}
+                />
+              </div>
+
+              <div className="flex items-center justify-between text-xs text-zinc-400 font-medium pt-1">
+                <span>Faltam {totalModuleLessons - completedModuleLessons.length} aula(s) para liberar a prova</span>
+                <span>Nota de corte: {assessment.minScore}% de acertos</span>
+              </div>
+            </div>
+
+            {/* Chamada para Ação (CTA) Principal */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+              {nextPendingLesson && (
+                <Link href={`/aulas/${nextPendingLesson.id}`} className="w-full sm:w-auto">
+                  <Button
+                    size="lg"
+                    className="w-full sm:w-auto gap-2.5 font-black text-sm px-8 py-6 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-xl shadow-purple-600/30 border border-violet-400/30 cursor-pointer"
+                  >
+                    <ArrowRight className="size-4" /> Continuar Aulas do Curso (Aula {nextPendingLesson.order})
+                  </Button>
+                </Link>
+              )}
+
+              <Link href="/trilha" className="w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full sm:w-auto font-bold text-sm px-6 py-6 rounded-2xl bg-white/[0.02] border-white/10 text-zinc-300 hover:text-white hover:border-white/20 cursor-pointer"
+                >
+                  Explorar Trilha
+                </Button>
+              </Link>
+            </div>
+
+            {/* Grade Informativa: O que será avaliado na Prova */}
+            <div className="pt-6 border-t border-white/5 space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
+                <Sparkles className="size-3.5 text-violet-400" />
+                Matérias avaliadas pelo Mentor Dev após a conclusão:
+              </h3>
+
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] space-y-1">
+                  <span className="text-xs font-bold text-white">Algoritmos & Visualg</span>
+                  <p className="text-[11px] text-zinc-400">Passos lógicos, variáveis de memória e tipos primitivos.</p>
+                </div>
+                <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] space-y-1">
+                  <span className="text-xs font-bold text-white">Operadores & Condicionais</span>
+                  <p className="text-[11px] text-zinc-400">Operadores lógicos, relacionais, Se..Então e Escolha..Caso.</p>
+                </div>
+                <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] space-y-1">
+                  <span className="text-xs font-bold text-white">Repetições & Matrizes</span>
+                  <p className="text-[11px] text-zinc-400">Laços Enquanto, Repita, Para, vetores e matrizes 2D.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </AppShell>
+    )
+  }
+
   return (
     <AppShell title={assessment.title} subtitle={`Módulo: ${currentModule.title}`}>
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-4xl mx-auto pb-16">
         {/* Navigation & Timer Header */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/80 pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
           <Link
             href="/trilha"
-            className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 text-xs font-semibold text-zinc-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="size-3.5" /> Voltar para Minha Trilha
           </Link>
 
           {!isSubmitted ? (
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-bold text-primary">
+              <div className="flex items-center gap-1.5 rounded-full border border-violet-500/30 bg-violet-950/40 px-3.5 py-1 text-xs font-bold text-violet-300 shadow-sm">
                 <Clock className="size-3.5" />
                 <span>
                   Tempo: {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
                 </span>
               </div>
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary" className="text-xs bg-white/5 text-zinc-300">
                 Questão {currentIdx + 1} de {totalQ}
               </Badge>
             </div>

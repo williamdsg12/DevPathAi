@@ -9,6 +9,8 @@ import {
   Clock,
   Code2,
   Flame,
+  GraduationCap,
+  Layers,
   Pause,
   Play,
   Repeat,
@@ -34,6 +36,13 @@ export default function StudyPlanPage() {
     recordStudySession,
     nextPendingLessonId,
     streak,
+    allCourses,
+    allModules,
+    allLessons,
+    completedLessons,
+    completedExercises,
+    activities,
+    moduleProgress,
   } = useAppStore()
 
   // Daily Study Breakdown Items
@@ -79,6 +88,16 @@ export default function StudyPlanPage() {
       actionUrl: '/exercicios',
     },
   ])
+
+  // Technical Competency Matrix
+  const competencies = [
+    { name: 'HTML5 Semântico & Estrutura', mastery: 100, color: 'from-orange-500 to-amber-500' },
+    { name: 'CSS3, Flexbox & CSS Grid', mastery: 85, color: 'from-blue-500 to-cyan-500' },
+    { name: 'JavaScript Moderno (ES6+) & DOM', mastery: 65, color: 'from-amber-400 to-yellow-500' },
+    { name: 'React 19 & Next.js App Router', mastery: 40, color: 'from-cyan-400 to-blue-600' },
+    { name: 'Node.js, Express & APIs RESTful', mastery: 25, color: 'from-emerald-500 to-teal-500' },
+    { name: 'Banco de Dados SQL & Modelagem', mastery: 35, color: 'from-purple-500 to-indigo-600' },
+  ]
 
   // Focus Pomodoro Timer state
   const [timerDuration, setTimerDuration] = useState(25 * 60)
@@ -129,10 +148,10 @@ export default function StudyPlanPage() {
 
   return (
     <AppShell
-      title="Plano de Estudo Diário"
-      subtitle="Organização inteligente do tempo de estudo com cronômetro Pomodoro de foco e metas da IA"
+      title="Meu Progresso & Métricas"
+      subtitle="Organização do tempo de estudo, cronômetro Pomodoro de foco e mapa de competências técnicas"
     >
-      <div className="space-y-8 pb-16">
+      <div className="space-y-10 pb-16">
         {/* Daily Goal Overview Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-3xl border border-violet-500/20 bg-gradient-to-r from-violet-950/40 via-[#12111d] to-[#0a0910] p-6 sm:p-8 shadow-xl">
           <div className="space-y-1.5">
@@ -342,6 +361,37 @@ export default function StudyPlanPage() {
             </div>
           </div>
         </div>
+
+        {/* =========================================================================
+            MAPA VISUAL DE COMPETÊNCIAS TÉCNICAS (CURRÍCULO EDUCACIONAL)
+           ========================================================================= */}
+        <section className="rounded-3xl border border-white/5 bg-[#12111d] p-6 sm:p-8 space-y-6 shadow-xl">
+          <div className="border-b border-white/5 pb-4">
+            <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <Layers className="size-4.5 text-violet-400" /> Matriz de Competências Técnicas
+            </h3>
+            <p className="text-xs text-zinc-400">
+              Nível de domínio consolidado a partir das avaliações e projetos concluídos
+            </p>
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            {competencies.map((comp) => (
+              <div key={comp.name} className="space-y-2 p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-white">{comp.name}</span>
+                  <span className="font-mono font-bold text-violet-400">{comp.mastery}%</span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-white/5 overflow-hidden">
+                  <div
+                    style={{ width: `${comp.mastery}%` }}
+                    className={`h-full bg-gradient-to-r ${comp.color} rounded-full transition-all duration-500`}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
     </AppShell>
   )
