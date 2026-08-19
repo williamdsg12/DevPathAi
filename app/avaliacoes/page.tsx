@@ -41,11 +41,11 @@ export default function AvaliacoesHubPage() {
     const isUnlocked = totalModLessons > 0 && completedModLessons.length >= totalModLessons
 
     const progress = moduleProgress[mod.id]
-    const hasPassed = (progress?.assessmentScore || 0) >= (assessments[mod.id]?.minScore || 60)
+    const hasPassed = (progress?.assessmentScore || 0) >= (assessments[mod.id]?.minScore || 70)
     const nextPendingLesson = modLessons.find((l) => !completedLessons.includes(l.id)) || modLessons[0]
 
     const assessmentMeta = assessments[mod.id] || mockAssessments.find((a) => a.moduleId === mod.id) || {
-      minScore: 60,
+      minScore: 70,
       timeLimitMin: 20,
       questions: [],
     }
@@ -90,7 +90,7 @@ export default function AvaliacoesHubPage() {
                   <Sparkles className="size-3 mr-1 text-violet-400" /> Nivelamento Pedagógico Oficial
                 </Badge>
                 <Badge variant="outline" className="text-zinc-400 text-xs">
-                  Critério de Corte: 60%
+                  Critério de Corte: 70%
                 </Badge>
               </div>
 

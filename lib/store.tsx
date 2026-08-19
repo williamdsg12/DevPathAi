@@ -41,11 +41,18 @@ import {
 import { learningPathEngine } from './ai/learning-path-engine'
 import { activityEngine } from './ai/activity-engine'
 import { moduleCompletionEngine } from './pedagogy/module-completion-engine'
+import {
+  progressionEngine,
+  type CourseProgressDetails,
+  type LessonMissionDetails,
+  type LessonStepStatus,
+} from './pedagogy/progression-engine'
 import { validateContentMapping } from './youtube/service'
 import { isSuperAdmin } from './auth/rbac'
 import type {
   Achievement,
   ActivityAttempt,
+  ActivitySubmissionResult,
   Assessment,
   AssessmentQuestion,
   AssessmentResult,
@@ -320,6 +327,11 @@ export interface AppStoreValue extends PersistedState {
     xpEarned: number
     attemptNumber: number
   }
+  submitFullActivity: (
+    activityId: string,
+    answers: Record<string, string | number>,
+    timeSpentSeconds?: number,
+  ) => ActivitySubmissionResult
   generateActivitiesForLesson: (lessonId: string) => Promise<LearningActivity[]>
   generateActivitiesForModule: (moduleId: string) => Promise<LearningActivity[]>
   generateModuleProject: (moduleId: string) => Promise<ModuleProject>
@@ -394,6 +406,10 @@ export interface AppStoreValue extends PersistedState {
   moduleStatus: (moduleId: string) => ModuleStatus
   isModuleUnlocked: (moduleId: string) => boolean
   getModuleMastery: (moduleId: string) => ModuleMasteryScore
+  getLessonStatus: (lessonId: string, customSequence?: Lesson[]) => LessonStepStatus
+  isLessonUnlocked: (lessonId: string, customSequence?: Lesson[]) => boolean
+  getCourseProgressDetails: (courseId: string) => CourseProgressDetails | null
+  getLessonMissionDetails: (lessonId: string, customSequence?: Lesson[]) => LessonMissionDetails | null
   overallProgress: number
   xp: number
   level: number
@@ -1516,7 +1532,9 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     setState((s) => {
       if (s.completedLessons.includes(lessonId)) return s
       const allMods = s.customModules
-      const lessonMod = allMods.find((m) => m.lessonIds.includes(lessonId))
+      const allLes = s.customLessons
+      const currentLesson = allLes.find((l) => l.id === lessonId)
+      const lessonMod = allMods.find((m) => m.lessonIds.includes(lessonId) || (currentLesson && m.id === currentLesson.moduleId))
       const completedLessons = [...s.completedLessons, lessonId]
       const moduleProgress = { ...s.moduleProgress }
 
@@ -1545,14 +1563,31 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         }
       }
 
+      // Auto-generate AI activities for this lesson if not already existing
+      let updatedActivities = [...s.activities]
+      const hasActivities = s.activities.some((a) => a.lessonId === lessonId)
+      if (!hasActivities && currentLesson) {
+        const generated = activityEngine.generateActivitiesForLesson({
+          courseId: lessonMod?.courseId,
+          moduleId: lessonMod?.id || currentLesson.moduleId,
+          lessonId: currentLesson.id,
+          lessonTitle: currentLesson.title,
+          lessonDescription: currentLesson.description,
+          technology: lessonMod?.technology || 'JavaScript',
+        })
+        const existingIds = new Set(updatedActivities.map((a) => a.id))
+        const newOnes = generated.filter((g) => !existingIds.has(g.id))
+        updatedActivities = [...updatedActivities, ...newOnes]
+      }
+
       const newReview: SpacedReviewItem = {
         id: `rev-${lessonId}-${Date.now()}`,
-        topic: lessonMod?.title || 'Conceitos Fundamentais',
+        topic: currentLesson?.title || lessonMod?.title || 'Conceitos Fundamentais',
         moduleId: lessonMod?.id || 'mod-logica',
         moduleTitle: lessonMod?.title || 'Lógica de Programação',
         dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         intervalDays: 1,
-        question: `Qual o conceito principal abordado na aula "${lessonId}"?`,
+        question: `Qual o conceito principal abordado na aula "${currentLesson?.title || lessonId}"?`,
         answer: 'Revise o conteúdo da aula e certifique-se de conseguir explicar o código com suas próprias palavras.',
         completed: false,
       }
@@ -1564,15 +1599,30 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         ach.id === 'ach-1' ? { ...ach, unlocked: true } : ach
       )
 
+      const notifications = [
+        ...s.notifications,
+        {
+          id: `notif-les-${lessonId}-${Date.now()}`,
+          title: `Aula Concluída! Atividades Geradas ✨`,
+          message: `A IA Professora preparou exercícios práticos baseados no conteúdo da aula "${currentLesson?.title || 'Aula'}".`,
+          type: 'success' as const,
+          read: false,
+          actionUrl: '/exercicios',
+          createdAt: new Date().toISOString(),
+        },
+      ]
+
       return {
         ...s,
         completedLessons,
         moduleProgress,
+        activities: updatedActivities,
         spacedReviews: [...s.spacedReviews, newReview],
         studiedMinutes,
         todayStudiedMinutes,
         streak: s.streak === 0 ? 1 : s.streak,
         achievements,
+        notifications,
       }
     })
   }, [])
@@ -1740,6 +1790,79 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       return result
     },
     [],
+  )
+
+  const submitFullActivity = useCallback(
+    (
+      activityId: string,
+      answers: Record<string, string | number>,
+      timeSpentSeconds = 60,
+    ): ActivitySubmissionResult => {
+      const act = state.activities.find((a) => a.id === activityId)
+      if (!act) {
+        return {
+          isValid: false,
+          error: 'Atividade não encontrada.',
+          isApproved: false,
+          score: 0,
+          xpEarned: 0,
+          passedCount: 0,
+          totalCount: 0,
+          feedback: 'Atividade não encontrada no sistema.',
+          questionResults: [],
+        }
+      }
+
+      // 1. Backend / Store Level Strict Validation & Scoring
+      const evalResult = activityEngine.validateAndScoreSubmission(act, answers)
+      if (!evalResult.isValid) {
+        return evalResult
+      }
+
+      setState((s) => {
+        const isNewlyCompleted = evalResult.isApproved && !s.completedActivities.includes(activityId)
+        const completedActivities = isNewlyCompleted
+          ? [...s.completedActivities, activityId]
+          : s.completedActivities
+        const completedExercises = isNewlyCompleted
+          ? [...s.completedExercises, activityId]
+          : s.completedExercises
+
+        // Update module progress exercisesCompleted
+        const mod = s.customModules.find((m) => m.id === act.moduleId)
+        const curModProg = s.moduleProgress[act.moduleId]
+        const updatedModProgress = { ...s.moduleProgress }
+        if (mod && curModProg) {
+          const modActs = s.activities.filter((a) => a.moduleId === act.moduleId)
+          const doneInMod = modActs.filter((a) => completedActivities.includes(a.id)).length
+          const mastery = learningPathEngine.calculateModuleMastery(
+            act.moduleId,
+            {
+              ...curModProg,
+              exercisesCompleted: doneInMod,
+            },
+            mod,
+          )
+          updatedModProgress[act.moduleId] = {
+            ...curModProg,
+            exercisesCompleted: doneInMod,
+            masteryScore: mastery.totalMastery,
+          }
+        }
+
+        return {
+          ...s,
+          completedActivities,
+          completedExercises,
+          moduleProgress: updatedModProgress,
+          studiedMinutes: s.studiedMinutes + Math.ceil(timeSpentSeconds / 60 || 2),
+          todayStudiedMinutes: s.todayStudiedMinutes + Math.ceil(timeSpentSeconds / 60 || 2),
+        }
+      })
+
+      return evalResult
+    },
+    [state.activities],
   )
 
   const generateActivitiesForLesson = useCallback(
@@ -2526,6 +2649,72 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     )
   }, [currentModuleId, nextPendingLessonId, state.profile, state.customModules, state.customLessons, state.spacedReviews])
 
+  // Sequential Progression Engine Callbacks
+  const getLessonStatus = useCallback(
+    (lessonId: string, customSequence?: Lesson[]): LessonStepStatus => {
+      const lesson = state.customLessons.find((l) => l.id === lessonId)
+      if (!lesson) return 'LOCKED'
+      const sequence = customSequence || state.customLessons.filter((l) => l.moduleId === lesson.moduleId)
+      return progressionEngine.getLessonStepStatus(lesson, sequence, {
+        profile: state.profile,
+        completedLessons: state.completedLessons,
+        completedActivities: state.completedActivities,
+        activities: state.activities,
+        lessonProgressMap: state.lessonProgressMap,
+      })
+    },
+    [state.customLessons, state.profile, state.completedLessons, state.completedActivities, state.activities, state.lessonProgressMap]
+  )
+
+  const isLessonUnlocked = useCallback(
+    (lessonId: string, customSequence?: Lesson[]): boolean => {
+      const lesson = state.customLessons.find((l) => l.id === lessonId)
+      if (!lesson) return false
+      const sequence = customSequence || state.customLessons.filter((l) => l.moduleId === lesson.moduleId)
+      return progressionEngine.isLessonUnlocked(lessonId, sequence, {
+        profile: state.profile,
+        completedLessons: state.completedLessons,
+        completedActivities: state.completedActivities,
+        activities: state.activities,
+      })
+    },
+    [state.customLessons, state.profile, state.completedLessons, state.completedActivities, state.activities]
+  )
+
+  const getCourseProgressDetails = useCallback(
+    (courseId: string): CourseProgressDetails | null => {
+      const course = allCourses.find((c) => c.id === courseId || c.slug === courseId)
+      if (!course) return null
+      const courseModules = allModules.filter((m) => m.courseId === course.id || m.phase === course.category)
+      const courseLessons = courseModules.flatMap((m) => allLessons.filter((l) => m.lessonIds.includes(l.id)))
+      return progressionEngine.getCourseProgressDetails(course, courseModules, courseLessons, {
+        profile: state.profile,
+        completedLessons: state.completedLessons,
+        completedActivities: state.completedActivities,
+        activities: state.activities,
+        moduleProgress: state.moduleProgress,
+        assessments: state.assessments,
+      })
+    },
+    [allCourses, allModules, allLessons, state.profile, state.completedLessons, state.completedActivities, state.activities, state.moduleProgress, state.assessments]
+  )
+
+  const getLessonMissionDetails = useCallback(
+    (lessonId: string, customSequence?: Lesson[]): LessonMissionDetails | null => {
+      const lesson = state.customLessons.find((l) => l.id === lessonId)
+      if (!lesson) return null
+      const sequence = customSequence || state.customLessons.filter((l) => l.moduleId === lesson.moduleId)
+      return progressionEngine.getLessonMissionDetails(lesson, sequence, {
+        profile: state.profile,
+        completedLessons: state.completedLessons,
+        completedActivities: state.completedActivities,
+        activities: state.activities,
+        lessonProgressMap: state.lessonProgressMap,
+      })
+    },
+    [state.customLessons, state.profile, state.completedLessons, state.completedActivities, state.activities, state.lessonProgressMap]
+  )
+
   const value: AppStoreValue = {
     ...state,
     ready,
@@ -2558,6 +2747,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     syncOfficialTrustedChannels,
     // Activity Engine Actions
     submitActivityAnswer,
+    submitFullActivity,
     generateActivitiesForLesson,
     generateActivitiesForModule,
     generateModuleProject,
@@ -2613,6 +2803,10 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     moduleStatus,
     isModuleUnlocked,
     getModuleMastery,
+    getLessonStatus,
+    isLessonUnlocked,
+    getCourseProgressDetails,
+    getLessonMissionDetails,
     overallProgress,
     xp,
     level,

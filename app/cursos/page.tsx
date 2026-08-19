@@ -236,11 +236,11 @@ export default function CoursesPage() {
 
                 <div className="pt-3 border-t border-white/5 flex items-center justify-between">
                   <span className="text-[11px] text-zinc-400 font-semibold">
-                    {course.lessonsCount || courseModule?.lessonIds?.length || 10} aulas oficiais
+                    {course.lessonsCount || courseModule?.lessonIds?.length || 10} missões práticas
                   </span>
-                  <Link href={`/aulas/${firstLessonId}`}>
+                  <Link href={`/courses/${course.slug || course.id}`}>
                     <Button size="sm" variant="ghost" className="text-xs text-violet-400 hover:text-violet-300 font-bold gap-1 p-0 cursor-pointer">
-                      Assistir Curso <ArrowRight className="size-3.5" />
+                      Ver Jornada <ArrowRight className="size-3.5" />
                     </Button>
                   </Link>
                 </div>

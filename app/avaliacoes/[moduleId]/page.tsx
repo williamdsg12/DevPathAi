@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { mockAssessment, mockModules } from '@/lib/mock-data'
 import { useAppStore } from '@/lib/store'
+import { activityEngine } from '@/lib/ai/activity-engine'
 import { moduleCompletionEngine } from '@/lib/pedagogy/module-completion-engine'
 import type { Assessment, AssessmentQuestion, ModuleReflection, RecoveryPlan } from '@/lib/types'
 import { Textarea } from '@/components/ui/textarea'
@@ -62,13 +63,13 @@ export default function ModuleAssessmentPage({ params }: { params: Promise<{ mod
   const isModuleFullyCompleted = totalModuleLessons > 0 && completedModuleLessons.length >= totalModuleLessons
   const nextPendingLesson = moduleLessons.find((l) => !completedLessons.includes(l.id)) || moduleLessons[0]
 
-  // Use the assessment questions for the module or fallback to mock
-  const rawAssessment = assessments[currentModule.id] || mockAssessments.find((a) => a.moduleId === currentModule.id) || mockAssessments[0]
-  const assessment: Assessment = {
-    ...rawAssessment,
-    moduleId: currentModule.id,
-    title: `Avaliação Oficial — ${currentModule.title}`,
-  }
+  // Dynamic assessment covering all lessons in a balanced matrix
+  const assessment: Assessment = useMemo(() => {
+    if (assessments[currentModule.id]) return assessments[currentModule.id]
+    const foundMock = mockAssessments.find((a) => a.moduleId === currentModule.id)
+    if (foundMock && foundMock.questions.length >= 10) return foundMock
+    return activityEngine.generateModuleAssessment(currentModule, moduleLessons, currentModule.technology)
+  }, [assessments, currentModule, moduleLessons])
 
   const [currentIdx, setCurrentIdx] = useState(0)
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})

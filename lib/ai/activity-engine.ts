@@ -13,12 +13,15 @@
 
 import type {
   ActivityDifficulty,
+  ActivityQuestion,
+  ActivitySubmissionResult,
   ActivityType,
   Assessment,
   AssessmentQuestion,
   LearningActivity,
   LearningModule,
   Lesson,
+  LessonActivityAnalysis,
   ModuleProject,
   ProjectRubricCriterion,
   ProjectSubmission,
@@ -40,6 +43,126 @@ export interface GenerateActivitiesParams {
 }
 
 export class ActivityEngine {
+  /**
+   * Intelligently analyzes lesson content to determine if an activity is required.
+   * Differentiates explicit exercises vs simple demonstrations vs introductory concepts.
+   */
+  public analyzeLessonForActivity(lesson: Lesson): LessonActivityAnalysis {
+    if (!lesson) {
+      return {
+        hasActivity: false,
+        activityType: 'none',
+        reason: 'Aula não encontrada.',
+        learningObjectives: [],
+        suggestedDifficulty: 'facil',
+        estimatedTimeMinutes: 0,
+      }
+    }
+
+    // Explicit override from lesson data if already set
+    if (typeof lesson.hasActivity === 'boolean') {
+      return {
+        hasActivity: lesson.hasActivity,
+        activityType: lesson.hasActivity ? 'code' : 'none',
+        reason: lesson.hasActivity
+          ? 'Atividade prática explicitamente marcada na matriz pedagógica da aula.'
+          : 'Aula marcada como demonstrativa/conceitual sem atividade obrigatória.',
+        learningObjectives: [lesson.title],
+        suggestedDifficulty: 'facil',
+        estimatedTimeMinutes: lesson.hasActivity ? 10 : 0,
+      }
+    }
+
+    const titleLower = (lesson.title || '').toLowerCase()
+    const descLower = (lesson.description || '').toLowerCase()
+    const combined = `${titleLower} ${descLower}`
+
+    // Case C: Purely introductory or environment setup
+    const isIntro =
+      titleLower.includes('seja bem vindo') ||
+      titleLower.includes('apresentação') ||
+      titleLower.includes('apresentacao') ||
+      titleLower.includes('o que é') ||
+      titleLower.includes('o que e') ||
+      titleLower.includes('introdução ao curso') ||
+      titleLower.includes('introducao ao curso') ||
+      titleLower.includes('instalação') ||
+      titleLower.includes('instalacao') ||
+      titleLower.includes('configurando o ambiente') ||
+      titleLower.includes('instalando o') ||
+      titleLower.includes('primeiros passos no vs code')
+
+    if (isIntro) {
+      return {
+        hasActivity: false,
+        activityType: 'none',
+        reason: 'Aula de ambientação e visão geral conceitual sem proposta de exercício prático.',
+        learningObjectives: ['Compreender o escopo e os objetivos da formação'],
+        suggestedDifficulty: 'facil',
+        estimatedTimeMinutes: 0,
+      }
+    }
+
+    // Case A: Explicit exercises or practical coding topics
+    const isExplicitPractice =
+      combined.includes('exercício') ||
+      combined.includes('exercicio') ||
+      combined.includes('prática') ||
+      combined.includes('pratica') ||
+      combined.includes('algoritmo') ||
+      combined.includes('variáv') ||
+      combined.includes('condicion') ||
+      combined.includes('laço') ||
+      combined.includes('laco') ||
+      combined.includes('loop') ||
+      combined.includes('funç') ||
+      combined.includes('func') ||
+      combined.includes('vetor') ||
+      combined.includes('array') ||
+      combined.includes('matriz') ||
+      combined.includes('portugol') ||
+      combined.includes('html') ||
+      combined.includes('css') ||
+      combined.includes('flexbox') ||
+      combined.includes('grid') ||
+      combined.includes('javascript') ||
+      combined.includes('react') ||
+      combined.includes('component') ||
+      combined.includes('props') ||
+      combined.includes('state') ||
+      combined.includes('git') ||
+      combined.includes('commit') ||
+      combined.includes('sql') ||
+      combined.includes('select')
+
+    if (isExplicitPractice) {
+      let actType: ActivityType = 'code'
+      if (combined.includes('git') || combined.includes('teoria') || combined.includes('diferença')) {
+        actType = 'multiple_choice'
+      } else if (combined.includes('bug') || combined.includes('erro') || combined.includes('corrija')) {
+        actType = 'find_bug'
+      }
+
+      return {
+        hasActivity: true,
+        activityType: actType,
+        reason: 'A aula propõe exercícios práticos e fixação de conceitos essenciais da tecnologia.',
+        learningObjectives: [`Dominar os conceitos práticos de ${lesson.title}`],
+        suggestedDifficulty: combined.includes('matriz') || combined.includes('hook') || combined.includes('join') ? 'medio' : 'facil',
+        estimatedTimeMinutes: 8,
+      }
+    }
+
+    // Case B: General demonstration
+    return {
+      hasActivity: true,
+      activityType: 'multiple_choice',
+      reason: 'Atividade de fixação conceitual sobre os tópicos abordados pelo instrutor.',
+      learningObjectives: [`Revisar os pontos centrais de ${lesson.title}`],
+      suggestedDifficulty: 'facil',
+      estimatedTimeMinutes: 5,
+    }
+  }
   /**
    * Validates that an activity satisfies all quality and pedagogical constraints.
    * Discards any activity with empty statement, missing skills or invalid types.
@@ -430,7 +553,202 @@ export class ActivityEngine {
       })
     }
 
-    // 7. Genérico Pedagógico Adaptado ao Título da Aula (Garantia de 100% de cobertura com conteúdo real)
+    // 7. HTML5 Semântico e Estruturação Web
+    else if (textToAnalyze.includes('html') || textToAnalyze.includes('semântic') || textToAnalyze.includes('tag') || textToAnalyze.includes('formulário') || textToAnalyze.includes('acessibilidade')) {
+      activities.push({
+        id: `act-${lessonId}-html-1`,
+        title: 'Estruturação Semântica com HTML5',
+        statement: 'Crie a estrutura semântica básica de um artigo de blog em HTML5 contendo a tag `<article>`, um cabeçalho `<header>` com título `<h1>`, e a área de conteúdo principal `<section>`.',
+        objective: 'Compreender e aplicar tags semânticas do HTML5 para melhoria de SEO e acessibilidade.',
+        type: 'code',
+        difficulty: 'facil',
+        status: 'published',
+        xpReward: 20,
+        expectedTimeMin: 5,
+        courseId,
+        moduleId,
+        lessonId,
+        skillName: 'HTML5 Semântico & Acessibilidade',
+        technology: 'HTML5',
+        codeStarter: '<!-- Estruture seu artigo semântico aqui: -->\n',
+        codeSolution: '<article>\n  <header>\n    <h1>Título do Artigo</h1>\n  </header>\n  <section>\n    <p>Conteúdo do artigo...</p>\n  </section>\n</article>',
+        hint: 'Nível 1: Evite usar apenas tags <div>. Utilize as tags semânticas <article>, <header> e <section>.',
+        detailedGuidance: 'Nível 2: Envolva o título <h1> dentro do <header> e o texto principal dentro da tag <section>, todos encapsulados pelo <article>.',
+        hints: [
+          'Evite usar apenas tags <div>. Utilize as tags semânticas <article>, <header> e <section>.',
+          'Envolva o título <h1> dentro do <header> e o texto principal dentro da tag <section>, todos encapsulados pelo <article>.',
+          'Estrutura esperada: <article><header><h1>...</h1></header><section><p>...</p></section></article>',
+        ],
+        explanation: 'Tags semânticas descrevem seu significado tanto para o navegador quanto para leitores de tela e robôs de busca (SEO).',
+        createdAt: new Date().toISOString(),
+      })
+
+      activities.push({
+        id: `act-${lessonId}-html-2`,
+        title: 'Acessibilidade em Imagens e Formulários',
+        statement: 'Qual atributo é obrigatório na tag `<img>` para fornecer uma descrição textual alternativa para leitores de tela e motores de busca?',
+        objective: 'Reconhecer padrões de acessibilidade web (WCAG) fundamentais.',
+        type: 'multiple_choice',
+        difficulty: 'facil',
+        status: 'published',
+        xpReward: 20,
+        expectedTimeMin: 3,
+        courseId,
+        moduleId,
+        lessonId,
+        skillName: 'Acessibilidade Web & WCAG',
+        technology: 'HTML5',
+        options: [
+          '`alt="descrição da imagem"`',
+          '`title="descrição da imagem"`',
+          '`name="descrição da imagem"`',
+          '`caption="descrição da imagem"`',
+        ],
+        correctOptionIndex: 0,
+        hint: 'Nível 1: Pense em "texto alternativo".',
+        detailedGuidance: 'Nível 2: O atributo `alt` é lido por tecnologias assistivas quando a imagem não pode ser carregada ou visualizada.',
+        hints: [
+          'Pense em "texto alternativo".',
+          'O atributo `alt` é lido por tecnologias assistivas quando a imagem não pode ser carregada ou visualizada.',
+          'A sintaxe correta é <img src="..." alt="Descrição clara da imagem" />.',
+        ],
+        explanation: 'O atributo `alt` é um requisito fundamental de acessibilidade, garantindo inclusão digital para usuários com deficiência visual.',
+        createdAt: new Date().toISOString(),
+      })
+    }
+
+    // 8. CSS3, Flexbox e Grid Layout
+    else if (textToAnalyze.includes('css') || textToAnalyze.includes('flexbox') || textToAnalyze.includes('grid') || textToAnalyze.includes('estil') || textToAnalyze.includes('responsiv')) {
+      activities.push({
+        id: `act-${lessonId}-css-1`,
+        title: 'Centralização Perfeita com Flexbox',
+        statement: 'Escreva a regra CSS para centralizar horizontal e verticalmente todos os itens filhos de um elemento `.container` utilizando Flexbox.',
+        objective: 'Dominar os eixos principal (main axis) e transversal (cross axis) do Flexbox.',
+        type: 'code',
+        difficulty: 'facil',
+        status: 'published',
+        xpReward: 25,
+        expectedTimeMin: 5,
+        courseId,
+        moduleId,
+        lessonId,
+        skillName: 'CSS Flexbox & Alinhamento',
+        technology: 'CSS3',
+        codeStarter: '.container {\n  display: flex;\n  /* Adicione as propriedades de alinhamento abaixo */\n}',
+        codeSolution: '.container {\n  display: flex;\n  justify-content: center;\n  align-items: center;\n}',
+        hint: 'Nível 1: Use uma propriedade para o eixo horizontal (justificar) e outra para o vertical (alinhamento de itens).',
+        detailedGuidance: 'Nível 2: As propriedades são `justify-content: center;` e `align-items: center;`.',
+        hints: [
+          'Use uma propriedade para o eixo horizontal (justificar) e outra para o vertical (alinhamento de itens).',
+          'As propriedades são `justify-content: center;` e `align-items: center;`.',
+          'Código final: display: flex; justify-content: center; align-items: center;',
+        ],
+        explanation: 'Com `display: flex`, `justify-content` controla o alinhamento no eixo principal e `align-items` no eixo transversal.',
+        createdAt: new Date().toISOString(),
+      })
+
+      activities.push({
+        id: `act-${lessonId}-css-2`,
+        title: 'Diferença entre Flexbox e CSS Grid',
+        statement: 'Qual é a principal distinção arquitetural entre CSS Flexbox e CSS Grid Layout no design de interfaces web?',
+        objective: 'Identificar cenários unidimensionais (1D) vs bidimensionais (2D).',
+        type: 'multiple_choice',
+        difficulty: 'medio',
+        status: 'published',
+        xpReward: 25,
+        expectedTimeMin: 4,
+        courseId,
+        moduleId,
+        lessonId,
+        skillName: 'Layouts 1D vs 2D no CSS',
+        technology: 'CSS3',
+        options: [
+          'Flexbox é prioritariamente unidimensional (linha OU coluna), enquanto CSS Grid é bidimensional (linhas E colunas simultaneamente).',
+          'Flexbox só funciona com textos e Grid só funciona com imagens.',
+          'Grid não suporta design responsivo e Flexbox sim.',
+          'Flexbox é uma biblioteca externa do JavaScript e Grid é nativo do navegador.',
+        ],
+        correctOptionIndex: 0,
+        hint: 'Nível 1: Pense nas dimensões de controle: 1 dimensão vs 2 dimensões.',
+        detailedGuidance: 'Nível 2: Use Flexbox para distribuir elementos em uma única direção e Grid para layouts complexos de grade com colunas e linhas coordenadas.',
+        hints: [
+          'Pense nas dimensões de controle: 1 dimensão vs 2 dimensões.',
+          'Use Flexbox para distribuir elementos em uma única direção e Grid para layouts complexos de grade.',
+          'Flexbox = 1D (linha ou coluna); Grid = 2D (linhas e colunas coordenadas).',
+        ],
+        explanation: 'Flexbox é perfeito para alinhamento em 1 dimensão (como barras de navegação), e Grid é ideal para páginas com matrizes bidimensionais completas.',
+        createdAt: new Date().toISOString(),
+      })
+    }
+
+    // 9. Git & GitHub Profissional
+    else if (textToAnalyze.includes('git') || textToAnalyze.includes('commit') || textToAnalyze.includes('branch') || textToAnalyze.includes('merge') || textToAnalyze.includes('repositório')) {
+      activities.push({
+        id: `act-${lessonId}-git-1`,
+        title: 'Fluxo de Versionamento: Stage e Commit',
+        statement: 'Qual sequência de comandos Git adiciona todos os arquivos modificados para a área de preparação (staging) e cria um commit semântico com a mensagem `"feat: add user authentication"`?',
+        objective: 'Dominar o ciclo diário de commits no Git.',
+        type: 'multiple_choice',
+        difficulty: 'facil',
+        status: 'published',
+        xpReward: 20,
+        expectedTimeMin: 4,
+        courseId,
+        moduleId,
+        lessonId,
+        skillName: 'Controle de Versão com Git',
+        technology: 'Git',
+        options: [
+          '`git add .` seguido de `git commit -m "feat: add user authentication"`',
+          '`git push -m "feat: add user authentication"`',
+          '`git save all "feat: add user authentication"`',
+          '`git branch -m "feat: add user authentication"`',
+        ],
+        correctOptionIndex: 0,
+        hint: 'Nível 1: Primeiro colocamos as alterações no palco (add), depois registramos o ponto na história (commit).',
+        detailedGuidance: 'Nível 2: O comando `git add .` prepara todas as mudanças locais e `git commit -m "mensagem"` consolida a gravação local.',
+        hints: [
+          'Primeiro colocamos as alterações no palco (add), depois registramos o ponto na história (commit).',
+          'O comando `git add .` prepara todas as mudanças e `git commit -m "mensagem"` cria o commit.',
+          'Sequência padrão: git add . && git commit -m "mensagem"',
+        ],
+        explanation: 'No Git, `git add` move as alterações para a Staging Area e `git commit` grava uma fotografia permanente no histórico local do repositório.',
+        createdAt: new Date().toISOString(),
+      })
+    }
+
+    // 10. Bancos de Dados e SQL
+    else if (textToAnalyze.includes('sql') || textToAnalyze.includes('banco') || textToAnalyze.includes('database') || textToAnalyze.includes('select') || textToAnalyze.includes('tabela')) {
+      activities.push({
+        id: `act-${lessonId}-sql-1`,
+        title: 'Consulta Filtrada com SQL (SELECT e WHERE)',
+        statement: 'Escreva uma consulta SQL que selecione o `nome` e o `email` de todos os usuários da tabela `usuarios` cujo `status` seja igual a `"ativo"` e ordenados pelo `nome` em ordem alfabética crescente.',
+        objective: 'Praticar consultas SQL com projeção de colunas, cláusula de filtro e ordenação.',
+        type: 'code',
+        difficulty: 'medio',
+        status: 'published',
+        xpReward: 30,
+        expectedTimeMin: 6,
+        courseId,
+        moduleId,
+        lessonId,
+        skillName: 'Consultas SQL & Modelagem Relacional',
+        technology: 'SQL',
+        codeStarter: '-- Escreva sua consulta SQL abaixo:\n',
+        codeSolution: 'SELECT nome, email FROM usuarios WHERE status = \'ativo\' ORDER BY nome ASC;',
+        hint: 'Nível 1: A estrutura básica é SELECT colunas FROM tabela WHERE condicao ORDER BY coluna.',
+        detailedGuidance: 'Nível 2: Use `SELECT nome, email FROM usuarios WHERE status = \'ativo\' ORDER BY nome ASC;`.',
+        hints: [
+          'A estrutura básica é SELECT colunas FROM tabela WHERE condicao ORDER BY coluna.',
+          'Use `SELECT nome, email FROM usuarios WHERE status = \'ativo\' ORDER BY nome ASC;`.',
+          'Cláusulas na ordem: SELECT -> FROM -> WHERE -> ORDER BY',
+        ],
+        explanation: 'A cláusula WHERE filtra as linhas na fonte antes da agregação e ORDER BY organiza o conjunto de resultados.',
+        createdAt: new Date().toISOString(),
+      })
+    }
+
+    // 11. Genérico Pedagógico Adaptado ao Título da Aula (Garantia de 100% de cobertura com conteúdo real)
     else {
       activities.push({
         id: `act-${lessonId}-core-1`,
@@ -449,8 +767,13 @@ export class ActivityEngine {
         technology,
         codeStarter: `// Implemente a solução demonstrada na aula "${lessonTitle}":\n`,
         codeSolution: `// Solução validada para a aula "${lessonTitle}"\nconsole.log("Conceito de ${lessonTitle} aplicado com sucesso.");`,
-        hint: `Revise os exemplos práticos mostrados no vídeo da aula "${lessonTitle}".`,
-        detailedGuidance: `Estruture o código em passos claros: 1. Entrada de dados, 2. Processamento/Lógica, 3. Saída formatada.`,
+        hint: `Nível 1: Revise os exemplos práticos mostrados no vídeo da aula "${lessonTitle}".`,
+        detailedGuidance: `Nível 2: Estruture o código em passos claros: 1. Entrada de dados, 2. Processamento/Lógica, 3. Saída formatada.`,
+        hints: [
+          `Revise os exemplos práticos mostrados no vídeo da aula "${lessonTitle}".`,
+          `Estruture o código em passos claros: 1. Entrada de dados, 2. Processamento/Lógica, 3. Saída formatada.`,
+          `Aplique a sintaxe correspondente ao que o professor demonstrou para validar a execução.`,
+        ],
         explanation: `A consolidação imediata da teoria através do código garante a retenção do aprendizado.`,
         createdAt: new Date().toISOString(),
       })
@@ -477,8 +800,13 @@ export class ActivityEngine {
           `Aumentar o tamanho do arquivo final sem benefícios pedagógicos ou práticos.`,
         ],
         correctOptionIndex: 0,
-        hint: 'Pense em como esse conceito contribui para código limpo, modular e reutilizável.',
-        detailedGuidance: 'Conceitos fundamentais servem para dar clareza, modularidade e escalabilidade ao software.',
+        hint: 'Nível 1: Pense em como esse conceito contribui para código limpo, modular e reutilizável.',
+        detailedGuidance: 'Nível 2: Conceitos fundamentais servem para dar clareza, modularidade e escalabilidade ao software.',
+        hints: [
+          'Pense em como esse conceito contribui para código limpo, modular e reutilizável.',
+          'Conceitos fundamentais servem para dar clareza, modularidade e escalabilidade ao software.',
+          'A alternativa correta é a que destaca eficiência, modularidade e boas práticas.',
+        ],
         explanation: `O domínio de "${lessonTitle}" é essencial para avançar com confiança nos próximos tópicos da trilha.`,
         createdAt: new Date().toISOString(),
       })
@@ -555,98 +883,114 @@ export class ActivityEngine {
   }
 
   /**
-   * Generates a module assessment containing 5+ contextualized multiple-choice questions.
+   * Generates a module assessment containing 10+ contextualized questions covering all lessons in a balanced matrix.
    */
   public generateModuleAssessment(
     module: LearningModule,
     lessons: Lesson[],
     technology = 'JavaScript',
   ): Assessment {
-    const questions: AssessmentQuestion[] = [
+    const questions: AssessmentQuestion[] = []
+    const moduleLessons = lessons.filter((l) => l.moduleId === module.id || module.lessonIds.includes(l.id))
+
+    // 1. Build balanced questions derived from real lessons
+    if (moduleLessons.length > 0) {
+      moduleLessons.forEach((lesson, idx) => {
+        questions.push({
+          id: `q-${module.id}-les-${idx + 1}`,
+          prompt: `[Aula ${lesson.order || idx + 1}: ${lesson.title}] Qual é o conceito central abordado nesta aula e como ele deve ser aplicado no desenvolvimento com ${technology}?`,
+          options: [
+            `Dominar a estrutura de "${lesson.title}" para implementar soluções robustas, limpas e escaláveis.`,
+            `Ignorar o uso de boas práticas para focar apenas em código sem formatação.`,
+            `Utilizar este conceito exclusivamente em navegadores obsoletos sem suporte moderno.`,
+            `Substituir completamente todos os demais paradigmas de programação do ecossistema.`,
+          ],
+          correctIndex: 0,
+          explanation: `A aula "${lesson.title}" aborda conceitos fundamentais para a construção sólida de software com ${technology}.`,
+          topic: lesson.title,
+          skillName: lesson.topic || module.skills[idx % (module.skills.length || 1)] || 'Fundamentos',
+          points: 10,
+        })
+      })
+    }
+
+    // 2. Add synthesis & comprehensive architecture questions
+    const synthesisQuestions: AssessmentQuestion[] = [
       {
-        id: `q-${module.id}-1`,
+        id: `q-${module.id}-arch-1`,
         prompt: `Qual é o princípio fundamental ensinado no módulo "${module.title}" para garantir manutenibilidade e legibilidade no código?`,
         options: [
-          'Dividir o problema em partes menores, utilizando nomes descritivos e funções com responsabilidade única.',
-          'Escrever todo o sistema em um único arquivo para facilitar a busca por palavras-chave.',
-          'Evitar o uso de constantes e tipagens estáticas para permitir alterações livres a qualquer momento.',
-          'Eliminar comentários explicativos e documentações para reduzir o tamanho dos arquivos.',
+          'Dividir o problema em partes menores, utilizando nomes descritivos e funções com responsabilidade única (Clean Code).',
+          'Escrever todo o sistema em um único arquivo gigantesco para facilitar a busca de variáveis.',
+          'Evitar o uso de constantes e tipagens para permitir modificações não controladas no estado.',
+          'Eliminar testes automatizados e validações de entrada.',
         ],
         correctIndex: 0,
-        explanation: 'Modularidade e funções com responsabilidade única (Single Responsibility Principle) são os pilares da manutenibilidade de software.',
+        explanation: 'Modularidade e o Princípio da Responsabilidade Única (SRP) são pilares fundamentais da engenharia de software.',
         topic: 'Arquitetura e Boas Práticas',
         skillName: 'Boas Práticas de Código',
-        points: 20,
+        points: 10,
       },
       {
-        id: `q-${module.id}-2`,
-        prompt: `Ao lidar com fluxo de controle e tomada de decisão em ${technology}, qual é a abordagem recomendada para evitar aninhamento excessivo de blocos ("código pirâmide")?`,
+        id: `q-${module.id}-arch-2`,
+        prompt: `Ao lidar com fluxo de controle, condições e tomada de decisão em ${technology}, qual é a abordagem recomendada para evitar aninhamento excessivo ("código pirâmide")?`,
         options: [
           'Utilizar cláusulas de guarda (Early Return) para tratar erros e condições especiais logo no início da função.',
-          'Aninhar múltiplos blocos `if` dentro de outros `if` até cobrir todas as combinações possíveis.',
-          'Usar loops infinitos combinados com comandos `goto`.',
-          'Ignorar validações de entrada e confiar que o usuário sempre enviará dados corretos.',
+          'Aninhar mais de 6 blocos `if` dentro de outros `if` para cobrir todas as variáveis possíveis.',
+          'Utilizar loops infinitos com comandos `goto` descontinuados.',
+          'Deixar de tratar erros e assumir que os dados sempre virão perfeitos.',
         ],
         correctIndex: 0,
-        explanation: 'Cláusulas de guarda (Early Return) simplificam o fluxo mental do desenvolvedor eliminando níveis desnecessários de indentação.',
+        explanation: 'Cláusulas de guarda (Early Return) tornam o código linear, limpo e muito mais fácil de compreender e testar.',
         topic: 'Controle de Fluxo e Condicionais',
         skillName: 'Estruturas Condicionais',
-        points: 20,
+        points: 10,
       },
       {
-        id: `q-${module.id}-3`,
-        prompt: `Por que a imutabilidade e a separação de efeitos colaterais são tão valorizadas em aplicações modernas?`,
+        id: `q-${module.id}-arch-3`,
+        prompt: `Por que a imutabilidade e a prevenção de efeitos colaterais são tão valorizadas em aplicações modernas?`,
         options: [
-          'Porque tornam o comportamento do sistema previsível, facilitando testes automatizados e prevenindo bugs por mutação acidental.',
-          'Porque consomem menos memória RAM do computador em 100% dos casos.',
-          'Porque impedem que o código seja executado em múltiplos navegadores.',
-          'Porque são uma exigência do protocolo HTTP/2.',
+          'Porque tornam o comportamento do software previsível, facilitando testes e evitando mutações acidentais de estado.',
+          'Porque reduzem a velocidade de carregamento em 100% dos cenários.',
+          'Porque impedem a execução do código em ambientes de desenvolvimento.',
+          'Porque são obrigatórias apenas para sistemas sem interface gráfica.',
         ],
         correctIndex: 0,
-        explanation: 'Imutabilidade reduz o acoplamento temporal e previne bugs decorrentes de múltiplos pontos do código alterando a mesma referência de memória.',
-        topic: 'Paradigma Funcional e Estado',
-        skillName: 'Gestão de Estado e Imutabilidade',
-        points: 20,
+        explanation: 'Imutabilidade reduz acoplamento temporal e previne bugs decorrentes de múltiplos pontos alterando o mesmo objeto em memória.',
+        topic: 'Gestão de Estado e Imutabilidade',
+        skillName: 'Imutabilidade & Qualidade',
+        points: 10,
       },
       {
-        id: `q-${module.id}-4`,
-        prompt: `Qual das seguintes afirmações sobre tratamento de exceções e erros em ${technology} está CORRETA?`,
+        id: `q-${module.id}-arch-4`,
+        prompt: `Qual das seguintes afirmações sobre tratamento de exceções e resiliência em ${technology} está CORRETA?`,
         options: [
-          'Erros previsíveis devem ser tratados com blocos `try/catch` e mensagens claras, evitando que a aplicação quebre silenciosamente.',
-          'O bloco `catch` deve sempre ser deixado vazio para que o usuário não perceba que houve uma falha.',
-          'Não é necessário tratar erros em chamadas de rede assíncronas porque a internet é estável.',
-          'O bloco `finally` só é executado quando nenhum erro ocorre no bloco `try`.',
+          'Erros previsíveis devem ser tratados conscientemente com feedback amigável ao usuário, evitando quebras inesperadas.',
+          'O bloco `catch` deve sempre ficar vazio para ocultar erros dos desenvolvedores.',
+          'Não é necessário validar entradas do usuário porque os navegadores já fazem tudo sozinhos.',
+          'O tratamento de exceções só é necessário em código legado.',
         ],
         correctIndex: 0,
-        explanation: 'O tratamento consciente de erros com feedback informativo garante resiliência e boa experiência ao usuário final.',
+        explanation: 'O tratamento consciente de erros com blocos try/catch e validações defensivas garante robustez ao sistema.',
         topic: 'Tratamento de Erros e Exceções',
         skillName: 'Resiliência e Tratamento de Erros',
-        points: 20,
-      },
-      {
-        id: `q-${module.id}-5`,
-        prompt: `Como os conceitos aprendidos nas aulas do módulo "${module.title}" se conectam para a construção de projetos reais?`,
-        options: [
-          'Eles formam uma base sólida onde a sintaxe correta alimenta a lógica, que estrutura os componentes e integra os dados em uma solução coesa.',
-          'Eles funcionam de forma totalmente isolada e nunca devem ser combinados no mesmo projeto.',
-          'Eles são úteis apenas para entrevistas teóricas e não são utilizados no dia a dia do mercado de trabalho.',
-          'Eles só podem ser aplicados se você usar bibliotecas externas proprietárias.',
-        ],
-        correctIndex: 0,
-        explanation: 'O aprendizado em camadas (sintaxe -> algoritmos -> arquitetura -> integração) é o alicerce de qualquer engenheiro de software.',
-        topic: 'Integração Pedagógica',
-        skillName: 'Visão Holística de Engenharia',
-        points: 20,
+        points: 10,
       },
     ]
+
+    synthesisQuestions.forEach((sq) => {
+      if (!questions.some((q) => q.prompt === sq.prompt)) {
+        questions.push(sq)
+      }
+    })
 
     return {
       id: `eval-${module.id}`,
       moduleId: module.id,
       title: `Avaliação Oficial — ${module.title}`,
-      minScore: 70,
-      timeLimitMin: 20,
-      questions,
+      minScore: 70, // Regra centralizada: 70% para aprovação
+      timeLimitMin: Math.max(15, questions.length * 2),
+      questions: questions.slice(0, 15),
       createdAt: new Date().toISOString(),
     }
   }
@@ -774,16 +1118,205 @@ export class ActivityEngine {
     }
 
     // Incorrect attempt: progressive pedagogical hint
-    const hint = attemptNumber === 1
-      ? (activity.hint || 'Revise com atenção o enunciado e identifique os conceitos-chave exigidos.')
-      : (activity.detailedGuidance || activity.hint || 'Analise a sintaxe e a ordem de execução dos comandos.');
+    let hint = ''
+    if (activity.hints && activity.hints.length > 0) {
+      const hintIdx = Math.min(attemptNumber - 1, activity.hints.length - 1)
+      hint = activity.hints[hintIdx]
+    } else if (attemptNumber === 1) {
+      hint = activity.hint || 'Revise com atenção o enunciado e identifique os conceitos-chave exigidos.'
+    } else {
+      hint = activity.detailedGuidance || activity.hint || 'Analise a sintaxe e a ordem de execução dos comandos.'
+    }
 
     return {
       isCorrect: false,
       score: Math.max(0, 50 - attemptNumber * 10),
-      feedback: `❌ Ainda não. ${attemptNumber === 1 ? 'Dica pedagógica para você tentar novamente:' : 'Orientação detalhada:'} ${hint}`,
+      feedback: `❌ Ainda não. ${attemptNumber === 1 ? 'Dica pedagógica (Nível 1):' : `Orientação guiada (Nível ${Math.min(attemptNumber, 3)}):`} ${hint}`,
       hintProvided: hint,
       xpEarned: 0,
+    }
+  }
+
+  /**
+   * Generates a multi-question sequence (3 to 5 questions) for any given activity.
+   */
+  public ensureActivityQuestions(act: LearningActivity): ActivityQuestion[] {
+    if (act.questions && act.questions.length >= 3) {
+      return act.questions
+    }
+
+    const questions: ActivityQuestion[] = []
+    const baseTitle = act.title || 'Exercício Prático'
+    const tech = act.technology || 'Programação'
+
+    // Question 1: Core Concept / Objective
+    questions.push({
+      id: `${act.id}-q1`,
+      statement: act.statement || `Qual é o objetivo principal abordado no tópico de ${baseTitle}?`,
+      type: act.options && act.options.length >= 2 ? 'multiple_choice' : act.type,
+      options: act.options && act.options.length >= 2 ? act.options : [
+        `Aplicar a sintaxe e a lógica correta em ${tech}`,
+        `Apenas assistir à aula sem praticar`,
+        `Deletar o código anterior`,
+        `Ignorar as boas práticas de desenvolvimento`,
+      ],
+      correctOptionIndex: typeof act.correctOptionIndex === 'number' ? act.correctOptionIndex : 0,
+      explanation: act.explanation || `O foco é consolidar os conhecimentos de ${baseTitle}.`,
+      hint: act.hints?.[0] || act.hint || 'Identifique a alternativa que melhor expressa as boas práticas.',
+      detailedGuidance: act.hints?.[1] || act.detailedGuidance || 'A alternativa correta reforça a aplicação prática.',
+      hints: act.hints || ['Identifique a alternativa que expressa boas práticas.'],
+      points: 25,
+    })
+
+    // Question 2: Practical Coding / Syntax application
+    questions.push({
+      id: `${act.id}-q2`,
+      statement: act.codeStarter
+        ? `Complete ou implemente o código abaixo conforme os requisitos da missão:`
+        : `Analise a sintaxe e identifique a estrutura correta para ${baseTitle}:`,
+      type: act.codeStarter || act.type === 'code' ? 'code' : 'multiple_choice',
+      codeStarter: act.codeStarter || `// Escreva o código para ${baseTitle}\n`,
+      codeSolution: act.codeSolution || `// Código solução validado\n`,
+      options: [
+        `Utilizar a sintaxe padronizada da linguagem ${tech}`,
+        `Escrever variáveis sem declarar`,
+        `Utilizar loops infinitos sem condição de parada`,
+        `Nenhuma das anteriores`,
+      ],
+      correctOptionIndex: 0,
+      explanation: act.explanation || 'A sintaxe padronizada garante clareza e previsibilidade no código.',
+      hint: 'Verifique os comandos ensinados durante a aula.',
+      hints: ['Verifique os comandos ensinados durante a aula.', 'Siga as boas práticas da linguagem.'],
+      points: 25,
+    })
+
+    // Question 3: Reasoning / Edge Case Analysis
+    questions.push({
+      id: `${act.id}-q3`,
+      statement: `Sobre a execução e o comportamento prático de ${baseTitle}, assinale a afirmativa correta:`,
+      type: 'multiple_choice',
+      options: [
+        `A correta estruturação do código previne bugs e facilita a manutenção contínua.`,
+        `Qualquer erro de sintaxe é corrigido automaticamente pelo navegador em produção.`,
+        `Não é necessário testar diferentes entradas de dados no programa.`,
+        `A ordem dos comandos não altera o resultado final da execução.`,
+      ],
+      correctOptionIndex: 0,
+      explanation: 'A clareza estrutural e os testes garantem código sustentável e livre de falhas.',
+      hint: 'Pense no ciclo de vida de uma aplicação profissional.',
+      hints: ['Pense no ciclo de vida de uma aplicação profissional.'],
+      points: 25,
+    })
+
+    // Question 4: Problem Solving & Debugging
+    questions.push({
+      id: `${act.id}-q4`,
+      statement: `Em um cenário real, se o programa apresentar um comportamento inesperado ao processar os dados de ${baseTitle}, qual deve ser a primeira ação do desenvolvedor?`,
+      type: 'multiple_choice',
+      options: [
+        `Verificar o fluxo de execução, os tipos de dados das variáveis e mensagens de log/console.`,
+        `Reinstalar o sistema operacional do computador.`,
+        `Apagar todo o projeto e começar do zero.`,
+        `Ignorar o erro se o sistema continuar rodando.`,
+      ],
+      correctOptionIndex: 0,
+      explanation: 'O processo de depuração metódica (debugging) envolve inspecionar variáveis e entender o fluxo lógico.',
+      hint: 'Debugar é analisar o fluxo de ponta a ponta.',
+      hints: ['Debugar é analisar o fluxo de ponta a ponta.'],
+      points: 25,
+    })
+
+    return questions
+  }
+
+  /**
+   * Evaluates and scores an entire multi-question activity submission with MANDATORY ANTI-EMPTY VALIDATION.
+   * Rejects submission if any required question is missing or blank.
+   */
+  public validateAndScoreSubmission(
+    activity: LearningActivity,
+    userAnswers: Record<string, string | number>,
+  ): ActivitySubmissionResult {
+    const questions = this.ensureActivityQuestions(activity)
+    const totalCount = questions.length
+
+    // 1. Mandatory Anti-Empty Validation (No blank/null/undefined responses allowed)
+    const missingQuestionIndices: number[] = []
+    questions.forEach((q, idx) => {
+      const ans = userAnswers[q.id]
+      if (ans === undefined || ans === null) {
+        missingQuestionIndices.push(idx + 1)
+      } else if (typeof ans === 'string' && ans.trim().length === 0) {
+        missingQuestionIndices.push(idx + 1)
+      }
+    })
+
+    if (missingQuestionIndices.length > 0) {
+      return {
+        isValid: false,
+        error: `Responda todas as questões obrigatórias antes de finalizar. Questão(ões) pendente(s): #${missingQuestionIndices.join(', #')}.`,
+        isApproved: false,
+        score: 0,
+        xpEarned: 0,
+        passedCount: 0,
+        totalCount,
+        feedback: 'Submissão incompleta. Todas as questões exigem resposta válida.',
+        questionResults: [],
+      }
+    }
+
+    // 2. Score each question
+    let passedCount = 0
+    let earnedPoints = 0
+    const totalPoints = questions.reduce((acc, q) => acc + (q.points || 25), 0)
+
+    const questionResults = questions.map((q) => {
+      const userAns = userAnswers[q.id]
+      let isCorrect = false
+
+      if (q.type === 'multiple_choice' || q.type === 'true_false') {
+        isCorrect = Number(userAns) === q.correctOptionIndex
+      } else if (q.type === 'code' || q.type === 'fill_code' || q.type === 'fix_code' || q.type === 'find_bug') {
+        const cleanUser = String(userAns).trim().replace(/\s+/g, ' ')
+        const cleanSol = (q.codeSolution || '').trim().replace(/\s+/g, ' ')
+        isCorrect = cleanUser.length >= 8 && (cleanUser.includes(cleanSol) || cleanSol.includes(cleanUser) || cleanUser.length >= 15)
+      } else {
+        isCorrect = String(userAns).trim().length >= 5
+      }
+
+      const qPoints = q.points || 25
+      if (isCorrect) {
+        passedCount++
+        earnedPoints += qPoints
+      }
+
+      return {
+        questionId: q.id,
+        isCorrect,
+        score: isCorrect ? 100 : 0,
+        feedback: isCorrect ? `✅ Correto! ${q.explanation}` : `❌ Incorreto. ${q.explanation}`,
+        explanation: q.explanation,
+      }
+    })
+
+    const finalScore = Math.round((earnedPoints / (totalPoints || 100)) * 100)
+    const isApproved = finalScore >= 60
+    const xpReward = activity.xpReward || 25
+    const xpEarned = isApproved ? xpReward : Math.max(5, Math.round(xpReward * (finalScore / 100)))
+
+    const feedback = isApproved
+      ? `🎉 Parabéns! Você concluiu a atividade com ${finalScore}% de aproveitamento e conquistou +${xpEarned} XP!`
+      : `⚠️ Você obteve ${finalScore}% de aproveitamento. Revise o material e tente novamente para fixar os conceitos!`
+
+    return {
+      isValid: true,
+      isApproved,
+      score: finalScore,
+      xpEarned,
+      passedCount,
+      totalCount,
+      feedback,
+      questionResults,
     }
   }
 }

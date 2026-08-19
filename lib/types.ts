@@ -367,6 +367,14 @@ export interface VideoMetadata {
   lastCheckedAt: string
 }
 
+export interface LessonResource {
+  id?: string
+  title: string
+  url: string
+  type: 'pdf' | 'zip' | 'code' | 'link'
+  size?: string
+}
+
 export interface Lesson {
   id: string
   moduleId: string
@@ -385,6 +393,9 @@ export interface Lesson {
   topic?: string
   contentMarkdown?: string
   pdfUrl?: string
+  resources?: LessonResource[] // Recursos e arquivos REAIS anexados à aula
+  hasActivity?: boolean // Se a aula possui atividade prática obrigatória
+  activityRequired?: boolean
   thumbnailUrl?: string
   availabilityStatus?: VideoAvailabilityStatus
   youtubeExists?: boolean
@@ -408,6 +419,23 @@ export type ActivityType =
 export type ActivityDifficulty = 'facil' | 'medio' | 'dificil' | 'desafio'
 
 export type ActivityStatus = 'draft' | 'review' | 'approved' | 'published'
+
+export interface ActivityQuestion {
+  id: string
+  statement: string
+  type: ActivityType
+  options?: string[]
+  correctOptionIndex?: number
+  correctAnswer?: string
+  codeStarter?: string
+  codeSolution?: string
+  testCases?: Array<{ input: string; expectedOutput: string; description?: string }>
+  explanation: string
+  hint?: string
+  detailedGuidance?: string
+  hints?: string[]
+  points?: number
+}
 
 export interface LearningActivity {
   id: string
@@ -435,10 +463,39 @@ export interface LearningActivity {
   explanation: string
   hint?: string // Dica na 1ª tentativa
   detailedGuidance?: string // Orientação na 2ª tentativa
+  hints?: string[] // Sistema de dicas progressivas (Níveis 1, 2, 3)
+  questions?: ActivityQuestion[] // Coleção sequencial de questões da atividade
   activityHash?: string
   isMandatory?: boolean
   createdAt: string
   updatedAt?: string
+}
+
+export interface LessonActivityAnalysis {
+  hasActivity: boolean
+  activityType: ActivityType | 'none'
+  reason: string
+  learningObjectives: string[]
+  suggestedDifficulty: ActivityDifficulty
+  estimatedTimeMinutes: number
+}
+
+export interface ActivitySubmissionResult {
+  isValid: boolean
+  error?: string
+  isApproved: boolean
+  score: number // 0 a 100
+  xpEarned: number
+  passedCount: number
+  totalCount: number
+  feedback: string
+  questionResults: Array<{
+    questionId: string
+    isCorrect: boolean
+    score: number
+    feedback: string
+    explanation?: string
+  }>
 }
 
 // Backward compatibility alias
