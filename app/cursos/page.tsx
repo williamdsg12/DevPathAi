@@ -174,80 +174,103 @@ export default function CoursesPage() {
         </div>
 
         {/* Grid de Cursos */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredCourses.map((course) => {
-            const courseLessons = allLessons.filter((l) => (course.skills || []).some(() => true))
-            const courseModule = allModules.find(
-              (m) => m.courseId === course.id || m.id === `mod-${course.id.replace('crs-', '')}` || m.title.toLowerCase().includes(course.title.toLowerCase().split(' ')[0]),
-            )
-            const firstLessonId =
-              courseModule?.lessonIds?.[0] ||
-              allLessons.find((l) => l.moduleId === courseModule?.id || l.playlistId === course.playlistId)?.id ||
-              'l-logica-1'
+        {filteredCourses.length === 0 ? (
+          <div className="rounded-3xl border border-white/10 bg-[#12111d] p-12 text-center space-y-4">
+            <BookOpen className="size-10 text-zinc-500 mx-auto" />
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-white">Nenhum curso encontrado</h3>
+              <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+                Não encontramos nenhum curso ativo correspondente aos filtros selecionados.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSearchQuery('')
+                setSelectedCategory('all')
+                setSelectedLevel('all')
+              }}
+              className="text-xs font-bold border-white/10 rounded-xl"
+            >
+              Limpar Filtros
+            </Button>
+          </div>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredCourses.map((course) => {
+              const courseModules = allModules.filter(
+                (m) => m.courseId === course.id || m.phase === course.category || (course.playlistId && m.id.includes(course.id))
+              )
+              const courseLessons = courseModules.flatMap((m) =>
+                allLessons.filter((l) => m.lessonIds.includes(l.id) || l.moduleId === m.id)
+              )
+              const totalMissions = courseLessons.length || course.lessonsCount || 1
 
-            const techKey = Object.keys(TECH_COLORS).find((k) =>
-              course.title.toLowerCase().includes(k.toLowerCase()) || (course.technology || '').toLowerCase().includes(k.toLowerCase())
-            )
-            const techStyle = techKey ? TECH_COLORS[techKey] : { bg: 'bg-violet-500/10', text: 'text-violet-300', border: 'border-violet-500/30' }
+              const techKey = Object.keys(TECH_COLORS).find((k) =>
+                course.title.toLowerCase().includes(k.toLowerCase()) || (course.technology || '').toLowerCase().includes(k.toLowerCase())
+              )
+              const techStyle = techKey ? TECH_COLORS[techKey] : { bg: 'bg-violet-500/10', text: 'text-violet-300', border: 'border-violet-500/30' }
 
-            return (
-              <div
-                key={course.id}
-                className="group relative rounded-3xl border border-white/5 bg-[#12111d] hover:border-violet-500/40 p-5 space-y-4 transition-all duration-300 shadow-xl flex flex-col justify-between"
-              >
-                <div className="space-y-3">
-                  {/* Thumbnail / Header */}
-                  <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black/60 border border-white/10 shadow-md">
-                    {course.thumbnailUrl ? (
-                      <Image
-                        src={course.thumbnailUrl}
-                        alt={course.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        unoptimized
-                      />
-                    ) : (
-                      <div className="grid size-full place-items-center bg-violet-950/40 text-violet-400">
-                        <BookOpen className="size-10" />
-                      </div>
-                    )}
-                    <span className="absolute bottom-2 right-2 px-2.5 py-0.5 rounded-lg bg-black/80 text-[10px] font-bold text-white font-mono">
-                      {course.totalHours || course.durationHours || 12}h de conteúdo
-                    </span>
+              return (
+                <div
+                  key={course.id}
+                  className="group relative rounded-3xl border border-white/5 bg-[#12111d] hover:border-violet-500/40 p-5 space-y-4 transition-all duration-300 shadow-xl flex flex-col justify-between"
+                >
+                  <div className="space-y-3">
+                    {/* Thumbnail / Header */}
+                    <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black/60 border border-white/10 shadow-md">
+                      {course.thumbnailUrl ? (
+                        <Image
+                          src={course.thumbnailUrl}
+                          alt={course.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="grid size-full place-items-center bg-violet-950/40 text-violet-400">
+                          <BookOpen className="size-10" />
+                        </div>
+                      )}
+                      <span className="absolute bottom-2 right-2 px-2.5 py-0.5 rounded-lg bg-black/80 text-[10px] font-bold text-white font-mono">
+                        {course.totalHours || Math.max(1, Math.round(courseLessons.reduce((acc, l) => acc + (l.durationMin || 25), 0) / 60))}h de conteúdo
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase font-mono border ${techStyle.bg} ${techStyle.text} ${techStyle.border}`}>
+                        {course.technology || 'Formação'}
+                      </span>
+                      <Badge variant="secondary" className="text-[10px] uppercase font-bold bg-white/5 text-zinc-400">
+                        {LEVEL_LABELS[course.level as SkillLevel] || course.level}
+                      </Badge>
+                    </div>
+
+                    <h3 className="text-base font-bold text-white group-hover:text-violet-300 transition-colors leading-snug">
+                      {course.title}
+                    </h3>
+
+                    <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed font-medium">
+                      {course.description}
+                    </p>
                   </div>
 
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase font-mono border ${techStyle.bg} ${techStyle.text} ${techStyle.border}`}>
-                      {course.technology || 'Formação'}
+                  <div className="pt-3 border-t border-white/5 flex items-center justify-between">
+                    <span className="text-[11px] text-zinc-400 font-semibold">
+                      {totalMissions} missões práticas
                     </span>
-                    <Badge variant="secondary" className="text-[10px] uppercase font-bold bg-white/5 text-zinc-400">
-                      {LEVEL_LABELS[course.level as SkillLevel] || course.level}
-                    </Badge>
+                    <Link href={`/courses/${course.slug || course.id}`}>
+                      <Button size="sm" variant="ghost" className="text-xs text-violet-400 hover:text-violet-300 font-bold gap-1 p-0 cursor-pointer">
+                        Ver Jornada <ArrowRight className="size-3.5" />
+                      </Button>
+                    </Link>
                   </div>
-
-                  <h3 className="text-base font-bold text-white group-hover:text-violet-300 transition-colors leading-snug">
-                    {course.title}
-                  </h3>
-
-                  <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed font-medium">
-                    {course.description}
-                  </p>
                 </div>
-
-                <div className="pt-3 border-t border-white/5 flex items-center justify-between">
-                  <span className="text-[11px] text-zinc-400 font-semibold">
-                    {course.lessonsCount || courseModule?.lessonIds?.length || 10} missões práticas
-                  </span>
-                  <Link href={`/courses/${course.slug || course.id}`}>
-                    <Button size="sm" variant="ghost" className="text-xs text-violet-400 hover:text-violet-300 font-bold gap-1 p-0 cursor-pointer">
-                      Ver Jornada <ArrowRight className="size-3.5" />
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        )}
       </div>
     </AppShell>
   )

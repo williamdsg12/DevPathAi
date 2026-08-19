@@ -440,22 +440,28 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
 
         // Merge official catalog to ensure defaultOfficialCourses/Modules/Lessons are ALWAYS present and ordered first
         const officialCourseIds = new Set(defaultOfficialCourses.map((c) => c.id))
-        const userCourses = Array.isArray(parsed.courses)
-          ? parsed.courses.filter((c: Course) => !officialCourseIds.has(c.id))
-          : []
-        const mergedCourses = [...defaultOfficialCourses, ...userCourses]
-
         const officialModuleIds = new Set(defaultOfficialModules.map((m) => m.id))
+        const officialLessonIds = new Set(defaultOfficialLessons.map((l) => l.id))
+
         const userModules = Array.isArray(parsed.customModules)
           ? parsed.customModules.filter((m: LearningModule) => !officialModuleIds.has(m.id))
           : []
         const mergedModules = [...defaultOfficialModules, ...userModules]
 
-        const officialLessonIds = new Set(defaultOfficialLessons.map((l) => l.id))
         const userLessons = Array.isArray(parsed.customLessons)
           ? parsed.customLessons.filter((l: Lesson) => !officialLessonIds.has(l.id))
           : []
         const mergedLessons = [...defaultOfficialLessons, ...userLessons]
+
+        const userCourses = Array.isArray(parsed.courses)
+          ? parsed.courses.filter((c: Course) => !officialCourseIds.has(c.id) && c.id !== 'crs-python')
+          : []
+        const mergedCourses = [...defaultOfficialCourses, ...userCourses].filter((course) => {
+          if (!course.thumbnailUrl || course.thumbnailUrl.trim() === '') return false
+          const courseModules = mergedModules.filter((m) => m.courseId === course.id || m.phase === course.category)
+          const courseLessons = courseModules.flatMap((m) => mergedLessons.filter((l) => m.lessonIds.includes(l.id) || l.moduleId === m.id))
+          return courseLessons.length > 0 && courseLessons.some((l) => Boolean(l.videoId || l.externalVideoId))
+        })
 
         const loadedActivities = Array.isArray(parsed.activities) && parsed.activities.length ? parsed.activities : defaultLearningActivities
         const loadedProjects = parsed.moduleProjects && Object.keys(parsed.moduleProjects).length ? parsed.moduleProjects : createCleanInitialState().moduleProjects
@@ -610,8 +616,17 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
 
   // Single Source of Truth for Educational Catalog: State/Database 100%
   const allCourses = useMemo(() => {
-    return state.courses
-  }, [state.courses])
+    return state.courses.filter((course) => {
+      if (!course.thumbnailUrl || course.thumbnailUrl.trim() === '') return false
+      const courseModules = state.customModules.filter(
+        (m) => m.courseId === course.id || m.phase === course.category || (course.playlistId && m.id.includes(course.id))
+      )
+      const courseLessons = courseModules.flatMap((m) =>
+        state.customLessons.filter((l) => m.lessonIds.includes(l.id) || l.moduleId === m.id)
+      )
+      return courseLessons.length > 0 && courseLessons.some((l) => Boolean(l.videoId || l.externalVideoId))
+    })
+  }, [state.courses, state.customModules, state.customLessons])
 
   const allModules = useMemo(() => {
     return state.customModules
