@@ -30,12 +30,13 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import confetti from 'canvas-confetti'
-import { AppShell } from '@/components/layout/app-shell'
+import { AdminShell } from '@/components/admin/admin-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { YoutubeIcon } from '@/components/icons'
+import { ContentHealthTab } from '@/components/admin/content-health-tab'
 import { useAppStore } from '@/lib/store'
 import type {
   ContentSource,
@@ -116,9 +117,17 @@ export default function AdminYouTubePage() {
     profile,
   } = useAppStore()
 
-  const [activeTab, setActiveTab] = useState<'channels' | 'library' | 'playlists' | 'sources' | 'validation' | 'logs'>('library')
+  const [activeTab, setActiveTab] = useState<
+    'discover' | 'curation_queue' | 'health' | 'library' | 'playlists' | 'channels' | 'sources' | 'validation' | 'logs'
+  >('discover')
   const [syncingId, setSyncingId] = useState<string | null>(null)
   const [validatingPlaylistId, setValidatingPlaylistId] = useState<string | null>(null)
+
+  // Discovery Engine State
+  const [discoverUrl, setDiscoverUrl] = useState('')
+  const [isDiscovering, setIsDiscovering] = useState(false)
+  const [discoveryStep, setDiscoveryStep] = useState(0)
+  const [discoveryReport, setDiscoveryReport] = useState<any>(null)
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('')
@@ -225,6 +234,76 @@ export default function AdminYouTubePage() {
 
     return matchesSearch && matchesCategory
   })
+
+  // Courses pending curation / review
+  const inReviewCourses = allCourses.filter(
+    (c) => c.status === 'em_revisao' || c.status === 'rascunho'
+  )
+
+  // Run Real Discovery Engine Pipeline
+  async function handleRunDiscovery(e: React.FormEvent) {
+    e.preventDefault()
+    if (!discoverUrl.trim()) {
+      toast.error('Informe uma URL de canal (@handle, /channel/), playlist ou vídeo.')
+      return
+    }
+    setIsDiscovering(true)
+    setDiscoveryStep(0)
+    try {
+      setDiscoveryStep(1)
+      await new Promise((r) => setTimeout(r, 300))
+      setDiscoveryStep(2)
+
+      const res = await fetch('/api/youtube/channel/ingest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelInput: discoverUrl.trim() }),
+      })
+
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Erro ao processar descoberta na API oficial.')
+      }
+
+      setDiscoveryStep(5)
+      await new Promise((r) => setTimeout(r, 300))
+
+      if (data.channel && data.courses) {
+        ingestFullChannelToStore({
+          channel: data.channel,
+          playlists: data.playlists || [],
+          courses: data.courses || [],
+          modules: data.modules || [],
+          lessons: data.lessons || [],
+          report: data.report,
+        })
+      }
+
+      setDiscoveryStep(7)
+      setDiscoveryReport(data.report)
+      toast.success(
+        `Descoberta concluída! ${data.courses?.length || 0} cursos e ${data.lessons?.length || 0} aulas sincronizadas.`
+      )
+      confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } })
+      setActiveTab('curation_queue')
+    } catch (err: any) {
+      toast.error(`Falha na descoberta: ${err.message || 'Erro ao consultar API oficial'}`)
+    } finally {
+      setIsDiscovering(false)
+    }
+  }
+
+  function handleApproveCourse(courseId: string, title: string) {
+    updateCourse(courseId, { status: 'ativo' })
+    toast.success(`Curso "${title}" aprovado e publicado no catálogo oficial!`)
+  }
+
+  function handleRejectCourse(courseId: string, title: string) {
+    if (confirm(`Tem certeza que deseja rejeitar e remover "${title}" da fila de curadoria?`)) {
+      deleteCourse(courseId)
+      toast.info(`Curso "${title}" rejeitado.`)
+    }
+  }
 
   // Open Edit Modal
   function handleOpenEditCourse(course: Course) {
@@ -730,9 +809,9 @@ export default function AdminYouTubePage() {
   }
 
   return (
-    <AppShell
-      title="Biblioteca Central de Conteúdo & YouTube"
-      subtitle="Gerenciamento completo do catálogo educacional, ingestão automática, edição e exclusão de cursos e playlists"
+    <AdminShell
+      title="Curadoria Central & YouTube"
+      subtitle="Gerenciamento de canais oficiais, ingestão de playlists e integridade de vídeos"
     >
       <div className="space-y-8">
         {/* Top Navigation & Action Bar */}
@@ -747,6 +826,36 @@ export default function AdminYouTubePage() {
 
             <div className="flex items-center gap-1 rounded-xl bg-muted/40 p-1 border border-border overflow-x-auto">
               <Button
+                variant={activeTab === 'discover' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setActiveTab('discover')}
+                className="text-xs font-semibold shrink-0 gap-1.5"
+              >
+                <Sparkles className="size-3.5" />
+                Descobrir Cursos
+              </Button>
+              <Button
+                variant={activeTab === 'curation_queue' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setActiveTab('curation_queue')}
+                className="text-xs font-semibold shrink-0 gap-1.5"
+              >
+                Fila de Curadoria
+                {inReviewCourses.length > 0 && (
+                  <Badge className="bg-amber-500/30 text-amber-300 border-amber-500/40 text-[10px] px-1.5 py-0">
+                    {inReviewCourses.length}
+                  </Badge>
+                )}
+              </Button>
+              <Button
+                variant={activeTab === 'health' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setActiveTab('health')}
+                className="text-xs font-semibold shrink-0"
+              >
+                Saúde do Catálogo
+              </Button>
+              <Button
                 variant={activeTab === 'library' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setActiveTab('library')}
@@ -760,7 +869,7 @@ export default function AdminYouTubePage() {
                 onClick={() => setActiveTab('playlists')}
                 className="text-xs font-semibold shrink-0"
               >
-                Playlists & Cursos ({allCourses.length})
+                Playlists ({allCourses.length})
               </Button>
               <Button
                 variant={activeTab === 'channels' ? 'default' : 'ghost'}
@@ -768,7 +877,7 @@ export default function AdminYouTubePage() {
                 onClick={() => setActiveTab('channels')}
                 className="text-xs font-semibold shrink-0"
               >
-                Canais & Ingestão ({contentSources.length})
+                Canais ({contentSources.length})
               </Button>
               <Button
                 variant={activeTab === 'sources' ? 'default' : 'ghost'}
@@ -784,7 +893,7 @@ export default function AdminYouTubePage() {
                 onClick={() => setActiveTab('validation')}
                 className="text-xs font-semibold shrink-0"
               >
-                Diagnóstico & Validação
+                Diagnóstico
               </Button>
               <Button
                 variant={activeTab === 'logs' ? 'default' : 'ghost'}
@@ -828,6 +937,201 @@ export default function AdminYouTubePage() {
             </Button>
           </div>
         </div>
+
+        {/* Tab: Discover Courses */}
+        {activeTab === 'discover' && (
+          <div className="space-y-6">
+            <div className="rounded-3xl border border-violet-500/30 bg-gradient-to-r from-violet-950/70 via-[#131124] to-[#0a0914] p-6 sm:p-8 shadow-2xl space-y-4">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div className="space-y-2 max-w-2xl">
+                  <Badge className="bg-violet-600/30 text-violet-300 border border-violet-500/40 text-xs font-mono font-bold">
+                    MOTOR DE DESCOBERTA v4.0
+                  </Badge>
+                  <h2 className="text-xl sm:text-2xl font-black text-white">
+                    Descoberta & Ingestão de Cursos Oficiais
+                  </h2>
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    Informe uma URL real de canal (@handle, /channel/, /c/) ou playlist oficial do YouTube. O motor executa
+                    conector autorizado, extrai metadados oficiais, deduplica vídeos, classifica com IA e encaminha para a
+                    fila de curadoria.
+                  </p>
+                </div>
+              </div>
+
+              {/* Discovery Input Form */}
+              <form onSubmit={handleRunDiscovery} className="pt-2 flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <YoutubeIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-red-400" />
+                  <Input
+                    value={discoverUrl}
+                    onChange={(e) => setDiscoverUrl(e.target.value)}
+                    placeholder="Cole a URL ou @handle do canal/playlist (Ex: @CursoemVideo, https://youtube.com/playlist?list=PL...)"
+                    className="pl-10 h-11 bg-black/40 border-white/10 text-xs text-white placeholder:text-zinc-500 rounded-xl"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  disabled={isDiscovering}
+                  className="bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs rounded-xl h-11 px-6 gap-2 shrink-0 shadow-lg shadow-violet-950/50"
+                >
+                  <Sparkles className={`size-4 ${isDiscovering ? 'animate-spin' : ''}`} />
+                  {isDiscovering ? 'Descobrindo Conteúdos...' : 'Iniciar Descoberta & Análise'}
+                </Button>
+              </form>
+
+              {/* Live Step Progress Visualizer */}
+              {isDiscovering && (
+                <div className="p-4 rounded-2xl bg-black/60 border border-violet-500/30 space-y-3 animate-pulse">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-violet-300 flex items-center gap-2">
+                      <RefreshCw className="size-3.5 animate-spin text-violet-400" /> Etapa {discoveryStep + 1} de 8
+                    </span>
+                    <span className="text-zinc-400 font-mono text-[11px]">Processando via YouTube API</span>
+                  </div>
+                  <p className="text-xs font-semibold text-white">{INGESTION_STEPS[discoveryStep]}</p>
+                  <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-violet-500 transition-all duration-300"
+                      style={{ width: `${((discoveryStep + 1) / 8) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Pipeline Architecture Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card className="bg-[#100f1c] border-white/10 p-4 space-y-1">
+                <span className="text-[10px] font-mono font-bold text-violet-400 uppercase">1. Conector Oficial</span>
+                <p className="text-xs font-bold text-white">YouTube Data API v3</p>
+                <p className="text-[11px] text-zinc-400">Embeds oficiais permitidos sem re-hospedagem indevida</p>
+              </Card>
+
+              <Card className="bg-[#100f1c] border-white/10 p-4 space-y-1">
+                <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase">2. Deduplicação</span>
+                <p className="text-xs font-bold text-white">Set Canônico por Video ID</p>
+                <p className="text-[11px] text-zinc-400">Zero duplicação física na base de dados</p>
+              </Card>
+
+              <Card className="bg-[#100f1c] border-white/10 p-4 space-y-1">
+                <span className="text-[10px] font-mono font-bold text-amber-400 uppercase">3. Classificação IA</span>
+                <p className="text-xs font-bold text-white">Nível & Carga Horária</p>
+                <p className="text-[11px] text-zinc-400">Detecção automática de tecnologia e competências</p>
+              </Card>
+
+              <Card className="bg-[#100f1c] border-white/10 p-4 space-y-1">
+                <span className="text-[10px] font-mono font-bold text-purple-400 uppercase">4. Fila de Curadoria</span>
+                <p className="text-xs font-bold text-white">Aprovação Humana</p>
+                <p className="text-[11px] text-zinc-400">Somente cursos validados entram no catálogo oficial</p>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* Tab: Curation Queue */}
+        {activeTab === 'curation_queue' && (
+          <div className="space-y-6">
+            <div className="rounded-3xl border border-amber-500/20 bg-amber-500/5 p-6 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold">
+                    FILA DE CURADORIA
+                  </Badge>
+                  <span className="text-xs text-zinc-400 font-mono">
+                    {inReviewCourses.length} {inReviewCourses.length === 1 ? 'curso pendente' : 'cursos pendentes'}
+                  </span>
+                </div>
+              </div>
+              <h2 className="text-lg font-bold text-white">Revisão e Aprovação Pedagógica</h2>
+              <p className="text-xs text-zinc-400 max-w-2xl leading-relaxed">
+                Conteúdos descobertos automaticamente aguardam sua aprovação antes de serem disponibilizados para os alunos.
+                Você pode aprovar imediatamente, editar metadados ou rejeitar.
+              </p>
+            </div>
+
+            {inReviewCourses.length === 0 ? (
+              <div className="rounded-3xl border border-white/10 bg-[#100f1c] p-12 text-center space-y-3">
+                <div className="size-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 grid place-items-center text-emerald-400 mx-auto">
+                  <CheckCircle2 className="size-6" />
+                </div>
+                <h3 className="text-base font-bold text-white">Tudo em dia na Fila de Curadoria!</h3>
+                <p className="text-xs text-zinc-400 max-w-md mx-auto">
+                  Todos os cursos descobertos já foram revisados e publicados no catálogo oficial. Use a aba "Descobrir Cursos" para importar novos canais.
+                </p>
+                <Button
+                  size="sm"
+                  onClick={() => setActiveTab('discover')}
+                  className="bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs rounded-xl mt-2"
+                >
+                  Descobrir Novos Cursos
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {inReviewCourses.map((course) => (
+                  <Card key={course.id} className="bg-[#100f1c] border-white/10 overflow-hidden flex flex-col justify-between">
+                    <div>
+                      {course.thumbnailUrl && (
+                        <img
+                          src={course.thumbnailUrl}
+                          alt={course.title}
+                          className="w-full h-36 object-cover border-b border-white/5"
+                        />
+                      )}
+                      <CardHeader className="p-4 pb-2 space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <Badge variant="outline" className="text-[10px] font-mono border-amber-500/30 text-amber-300">
+                            Pendente de Aprovação
+                          </Badge>
+                          <span className="text-[10px] text-zinc-400 font-mono">{course.totalHours}h est.</span>
+                        </div>
+                        <CardTitle className="text-sm font-bold text-white line-clamp-1">{course.title}</CardTitle>
+                        <CardDescription className="text-xs text-zinc-400 line-clamp-2">
+                          {course.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-4 pt-0 space-y-2 text-xs text-zinc-300">
+                        <div className="flex items-center justify-between text-[11px] text-zinc-400 border-t border-white/5 pt-2 font-mono">
+                          <span>{course.channelTitle || 'Canal Oficial'}</span>
+                          <span>{course.lessonsCount || 0} aulas</span>
+                        </div>
+                      </CardContent>
+                    </div>
+
+                    <div className="p-4 pt-0 flex items-center justify-end gap-2 border-t border-white/5 pt-3">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRejectCourse(course.id, course.title)}
+                        className="text-xs font-bold text-rose-400 hover:text-rose-300 h-8 px-2.5"
+                      >
+                        Rejeitar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenEditCourse(course)}
+                        className="text-xs font-bold border-white/10 text-zinc-300 h-8 px-2.5"
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleApproveCourse(course.id, course.title)}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl h-8 px-3"
+                      >
+                        Aprovar & Publicar
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab: Catalog Health */}
+        {activeTab === 'health' && <ContentHealthTab />}
 
         {/* Tab 1: Central Library */}
         {activeTab === 'library' && (
@@ -2210,6 +2514,6 @@ export default function AdminYouTubePage() {
           </div>
         )}
       </div>
-    </AppShell>
+    </AdminShell>
   )
 }

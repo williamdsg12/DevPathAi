@@ -66,7 +66,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import confetti from 'canvas-confetti'
-import { AppShell } from '@/components/layout/app-shell'
+import { AdminShell } from '@/components/admin/admin-shell'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -83,6 +83,7 @@ import type {
   AIPlaygroundMessage,
   AIPlaygroundPersona,
   AIPromptBlockKey,
+  AIKnowledgeItem,
 } from '@/lib/types'
 
 const CATEGORIES: AIInstructionCategory[] = [
@@ -118,6 +119,7 @@ export default function AdminAIPage() {
     aiPromptBlocks,
     aiVersions,
     aiLogs,
+    aiKnowledge,
     compiledPrompt,
     updateAIConfig,
     addAIInstruction,
@@ -130,6 +132,10 @@ export default function AdminAIPage() {
     restoreAIVersion,
     toggleAIAgentStatus,
     recordAIAudit,
+    addAIKnowledge,
+    updateAIKnowledge,
+    deleteAIKnowledge,
+    toggleAIKnowledge,
   } = useAppStore()
 
   const [activeTab, setActiveTab] = useState<string>('dashboard')
@@ -159,6 +165,27 @@ export default function AdminAIPage() {
     content: '',
     category: 'Pedagogia',
     priority: 'alta',
+    active: true,
+  })
+
+  // --- Knowledge Base State ---
+  const [searchKnowledge, setSearchKnowledge] = useState('')
+  const [knowledgeCategoryFilter, setKnowledgeCategoryFilter] = useState<string>('all')
+  const [isKnowledgeModalOpen, setIsKnowledgeModalOpen] = useState(false)
+  const [editingKnowledgeItem, setEditingKnowledgeItem] = useState<AIKnowledgeItem | null>(null)
+  const [knowledgeForm, setKnowledgeForm] = useState<{
+    title: string
+    category: string
+    tags: string
+    content: string
+    sourceUrl: string
+    active: boolean
+  }>({
+    title: '',
+    category: 'Programação',
+    tags: 'javascript, es6, frontend',
+    content: '',
+    sourceUrl: '',
     active: true,
   })
 
@@ -196,6 +223,29 @@ export default function AdminAIPage() {
       return matchSearch && matchCat && matchPriority
     })
   }, [aiInstructions, searchInstruction, categoryFilter, priorityFilter])
+
+  // Filtered Knowledge Base
+  const filteredKnowledge = useMemo(() => {
+    return (aiKnowledge || []).filter((item) => {
+      const matchSearch =
+        item.title.toLowerCase().includes(searchKnowledge.toLowerCase()) ||
+        item.content.toLowerCase().includes(searchKnowledge.toLowerCase()) ||
+        item.tags.some((t) => t.toLowerCase().includes(searchKnowledge.toLowerCase()))
+      const matchCat = knowledgeCategoryFilter === 'all' || item.category === knowledgeCategoryFilter
+      return matchSearch && matchCat
+    })
+  }, [aiKnowledge, searchKnowledge, knowledgeCategoryFilter])
+
+  // Lock body scroll when any modal is open
+  useEffect(() => {
+    if (isInstructionModalOpen || isPublishModalOpen || isKnowledgeModalOpen) {
+      const originalOverflow = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = originalOverflow
+      }
+    }
+  }, [isInstructionModalOpen, isPublishModalOpen, isKnowledgeModalOpen])
 
   // Prompt Metrics
   const promptMetrics = useMemo(() => {
@@ -244,13 +294,77 @@ export default function AdminAIPage() {
 
     if (editingInstruction) {
       updateAIInstruction(editingInstruction.id, instructionForm)
-      toast.success('Instrução de treinamento atualizada!')
+      toast.success('Instrução de treinamento atualizada com sucesso!')
     } else {
       addAIInstruction(instructionForm)
       toast.success('Nova instrução de treinamento adicionada!')
     }
 
     setIsInstructionModalOpen(false)
+  }
+
+  // Handle Knowledge Base Create / Edit
+  function handleOpenCreateKnowledge() {
+    setEditingKnowledgeItem(null)
+    setKnowledgeForm({
+      title: '',
+      category: 'Programação',
+      tags: 'javascript, es6, fundamentos',
+      content: '',
+      sourceUrl: '',
+      active: true,
+    })
+    setIsKnowledgeModalOpen(true)
+  }
+
+  function handleOpenEditKnowledge(item: AIKnowledgeItem) {
+    setEditingKnowledgeItem(item)
+    setKnowledgeForm({
+      title: item.title,
+      category: item.category,
+      tags: item.tags.join(', '),
+      content: item.content,
+      sourceUrl: item.sourceUrl || '',
+      active: item.active,
+    })
+    setIsKnowledgeModalOpen(true)
+  }
+
+  function handleSaveKnowledge(e: React.FormEvent) {
+    e.preventDefault()
+    if (!knowledgeForm.title.trim() || !knowledgeForm.content.trim()) {
+      toast.error('Preencha o título e o conteúdo do documento.')
+      return
+    }
+
+    const tagsArray = knowledgeForm.tags
+      .split(',')
+      .map((t) => t.trim().toLowerCase())
+      .filter(Boolean)
+
+    if (editingKnowledgeItem) {
+      updateAIKnowledge(editingKnowledgeItem.id, {
+        title: knowledgeForm.title,
+        category: knowledgeForm.category,
+        tags: tagsArray,
+        content: knowledgeForm.content,
+        sourceUrl: knowledgeForm.sourceUrl || undefined,
+        active: knowledgeForm.active,
+      })
+      toast.success('Documento da Base de Conhecimento atualizado!')
+    } else {
+      addAIKnowledge({
+        title: knowledgeForm.title,
+        category: knowledgeForm.category,
+        tags: tagsArray,
+        content: knowledgeForm.content,
+        sourceUrl: knowledgeForm.sourceUrl || undefined,
+        active: knowledgeForm.active,
+      })
+      toast.success('Novo documento indexado na Base de Conhecimento!')
+    }
+
+    setIsKnowledgeModalOpen(false)
   }
 
   // Handle Publish Version
@@ -292,10 +406,11 @@ export default function AdminAIPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: [...playgroundMessages, newUserMsg],
-          systemPrompt: compiledPrompt,
           persona: selectedPersona,
-          model: aiConfig.model,
-          temperature: aiConfig.temperature,
+          activeConfig: aiConfig,
+          activeInstructions: aiInstructions,
+          activeBlocks: aiPromptBlocks,
+          knowledgeBase: aiKnowledge,
         }),
       })
 
@@ -305,7 +420,7 @@ export default function AdminAIPage() {
       const assistantMsg: AIPlaygroundMessage = {
         id: `msg-ai-${Date.now()}`,
         role: 'assistant',
-        content: data.reply || 'Resposta simulada.',
+        content: data.reply || 'Resposta gerada.',
         timestamp: new Date().toLocaleTimeString(),
         tokens: data.tokens,
         latencyMs: data.latencyMs,
@@ -322,8 +437,8 @@ export default function AdminAIPage() {
   }
 
   return (
-    <AppShell
-      title="Inteligência Artificial — DEVPATH AI"
+    <AdminShell
+      title="DEVPATH AI Engine"
       subtitle="Painel administrativo de configuração, treinamento pedagógico, versionamento e testes da IA central"
     >
       <div className="space-y-8 max-w-7xl mx-auto pb-20">
@@ -457,6 +572,13 @@ export default function AdminAIPage() {
                 className="text-xs font-bold gap-1.5 data-[state=active]:bg-violet-600 data-[state=active]:text-white rounded-xl px-3.5 py-2"
               >
                 <Layers className="size-3.5" /> Construtor de IA
+              </TabsTrigger>
+
+              <TabsTrigger
+                value="conhecimento"
+                className="text-xs font-bold gap-1.5 data-[state=active]:bg-violet-600 data-[state=active]:text-white rounded-xl px-3.5 py-2"
+              >
+                <BookOpen className="size-3.5 text-emerald-400" /> Base de Conhecimento RAG ({(aiKnowledge || []).length})
               </TabsTrigger>
 
               <TabsTrigger
@@ -720,7 +842,7 @@ export default function AdminAIPage() {
                     value={configForm.systemPromptBase}
                     onChange={(e) => setConfigForm({ ...configForm, systemPromptBase: e.target.value })}
                     placeholder="Insira o System Prompt Base da IA..."
-                    className="bg-black/60 border-violet-500/30 text-xs font-mono text-zinc-200 leading-relaxed p-4 rounded-2xl focus:border-violet-500"
+                    className="bg-black/60 border-violet-500/30 text-xs font-mono text-zinc-200 leading-relaxed p-4 rounded-2xl focus:border-violet-500 h-[200px] max-h-[350px] min-h-[140px] overflow-y-auto w-full max-w-full resize-y"
                   />
                 </div>
               </div>
@@ -936,10 +1058,177 @@ export default function AdminAIPage() {
                     value={block.content}
                     onChange={(e) => updatePromptBlock(block.key, e.target.value)}
                     disabled={!block.enabled}
-                    className="text-xs font-mono bg-black/50 border-white/10 text-zinc-200 rounded-xl leading-relaxed"
+                    className="text-xs font-mono bg-black/50 border-white/10 text-zinc-200 rounded-xl leading-relaxed h-[130px] max-h-[220px] min-h-[90px] overflow-y-auto w-full max-w-full resize-y"
                   />
                 </Card>
               ))}
+            </div>
+          </TabsContent>
+
+          {/* =======================================================================
+              TAB: BASE DE CONHECIMENTO (RAG)
+             ======================================================================= */}
+          <TabsContent value="conhecimento" className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <BookOpen className="size-5 text-emerald-400" /> Base de Conhecimento RAG & Documentações
+                </h2>
+                <p className="text-xs text-zinc-400">
+                  Documentos técnicos, diretrizes pedagógicas e manuais indexados que a IA consulta semanticamente para fornecer respostas embasadas (grounded).
+                </p>
+              </div>
+
+              <Button
+                onClick={handleOpenCreateKnowledge}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-lg shadow-emerald-950/40 cursor-pointer"
+              >
+                <Plus className="size-3.5 mr-1.5" /> Novo Documento / Conhecimento
+              </Button>
+            </div>
+
+            {/* Filter and Search Bar */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-zinc-400" />
+                <Input
+                  value={searchKnowledge}
+                  onChange={(e) => setSearchKnowledge(e.target.value)}
+                  placeholder="Buscar na base por título, conteúdo ou tags..."
+                  className="pl-10 bg-[#100f1c] border-white/10 text-xs text-white"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <select
+                  value={knowledgeCategoryFilter}
+                  onChange={(e) => setKnowledgeCategoryFilter(e.target.value)}
+                  className="h-10 px-3 rounded-md bg-[#100f1c] border border-white/10 text-xs font-bold text-zinc-200 focus:outline-none focus:border-emerald-500 cursor-pointer"
+                >
+                  <option value="all">Todas as Categorias</option>
+                  <option value="Programação">Programação</option>
+                  <option value="Plataforma">Plataforma</option>
+                  <option value="Pedagogia">Pedagogia</option>
+                  <option value="Lógica">Lógica</option>
+                  <option value="Arquitetura">Arquitetura</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Knowledge Items Grid */}
+            <div className="grid gap-4 md:grid-cols-2">
+              {filteredKnowledge.length === 0 ? (
+                <div className="md:col-span-2 p-12 text-center rounded-3xl border border-dashed border-white/10 bg-[#100f1c]/50 space-y-3">
+                  <BookOpen className="size-10 text-zinc-600 mx-auto" />
+                  <h4 className="text-sm font-bold text-white">Nenhum documento de conhecimento encontrado</h4>
+                  <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+                    Indexe novos manuais, documentações oficiais ou regras técnicas para que o motor RAG forneça respostas precisas.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleOpenCreateKnowledge}
+                    className="text-xs font-bold border-emerald-500/30 text-emerald-400 hover:bg-emerald-950/30"
+                  >
+                    <Plus className="size-3.5 mr-1.5" /> Adicionar Primeiro Documento
+                  </Button>
+                </div>
+              ) : (
+                filteredKnowledge.map((item) => (
+                  <Card
+                    key={item.id}
+                    className={`border transition-all rounded-3xl p-5 space-y-3.5 flex flex-col justify-between ${
+                      item.active
+                        ? 'border-white/10 bg-[#100f1c]'
+                        : 'border-white/5 bg-[#090810] opacity-60'
+                    }`}
+                  >
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-[10px] font-bold border-emerald-500/40 bg-emerald-950/30 text-emerald-300">
+                            {item.category}
+                          </Badge>
+                          <Badge
+                            variant="outline"
+                            className={`text-[9px] font-bold uppercase ${
+                              item.active
+                                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                : 'bg-zinc-800 text-zinc-400 border-zinc-700'
+                            }`}
+                          >
+                            {item.active ? 'Indexado & Ativo' : 'Desativado'}
+                          </Badge>
+                        </div>
+
+                        {item.sourceUrl && (
+                          <a
+                            href={item.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] text-zinc-400 hover:text-emerald-400 flex items-center gap-1 transition-colors"
+                          >
+                            <ExternalLink className="size-3" /> Fonte Oficial
+                          </a>
+                        )}
+                      </div>
+
+                      <h3 className="text-sm font-bold text-white leading-tight">{item.title}</h3>
+
+                      <div className="flex flex-wrap gap-1">
+                        {item.tags.map((tag, idx) => (
+                          <span
+                            key={idx}
+                            className="text-[9px] font-mono px-2 py-0.5 rounded-md bg-white/5 text-zinc-400 border border-white/5"
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-black/40 border border-white/5 text-xs text-zinc-300 font-mono leading-relaxed max-h-[140px] overflow-y-auto scrollbar-thin">
+                        {item.content}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleAIKnowledge(item.id)}
+                        className={`text-xs font-bold ${
+                          item.active ? 'text-emerald-400 hover:text-emerald-300' : 'text-zinc-500 hover:text-zinc-300'
+                        }`}
+                      >
+                        {item.active ? 'Ativo' : 'Desativado'}
+                      </Button>
+
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleOpenEditKnowledge(item)}
+                          className="text-xs text-zinc-400 hover:text-white"
+                        >
+                          <Edit className="size-3.5" />
+                        </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            deleteAIKnowledge(item.id)
+                            toast.info('Documento removido da Base de Conhecimento.')
+                          }}
+                          className="text-xs text-red-400 hover:text-red-300 hover:bg-red-950/20"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
             </div>
           </TabsContent>
 
@@ -1255,96 +1544,125 @@ export default function AdminAIPage() {
           MODAL: ADICIONAR / EDITAR INSTRUÇÃO DE TREINAMENTO
          ========================================================================= */}
       {isInstructionModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-xl rounded-3xl border border-violet-500/30 bg-[#100f1c] p-6 sm:p-8 space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between border-b border-white/5 pb-4">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-hidden"
+        >
+          {/* Backdrop click closer */}
+          <div
+            className="fixed inset-0 bg-transparent"
+            onClick={() => setIsInstructionModalOpen(false)}
+          />
+
+          <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl border border-violet-500/30 bg-[#100f1c] shadow-2xl shadow-violet-950/50 overflow-hidden animate-in fade-in zoom-in-95 duration-150 z-10">
+            {/* Modal Header — Fixed */}
+            <div className="flex items-center justify-between border-b border-white/5 px-6 py-4.5 shrink-0 bg-[#131122]">
+              <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
                 <Brain className="size-5 text-purple-400" />
                 {editingInstruction ? 'Editar Instrução de Treinamento' : 'Nova Instrução de Treinamento'}
               </h3>
               <button
                 type="button"
                 onClick={() => setIsInstructionModalOpen(false)}
-                className="text-zinc-500 hover:text-white p-1"
+                className="text-zinc-400 hover:text-white p-1.5 rounded-xl hover:bg-white/5 transition-colors cursor-pointer"
+                title="Fechar"
               >
                 <X className="size-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveInstruction} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-zinc-300">Título da Instrução *</label>
-                <Input
-                  value={instructionForm.title}
-                  onChange={(e) => setInstructionForm({ ...instructionForm, title: e.target.value })}
-                  placeholder="Ex: Comportamento para alunos iniciantes"
-                  className="bg-black/50 border-white/10 text-xs text-white"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+            {/* Modal Body & Form — Scrollable Content with min-h-0 */}
+            <form onSubmit={handleSaveInstruction} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 space-y-4 scrollbar-thin scrollbar-thumb-violet-600/40 scrollbar-track-transparent overscroll-contain">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-zinc-300">Categoria</label>
-                  <select
-                    value={instructionForm.category}
-                    onChange={(e) => setInstructionForm({ ...instructionForm, category: e.target.value })}
-                    className="w-full h-10 px-3 rounded-md bg-black/50 border border-white/10 text-xs font-bold text-zinc-200 focus:outline-none focus:border-violet-500 cursor-pointer"
-                  >
-                    {CATEGORIES.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
+                  <label className="text-xs font-bold text-zinc-300">Título da Instrução *</label>
+                  <Input
+                    value={instructionForm.title}
+                    onChange={(e) => setInstructionForm({ ...instructionForm, title: e.target.value })}
+                    placeholder="Ex: Comportamento para alunos iniciantes"
+                    className="bg-black/50 border-white/10 text-xs text-white h-10 rounded-xl"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-zinc-300">Categoria</label>
+                    <select
+                      value={instructionForm.category}
+                      onChange={(e) => setInstructionForm({ ...instructionForm, category: e.target.value })}
+                      className="w-full h-10 px-3 rounded-xl bg-black/50 border border-white/10 text-xs font-bold text-zinc-200 focus:outline-none focus:border-violet-500 cursor-pointer"
+                    >
+                      {CATEGORIES.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-zinc-300">Prioridade</label>
+                    <select
+                      value={instructionForm.priority}
+                      onChange={(e) => setInstructionForm({ ...instructionForm, priority: e.target.value as any })}
+                      className="w-full h-10 px-3 rounded-xl bg-black/50 border border-white/10 text-xs font-bold text-zinc-200 focus:outline-none focus:border-violet-500 cursor-pointer"
+                    >
+                      <option value="alta">Alta (Prioritária)</option>
+                      <option value="media">Média</option>
+                      <option value="baixa">Baixa</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-zinc-300">Prioridade</label>
-                  <select
-                    value={instructionForm.priority}
-                    onChange={(e) => setInstructionForm({ ...instructionForm, priority: e.target.value as any })}
-                    className="w-full h-10 px-3 rounded-md bg-black/50 border border-white/10 text-xs font-bold text-zinc-200 focus:outline-none focus:border-violet-500 cursor-pointer"
-                  >
-                    <option value="alta">Alta (Prioritária)</option>
-                    <option value="media">Média</option>
-                    <option value="baixa">Baixa</option>
-                  </select>
+                  <label className="text-xs font-bold text-zinc-300">Descrição Curta (Finalidade)</label>
+                  <Input
+                    value={instructionForm.description}
+                    onChange={(e) => setInstructionForm({ ...instructionForm, description: e.target.value })}
+                    placeholder="Ex: Evitar termos avançados sem analogia simples"
+                    className="bg-black/50 border-white/10 text-xs text-white h-10 rounded-xl"
+                  />
+                </div>
+
+                {/* Conteúdo da Instrução com Altura Controlada e Scroll Interno Estrito */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-zinc-300">Conteúdo / Regra da Instrução *</label>
+                    <span className="text-[10px] text-zinc-400 font-mono">
+                      {instructionForm.content.length.toLocaleString('pt-BR')} caracteres • {instructionForm.content.split('\n').length} linhas
+                    </span>
+                  </div>
+
+                  <div className="relative rounded-2xl border border-white/10 bg-black/60 overflow-hidden focus-within:border-violet-500 focus-within:ring-1 focus-within:ring-violet-500 transition-all">
+                    <textarea
+                      value={instructionForm.content}
+                      onChange={(e) => setInstructionForm({ ...instructionForm, content: e.target.value })}
+                      placeholder="Descreva exatamente a diretriz, regra, conhecimento ou comportamento que a IA deve seguir..."
+                      className="w-full h-[220px] sm:h-[240px] max-h-[240px] min-h-[220px] bg-transparent text-xs font-mono text-zinc-200 p-4 leading-relaxed outline-none border-none resize-none overflow-y-auto overflow-x-hidden whitespace-pre-wrap break-words scrollbar-thin scrollbar-thumb-violet-600/50 scrollbar-track-white/5 block box-border"
+                      style={{ height: '240px', maxHeight: '240px', resize: 'none' }}
+                    />
+                  </div>
+
+                  <div className="flex justify-between items-center text-[10px] text-zinc-500 px-1">
+                    <span>O texto rola internamente sem alterar a altura ou estrutura do modal.</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-zinc-300">Descrição Curta (Finalidade)</label>
-                <Input
-                  value={instructionForm.description}
-                  onChange={(e) => setInstructionForm({ ...instructionForm, description: e.target.value })}
-                  placeholder="Ex: Evitar termos avançados sem analogia simples"
-                  className="bg-black/50 border-white/10 text-xs text-white"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-zinc-300">Conteúdo / Regra da Instrução *</label>
-                <Textarea
-                  rows={5}
-                  value={instructionForm.content}
-                  onChange={(e) => setInstructionForm({ ...instructionForm, content: e.target.value })}
-                  placeholder="Descreva exatamente a diretriz ou comportamento que a IA deve seguir..."
-                  className="bg-black/60 border-white/10 text-xs font-mono text-zinc-200 p-3.5 rounded-xl"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/5">
+              {/* Modal Footer — Fixed at the bottom */}
+              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-white/5 shrink-0 bg-[#0d0c17]">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsInstructionModalOpen(false)}
-                  className="text-xs border-white/10 text-zinc-400 hover:text-white rounded-xl"
+                  className="text-xs border-white/10 text-zinc-400 hover:text-white rounded-xl cursor-pointer"
                 >
                   Cancelar
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs rounded-xl px-6"
+                  className="bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs rounded-xl px-6 cursor-pointer shadow-lg shadow-violet-950/50"
                 >
                   Salvar Instrução
                 </Button>
@@ -1358,48 +1676,60 @@ export default function AdminAIPage() {
           MODAL: PUBLICAR NOVA VERSÃO DA IA
          ========================================================================= */}
       {isPublishModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-lg rounded-3xl border border-violet-500/40 bg-[#100f1c] p-6 sm:p-8 space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between border-b border-white/5 pb-4">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-hidden"
+        >
+          <div
+            className="fixed inset-0 bg-transparent"
+            onClick={() => setIsPublishModalOpen(false)}
+          />
+
+          <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col rounded-3xl border border-violet-500/40 bg-[#100f1c] shadow-2xl shadow-violet-950/50 overflow-hidden animate-in fade-in zoom-in-95 duration-150 z-10">
+            <div className="flex items-center justify-between border-b border-white/5 px-6 py-4.5 shrink-0 bg-[#131122]">
+              <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
                 <Upload className="size-5 text-violet-400" /> Publicar Nova Versão da IA
               </h3>
               <button
                 type="button"
                 onClick={() => setIsPublishModalOpen(false)}
-                className="text-zinc-500 hover:text-white p-1"
+                className="text-zinc-400 hover:text-white p-1.5 rounded-xl hover:bg-white/5 transition-colors cursor-pointer"
+                title="Fechar"
               >
                 <X className="size-5" />
               </button>
             </div>
 
-            <p className="text-xs text-zinc-300 leading-relaxed font-medium">
-              Esta ação compilará todas as instruções ativas, blocos estruturais e configurações em uma nova versão oficial imutável. Todos os alunos passarão a interagir com esta versão imediatamente.
-            </p>
+            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 space-y-4 scrollbar-thin scrollbar-thumb-violet-600/40 scrollbar-track-transparent">
+              <p className="text-xs text-zinc-300 leading-relaxed font-medium">
+                Esta ação compilará todas as instruções ativas, blocos estruturais e configurações em uma nova versão oficial imutável. Todos os alunos passarão a interagir com esta versão imediatamente.
+              </p>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-300">Descrição das Alterações / Release Notes *</label>
-              <Textarea
-                rows={4}
-                value={publishChangeDescription}
-                onChange={(e) => setPublishChangeDescription(e.target.value)}
-                placeholder="Ex: Adicionadas novas regras para explicação de funções e ajustada a temperatura para 0.4..."
-                className="bg-black/50 border-white/10 text-xs text-zinc-200 p-3.5 rounded-xl"
-              />
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-300">Descrição das Alterações / Release Notes *</label>
+                <textarea
+                  value={publishChangeDescription}
+                  onChange={(e) => setPublishChangeDescription(e.target.value)}
+                  placeholder="Ex: Adicionadas novas regras para explicação de funções e ajustada a temperatura para 0.4..."
+                  className="w-full h-[120px] max-h-[140px] bg-black/50 border border-white/10 text-xs font-mono text-zinc-200 p-3.5 rounded-xl outline-none resize-none overflow-y-auto leading-relaxed focus:border-violet-500"
+                  style={{ height: '120px', resize: 'none' }}
+                />
+              </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/5">
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-white/5 shrink-0 bg-[#0d0c17]">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsPublishModalOpen(false)}
-                className="text-xs border-white/10 text-zinc-400 hover:text-white rounded-xl"
+                className="text-xs border-white/10 text-zinc-400 hover:text-white rounded-xl cursor-pointer"
               >
                 Cancelar
               </Button>
               <Button
                 onClick={handleExecutePublish}
-                className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold text-xs rounded-xl px-6"
+                className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold text-xs rounded-xl px-6 cursor-pointer shadow-lg shadow-violet-950/50"
               >
                 Confirmar Publicação
               </Button>
@@ -1407,6 +1737,134 @@ export default function AdminAIPage() {
           </div>
         </div>
       )}
-    </AppShell>
+
+      {/* =========================================================================
+          MODAL: ADICIONAR / EDITAR DOCUMENTO DA BASE DE CONHECIMENTO
+         ========================================================================= */}
+      {isKnowledgeModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-hidden"
+        >
+          <div
+            className="fixed inset-0 bg-transparent"
+            onClick={() => setIsKnowledgeModalOpen(false)}
+          />
+
+          <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl border border-emerald-500/30 bg-[#100f1c] shadow-2xl shadow-emerald-950/50 overflow-hidden animate-in fade-in zoom-in-95 duration-150 z-10">
+            {/* Modal Header — Fixed */}
+            <div className="flex items-center justify-between border-b border-white/5 px-6 py-4.5 shrink-0 bg-[#131122]">
+              <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                <BookOpen className="size-5 text-emerald-400" />
+                {editingKnowledgeItem ? 'Editar Documento de Conhecimento' : 'Novo Documento de Conhecimento (RAG)'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsKnowledgeModalOpen(false)}
+                className="text-zinc-400 hover:text-white p-1.5 rounded-xl hover:bg-white/5 transition-colors cursor-pointer"
+                title="Fechar"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+
+            {/* Modal Body & Form — Scrollable Content */}
+            <form onSubmit={handleSaveKnowledge} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 space-y-4 scrollbar-thin scrollbar-thumb-emerald-600/40 scrollbar-track-transparent overscroll-contain">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-zinc-300">Título do Documento *</label>
+                  <Input
+                    value={knowledgeForm.title}
+                    onChange={(e) => setKnowledgeForm({ ...knowledgeForm, title: e.target.value })}
+                    placeholder="Ex: Padrões de Array Methods e Imutabilidade no ES6"
+                    className="bg-black/50 border-white/10 text-xs text-white h-10 rounded-xl"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-zinc-300">Categoria</label>
+                    <select
+                      value={knowledgeForm.category}
+                      onChange={(e) => setKnowledgeForm({ ...knowledgeForm, category: e.target.value })}
+                      className="w-full h-10 px-3 rounded-xl bg-black/50 border border-white/10 text-xs font-bold text-zinc-200 focus:outline-none focus:border-emerald-500 cursor-pointer"
+                    >
+                      <option value="Programação">Programação</option>
+                      <option value="Plataforma">Plataforma</option>
+                      <option value="Pedagogia">Pedagogia</option>
+                      <option value="Lógica">Lógica</option>
+                      <option value="Arquitetura">Arquitetura</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-zinc-300">Tags (separadas por vírgula)</label>
+                    <Input
+                      value={knowledgeForm.tags}
+                      onChange={(e) => setKnowledgeForm({ ...knowledgeForm, tags: e.target.value })}
+                      placeholder="javascript, arrays, imutabilidade"
+                      className="bg-black/50 border-white/10 text-xs text-white h-10 rounded-xl"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-zinc-300">URL da Fonte Oficial / Referência Técnica</label>
+                  <Input
+                    value={knowledgeForm.sourceUrl}
+                    onChange={(e) => setKnowledgeForm({ ...knowledgeForm, sourceUrl: e.target.value })}
+                    placeholder="https://developer.mozilla.org/..."
+                    className="bg-black/50 border-white/10 text-xs text-white h-10 rounded-xl"
+                  />
+                </div>
+
+                {/* Conteúdo do Documento com Altura Controlada e Scroll Interno */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-zinc-300">Conteúdo do Documento Técnico (Grounding) *</label>
+                    <span className="text-[10px] text-zinc-400 font-mono">
+                      {knowledgeForm.content.length.toLocaleString('pt-BR')} caracteres • {knowledgeForm.content.split('\n').length} linhas
+                    </span>
+                  </div>
+
+                  <div className="relative rounded-2xl border border-white/10 bg-black/60 overflow-hidden focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 transition-all">
+                    <textarea
+                      value={knowledgeForm.content}
+                      onChange={(e) => setKnowledgeForm({ ...knowledgeForm, content: e.target.value })}
+                      placeholder="Insira as explicações técnicas, regras oficiais, boas práticas, APIs ou exemplos de código que a IA deve utilizar como referência real..."
+                      className="w-full h-[220px] sm:h-[240px] max-h-[240px] min-h-[220px] bg-transparent text-xs font-mono text-zinc-200 p-4 leading-relaxed outline-none border-none resize-none overflow-y-auto overflow-x-hidden whitespace-pre-wrap break-words scrollbar-thin scrollbar-thumb-emerald-600/50 scrollbar-track-white/5 block box-border"
+                      style={{ height: '240px', maxHeight: '240px', resize: 'none' }}
+                    />
+                  </div>
+
+                  <div className="flex justify-between items-center text-[10px] text-zinc-500 px-1">
+                    <span>O motor RAG utilizará este texto para grounded responses sem alucinação.</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer — Fixed */}
+              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-white/5 shrink-0 bg-[#0d0c17]">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsKnowledgeModalOpen(false)}
+                  className="text-xs border-white/10 text-zinc-400 hover:text-white rounded-xl cursor-pointer"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl px-6 cursor-pointer shadow-lg shadow-emerald-950/50"
+                >
+                  Salvar Documento
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </AdminShell>
   )
 }

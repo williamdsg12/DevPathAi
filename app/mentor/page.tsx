@@ -104,6 +104,13 @@ function MentorChatContent() {
     difficulties,
     level,
     xp,
+    aiConfig,
+    aiInstructions,
+    aiPromptBlocks,
+    aiKnowledge,
+    studentMemories,
+    recordStudentDifficulty,
+    logAIOperation,
   } = useAppStore()
 
   const currentModule = allModules.find((m) => m.id === currentModuleId) || allModules[0]
@@ -114,7 +121,7 @@ function MentorChatContent() {
     {
       id: 'm1',
       role: 'assistant',
-      content: `Olá, **${profile?.name?.split(' ')[0] || 'Desenvolvedor'}**! Sou o seu **DevMentor AI** 🤖\n\nEstou acompanhando seu progresso em tempo real no módulo **${currentModule.title}** (Mastery Score: ${currentMastery.totalMastery}%).\n\nVocê pode escolher um dos modos de mentoria abaixo ou me perguntar qualquer dúvida sobre a aula **"${currentLesson.title}"**. Como posso te guiar agora?`,
+      content: `Olá, **${profile?.name?.split(' ')[0] || 'Desenvolvedor'}**! Sou o seu **DevMentor AI** 🤖 (Versão ${aiConfig.publishedVersion})\n\nEstou acompanhando seu progresso em tempo real no módulo **${currentModule.title}** (Mastery Score: ${currentMastery.totalMastery}%).\n\nVocê pode escolher um dos modos socráticos de mentoria abaixo ou me perguntar qualquer dúvida sobre a aula **"${currentLesson.title}"**. Como posso te guiar agora?`,
       createdAt: new Date().toISOString(),
     },
   ])
@@ -154,20 +161,62 @@ function MentorChatContent() {
     setLoading(true)
 
     try {
-      const reply = await aiService.chatWithMentor(updatedMessages, {
-        currentModuleTitle: currentModule.title,
-        userLevel: `Nível ${level} (${profile?.desiredRole || 'Desenvolvedor'})`,
-        recentDifficulties: difficulties.map((d) => d.topic),
+      const studentMemory = studentMemories[profile?.id || 'current-student'] || null
+
+      const res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: updatedMessages.map((m) => ({ role: m.role, content: m.content })),
+          studentProfile: profile,
+          studentMemory,
+          activeConfig: aiConfig,
+          activeInstructions: aiInstructions,
+          activeBlocks: aiPromptBlocks,
+          knowledgeBase: aiKnowledge,
+          lessonContext: {
+            courseTitle: 'Formação DevPath',
+            moduleTitle: currentModule.title,
+            lessonTitle: currentLesson.title,
+            lessonOrder: currentLesson.order,
+          },
+        }),
       })
+
+      if (!res.ok) throw new Error('Erro na resposta do mentor')
+      const data = await res.json()
 
       const assistantMsg: ChatMessage = {
         id: `ast-${Date.now()}`,
         role: 'assistant',
-        content: reply,
+        content: data.reply || 'Como posso te ajudar?',
         createdAt: new Date().toISOString(),
       }
 
       setMessages((prev) => [...prev, assistantMsg])
+
+      // Extract and save student difficulty to persistent memory if detected
+      if (data.extractedDifficulty) {
+        recordStudentDifficulty(data.extractedDifficulty)
+      }
+
+      // Log operation
+      logAIOperation({
+        userId: profile?.id,
+        studentLevel: profile?.level || 'iniciante',
+        intent: data.trace?.intent || 'chat',
+        promptVersionUsed: data.promptVersion || aiConfig.publishedVersion,
+        activeInstructionsCount: aiInstructions.filter((i) => i.active).length,
+        injectedKnowledgeTitles: data.trace?.promptHierarchyLevels?.level5_knowledgeAndWeb || [],
+        toolsExecuted: data.toolsExecuted || [],
+        sourcesCited: data.sourcesCited || [],
+        latencyMs: data.latencyMs || 250,
+        tokensUsed: data.tokensUsed || 300,
+        model: data.modelUsed || aiConfig.model,
+        status: 'success',
+        userMessageSnippet: text.slice(0, 80),
+        aiReplySnippet: (data.reply || '').slice(0, 100),
+      })
     } catch (err) {
       toast.error('Erro ao comunicar com o mentor.')
     } finally {

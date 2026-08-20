@@ -323,16 +323,23 @@ export function compilePrompt(
     })
   }
 
-  // 3. Active Training Instructions (Sorted: Alta -> Media -> Baixa)
+  // 3. Active Training Instructions (Sorted by priority descending / alta -> baixa)
   const activeInstructions = [...instructions].filter((i) => i.active)
   if (activeInstructions.length > 0) {
-    const priorityOrder: Record<string, number> = { alta: 1, media: 2, baixa: 3 }
-    activeInstructions.sort((a, b) => (priorityOrder[a.priority] || 4) - (priorityOrder[b.priority] || 4))
+    const priorityWeight = (p: any): number => {
+      if (typeof p === 'number') return p
+      if (p === 'alta') return 100
+      if (p === 'media') return 50
+      if (p === 'baixa') return 10
+      return 0
+    }
+    activeInstructions.sort((a, b) => priorityWeight(b.priority) - priorityWeight(a.priority))
 
     parts.push('\n## REGRAS DE TREINAMENTO ESPECÍFICAS (ADMIN)')
     activeInstructions.forEach((inst, idx) => {
+      const priorityLabel = String(inst.priority || 'NORMAL').toUpperCase()
       parts.push(
-        `\n${idx + 1}. **${inst.title}** [Categoria: ${inst.category} | Prioridade: ${inst.priority.toUpperCase()}]\n${inst.content.trim()}`
+        `\n${idx + 1}. **${inst.title}** [Categoria: ${inst.category} | Prioridade: ${priorityLabel}]\n${inst.content.trim()}`
       )
     })
   }

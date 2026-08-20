@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import type { UserProfile, UserRole } from '@/lib/types'
+import type { UserRole } from '@/lib/types'
 
 /**
  * Super Administradores com privilégios irrestritos de gestão de catálogo e CMS.
@@ -8,24 +8,126 @@ export const SUPER_ADMIN_EMAILS: readonly string[] = [
   'williamdev36@gmail.com',
 ]
 
+export interface RolePermissions {
+  manageUsers: boolean
+  manageCatalog: boolean
+  manageAI: boolean
+  manageFinance: boolean
+  manageSettings: boolean
+  viewAuditLogs: boolean
+  curateContent: boolean
+  supportStudents: boolean
+}
+
+export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
+  SUPER_ADMIN: {
+    manageUsers: true,
+    manageCatalog: true,
+    manageAI: true,
+    manageFinance: true,
+    manageSettings: true,
+    viewAuditLogs: true,
+    curateContent: true,
+    supportStudents: true,
+  },
+  ADMIN: {
+    manageUsers: true,
+    manageCatalog: true,
+    manageAI: true,
+    manageFinance: false,
+    manageSettings: true,
+    viewAuditLogs: true,
+    curateContent: true,
+    supportStudents: true,
+  },
+  CURATOR: {
+    manageUsers: false,
+    manageCatalog: true,
+    manageAI: false,
+    manageFinance: false,
+    manageSettings: false,
+    viewAuditLogs: false,
+    curateContent: true,
+    supportStudents: false,
+  },
+  SUPPORT: {
+    manageUsers: false,
+    manageCatalog: false,
+    manageAI: false,
+    manageFinance: false,
+    manageSettings: false,
+    viewAuditLogs: true,
+    curateContent: false,
+    supportStudents: true,
+  },
+  STUDENT: {
+    manageUsers: false,
+    manageCatalog: false,
+    manageAI: false,
+    manageFinance: false,
+    manageSettings: false,
+    viewAuditLogs: false,
+    curateContent: false,
+    supportStudents: false,
+  },
+}
+
+/**
+ * Extrai e normaliza o papel administrativo de um usuário ou perfil.
+ */
+export function getUserRole(
+  userOrProfile?: { email?: string | null; role?: UserRole | string | null; isAdmin?: boolean | null } | null
+): UserRole {
+  if (!userOrProfile) return 'STUDENT'
+
+  const email = (userOrProfile.email || '').trim().toLowerCase()
+  if (SUPER_ADMIN_EMAILS.includes(email) || userOrProfile.role === 'SUPER_ADMIN') {
+    return 'SUPER_ADMIN'
+  }
+
+  if (userOrProfile.role === 'ADMIN' || userOrProfile.isAdmin) {
+    return 'ADMIN'
+  }
+
+  if (userOrProfile.role === 'CURATOR') {
+    return 'CURATOR'
+  }
+
+  if (userOrProfile.role === 'SUPPORT') {
+    return 'SUPPORT'
+  }
+
+  return 'STUDENT'
+}
+
 /**
  * Verifica se um perfil ou usuário possui privilégios de SUPER_ADMIN.
  */
 export function isSuperAdmin(
   userOrProfile?: { email?: string | null; role?: UserRole | string | null; isAdmin?: boolean | null } | null
 ): boolean {
-  if (!userOrProfile) return false
+  return getUserRole(userOrProfile) === 'SUPER_ADMIN'
+}
 
-  const email = (userOrProfile.email || '').trim().toLowerCase()
-  if (SUPER_ADMIN_EMAILS.includes(email)) {
-    return true
-  }
+/**
+ * Verifica se o usuário tem permissão para acessar o painel administrativo.
+ */
+export function canAccessAdminArea(
+  userOrProfile?: { email?: string | null; role?: UserRole | string | null; isAdmin?: boolean | null } | null
+): boolean {
+  const role = getUserRole(userOrProfile)
+  return ['SUPER_ADMIN', 'ADMIN', 'CURATOR', 'SUPPORT'].includes(role)
+}
 
-  if (userOrProfile.role === 'SUPER_ADMIN') {
-    return true
-  }
-
-  return false
+/**
+ * Verifica se o usuário possui uma permissão específica.
+ */
+export function hasPermission(
+  userOrProfile: { email?: string | null; role?: UserRole | string | null; isAdmin?: boolean | null } | null | undefined,
+  permission: keyof RolePermissions
+): boolean {
+  const role = getUserRole(userOrProfile)
+  return ROLE_PERMISSIONS[role][permission] ?? false
 }
 
 /**

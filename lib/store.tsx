@@ -105,6 +105,9 @@ import type {
   AIPromptBlock,
   AIPromptBlockKey,
   AIPromptVersion,
+  AIKnowledgeItem,
+  StudentEducationalMemory,
+  AIOperationLog,
 } from './types'
 import {
   INITIAL_AI_BLOCKS,
@@ -113,6 +116,7 @@ import {
   INITIAL_AI_VERSIONS,
   compilePrompt,
 } from './ai/prompt-compiler'
+import { INITIAL_AI_KNOWLEDGE } from './ai/knowledge-base'
 
 const STORAGE_KEY = 'devpath-ai-state-v11-clean'
 
@@ -170,6 +174,9 @@ interface PersistedState {
   aiPromptBlocks: AIPromptBlock[]
   aiVersions: AIPromptVersion[]
   aiLogs: AIAuditLog[]
+  aiKnowledge: AIKnowledgeItem[]
+  studentMemories: Record<string, StudentEducationalMemory>
+  aiOperationLogs: AIOperationLog[]
 }
 
 function createInitialAchievements(): Achievement[] {
@@ -293,6 +300,9 @@ function createCleanInitialState(): PersistedState {
         category: 'config',
       },
     ],
+    aiKnowledge: INITIAL_AI_KNOWLEDGE,
+    studentMemories: {},
+    aiOperationLogs: [],
   }
 }
 
@@ -462,6 +472,14 @@ export interface AppStoreValue extends PersistedState {
   restoreAIVersion: (versionNumber: string) => void
   toggleAIAgentStatus: () => void
   recordAIAudit: (action: string, details: string, category?: AIAuditLog['category']) => void
+  // AI Knowledge Base & Student Memory Actions
+  addAIKnowledge: (item: Omit<AIKnowledgeItem, 'id' | 'createdAt' | 'updatedAt'>) => void
+  updateAIKnowledge: (id: string, partial: Partial<AIKnowledgeItem>) => void
+  deleteAIKnowledge: (id: string) => void
+  toggleAIKnowledge: (id: string) => void
+  saveStudentMemory: (memory: Partial<StudentEducationalMemory>) => void
+  recordStudentDifficulty: (difficulty: string) => void
+  logAIOperation: (log: Omit<AIOperationLog, 'id' | 'timestamp'>) => void
 }
 
 const AppStoreContext = createContext<AppStoreValue | null>(null)
@@ -609,7 +627,33 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
           console.warn('Supabase auth session notice:', err)
         })
         .finally(() => {
-          setReady(true)
+          // Live Database Catalog Sync
+          fetch('/api/catalog/courses?limit=100')
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+              if (data && Array.isArray(data.courses) && data.courses.length > 0) {
+                setState((s) => {
+                  const dbCourses: Course[] = data.courses
+                  const dbModules: LearningModule[] = data.modules || s.customModules
+                  const dbLessons: Lesson[] = data.lessons || s.customLessons
+                  const dbPlaylists: YouTubePlaylist[] = data.playlists || s.importedPlaylists
+                  const dbSources: ContentSource[] = data.sources || s.contentSources
+
+                  return {
+                    ...s,
+                    courses: dbCourses,
+                    customModules: dbModules,
+                    customLessons: dbLessons,
+                    importedPlaylists: dbPlaylists,
+                    contentSources: dbSources,
+                  }
+                })
+              }
+            })
+            .catch((err) => console.warn('Catalog live DB sync notice:', err))
+            .finally(() => {
+              setReady(true)
+            })
         })
 
       const {
@@ -968,19 +1012,31 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     lessons: Lesson[]
     report: IngestionReport
   }) => {
+    if (!payload || !payload.channel) {
+      console.warn('[store] ingestFullChannelToStore chamado com payload inválido ou sem canal.')
+      return
+    }
+
     setState((s) => {
-      const existingSources = s.contentSources.filter((cs) => cs.channelId !== payload.channel.channelId)
-      const existingPlIds = new Set(payload.playlists.map((p) => p.youtubePlaylistId))
+      const channelId = payload.channel.channelId || payload.channel.id
+      const existingSources = s.contentSources.filter((cs) => cs.channelId !== channelId && cs.id !== channelId)
+      const plList = payload.playlists || []
+      const crsList = payload.courses || []
+      const modList = payload.modules || []
+      const lesList = payload.lessons || []
+      const rep = payload.report || { playlistsImported: 0, playlistsFailed: 0, totalVideosFound: 0, videosImported: 0, unavailableCount: 0 }
+
+      const existingPlIds = new Set(plList.map((p) => p.youtubePlaylistId))
       const remainingPlaylists = s.importedPlaylists.filter((p) => !existingPlIds.has(p.youtubePlaylistId))
-      const existingCourseIds = new Set(payload.courses.map((c) => c.id))
+      const existingCourseIds = new Set(crsList.map((c) => c.id))
       const remainingCourses = s.courses.filter((c) => !existingCourseIds.has(c.id))
-      const existingModIds = new Set(payload.modules.map((m) => m.id))
+      const existingModIds = new Set(modList.map((m) => m.id))
       const remainingModules = s.customModules.filter((m) => !existingModIds.has(m.id))
-      const existingLessonIds = new Set(payload.lessons.map((l) => l.id))
+      const existingLessonIds = new Set(lesList.map((l) => l.id))
       const remainingLessons = s.customLessons.filter((l) => !existingLessonIds.has(l.id))
 
       const moduleProgress = { ...s.moduleProgress }
-      for (const m of payload.modules) {
+      for (const m of modList) {
         if (!moduleProgress[m.id]) {
           moduleProgress[m.id] = {
             moduleId: m.id,
@@ -1468,6 +1524,64 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   const deletePlaylist = useCallback((playlistId: string) => {
     deleteCourse(playlistId)
   }, [deleteCourse])
+
+  const updateLesson = useCallback((lesson: Lesson) => {
+    setState((s) => ({
+      ...s,
+      customLessons: s.customLessons.map((l) => (l.id === lesson.id ? { ...l, ...lesson } : l)),
+    }))
+
+    const client = getSupabaseClient()
+    if (client && isSupabaseConfigured()) {
+      client
+        .from('lessons')
+        .update({
+          title: lesson.title,
+          description: lesson.description,
+          video_id: lesson.videoId || null,
+          thumbnail_url: lesson.thumbnailUrl || null,
+          availability_status: lesson.availabilityStatus || 'available',
+          youtube_exists: lesson.youtubeExists ?? true,
+          embed_available: lesson.embedAvailable ?? true,
+          last_checked_at: lesson.lastCheckedAt || new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', lesson.id)
+        .then(() => {})
+        .catch((err) => console.warn('Supabase lesson update notice:', err))
+    }
+  }, [])
+
+  const markLessonUnavailable = useCallback((lessonId: string, isUnavailable: boolean, reason?: string) => {
+    setState((s) => ({
+      ...s,
+      customLessons: s.customLessons.map((l) =>
+        l.id === lessonId
+          ? {
+              ...l,
+              isUnavailable,
+              availabilityStatus: isUnavailable ? 'removed' : 'available',
+              lastCheckedAt: new Date().toISOString(),
+            }
+          : l
+      ),
+    }))
+
+    const client = getSupabaseClient()
+    if (client && isSupabaseConfigured()) {
+      client
+        .from('lessons')
+        .update({
+          availability_status: isUnavailable ? 'removed' : 'available',
+          is_unavailable: isUnavailable,
+          last_checked_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', lessonId)
+        .then(() => {})
+        .catch((err) => console.warn('Supabase lesson status update notice:', err))
+    }
+  }, [])
 
   const validateCatalogIntegrity = useCallback(() => {
     return validateContentMapping(allCourses, allModules, allLessons)
@@ -3004,6 +3118,134 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     recordAIAudit('Alternância de Status da IA', `Status da IA alterado.`, 'config')
   }, [recordAIAudit])
 
+  // AI Knowledge Base & Student Memory Implementations
+  const addAIKnowledge = useCallback(
+    (item: Omit<AIKnowledgeItem, 'id' | 'createdAt' | 'updatedAt'>) => {
+      const newItem: AIKnowledgeItem = {
+        ...item,
+        id: `kb-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+      setState((prev) => ({
+        ...prev,
+        aiKnowledge: [...(prev.aiKnowledge || INITIAL_AI_KNOWLEDGE), newItem],
+      }))
+      recordAIAudit('Novo Documento na Base de Conhecimento', `Item criado: "${newItem.title}" [${newItem.category}]`, 'config')
+    },
+    [recordAIAudit]
+  )
+
+  const updateAIKnowledge = useCallback(
+    (id: string, partial: Partial<AIKnowledgeItem>) => {
+      setState((prev) => ({
+        ...prev,
+        aiKnowledge: (prev.aiKnowledge || INITIAL_AI_KNOWLEDGE).map((k) =>
+          k.id === id ? { ...k, ...partial, updatedAt: new Date().toISOString() } : k
+        ),
+      }))
+      recordAIAudit('Edição de Documento de Conhecimento', `Item ID ${id} atualizado.`, 'config')
+    },
+    [recordAIAudit]
+  )
+
+  const deleteAIKnowledge = useCallback(
+    (id: string) => {
+      setState((prev) => ({
+        ...prev,
+        aiKnowledge: (prev.aiKnowledge || INITIAL_AI_KNOWLEDGE).filter((k) => k.id !== id),
+      }))
+      recordAIAudit('Exclusão de Documento de Conhecimento', `Item ID ${id} removido.`, 'config')
+    },
+    [recordAIAudit]
+  )
+
+  const toggleAIKnowledge = useCallback(
+    (id: string) => {
+      setState((prev) => ({
+        ...prev,
+        aiKnowledge: (prev.aiKnowledge || INITIAL_AI_KNOWLEDGE).map((k) =>
+          k.id === id ? { ...k, active: !k.active, updatedAt: new Date().toISOString() } : k
+        ),
+      }))
+      recordAIAudit('Alternância de Documento de Conhecimento', `Status do item ID ${id} alterado.`, 'config')
+    },
+    [recordAIAudit]
+  )
+
+  const saveStudentMemory = useCallback(
+    (memoryPatch: Partial<StudentEducationalMemory>) => {
+      const userId = state.profile?.id || 'current-student'
+      setState((prev) => {
+        const existing = prev.studentMemories?.[userId] || {
+          userId,
+          persistentDifficulties: [],
+          masteredConcepts: [],
+          frequentMistakes: [],
+          updatedAt: new Date().toISOString(),
+        }
+        const updated: StudentEducationalMemory = {
+          ...existing,
+          ...memoryPatch,
+          updatedAt: new Date().toISOString(),
+        }
+        return {
+          ...prev,
+          studentMemories: {
+            ...(prev.studentMemories || {}),
+            [userId]: updated,
+          },
+        }
+      })
+    },
+    [state.profile?.id]
+  )
+
+  const recordStudentDifficulty = useCallback(
+    (difficulty: string) => {
+      if (!difficulty || !difficulty.trim()) return
+      const userId = state.profile?.id || 'current-student'
+      setState((prev) => {
+        const existing = prev.studentMemories?.[userId] || {
+          userId,
+          persistentDifficulties: [],
+          masteredConcepts: [],
+          frequentMistakes: [],
+          updatedAt: new Date().toISOString(),
+        }
+        if (existing.persistentDifficulties.includes(difficulty)) return prev
+        const updated: StudentEducationalMemory = {
+          ...existing,
+          persistentDifficulties: [...existing.persistentDifficulties, difficulty.trim()],
+          updatedAt: new Date().toISOString(),
+        }
+        return {
+          ...prev,
+          studentMemories: {
+            ...(prev.studentMemories || {}),
+            [userId]: updated,
+          },
+        }
+      })
+    },
+    [state.profile?.id]
+  )
+
+  const logAIOperation = useCallback(
+    (logItem: Omit<AIOperationLog, 'id' | 'timestamp'>) => {
+      const newLog: AIOperationLog = {
+        ...logItem,
+        id: `op-log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        timestamp: new Date().toISOString(),
+      }
+      setState((prev) => ({
+        ...prev,
+        aiOperationLogs: [newLog, ...(prev.aiOperationLogs || [])].slice(0, 100),
+      }))
+    },
+    []
+  )
+
   const value: AppStoreValue = {
     ...state,
     ready,
@@ -3030,6 +3272,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     addCustomCourse,
     updateCourse,
     deleteCourse,
+    updateLesson,
+    markLessonUnavailable,
     deletePlaylist,
     validateCatalogIntegrity,
     resetEducationalCatalog,
@@ -3114,6 +3358,13 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     restoreAIVersion,
     toggleAIAgentStatus,
     recordAIAudit,
+    addAIKnowledge,
+    updateAIKnowledge,
+    deleteAIKnowledge,
+    toggleAIKnowledge,
+    saveStudentMemory,
+    recordStudentDifficulty,
+    logAIOperation,
   }
 
   return <AppStoreContext.Provider value={value}>{children}</AppStoreContext.Provider>

@@ -282,10 +282,21 @@ export default function LessonPlayerPage({ params }: { params: Promise<{ lessonI
             {/* YouTube Video Player Component */}
             <div className="overflow-hidden rounded-3xl border border-white/10 bg-black/90 shadow-2xl relative group">
               <VideoPlayer
-                videoId={lesson.videoId || 'dQw4w9WgXcQ'}
+                lessonId={lesson.id}
+                videoId={lesson.videoId}
+                externalVideoId={lesson.externalVideoId}
+                videoUrl={lesson.videoUrl}
+                sourceType={lesson.sourceType || 'youtube'}
                 title={lesson.title}
-                onProgress={(pct, sec) => recordVideoProgress(lesson.id, pct, sec)}
-                onEnded={handleCompleteVideo}
+                source={lesson.source || currentCourse?.channelTitle}
+                thumbnailUrl={lesson.thumbnailUrl}
+                durationMin={lesson.durationMin}
+                availabilityStatus={lesson.availabilityStatus || (lesson.isUnavailable ? 'removed' : 'available')}
+                youtubeExists={lesson.youtubeExists ?? !lesson.isUnavailable}
+                embedAvailable={lesson.embedAvailable ?? true}
+                isCompleted={completedLessons.includes(lesson.id)}
+                onProgress={(p) => recordVideoProgress(lesson.id, p.watchedPercentage, p.lastPositionSeconds)}
+                onComplete={handleCompleteVideo}
               />
             </div>
 

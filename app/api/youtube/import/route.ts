@@ -5,6 +5,7 @@ import {
   ingestFullChannel,
 } from '@/lib/youtube/service'
 import { validateSuperAdminRequest } from '@/lib/auth/rbac'
+import { persistCoursePackageToDatabase } from '@/lib/catalog/db-repository'
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,9 +43,26 @@ export async function POST(req: NextRequest) {
         )
       }
 
+      // PERSIST DIRECTLY TO POSTGRESQL / SUPABASE DATABASE ON SERVER
+      for (const course of channelResult.courses) {
+        const courseMods = channelResult.modules.filter((m) => m.courseId === course.id || m.phase === course.category)
+        const courseLessons = channelResult.lessons.filter((l) => courseMods.some((m) => m.id === l.moduleId))
+        const coursePl = channelResult.playlists.find((p) => p.youtubePlaylistId === course.playlistId)
+
+        await persistCoursePackageToDatabase({
+          course,
+          modules: courseMods,
+          lessons: courseLessons,
+          playlist: coursePl,
+          channel: channelResult.channel,
+          adminEmail: auth.userEmail,
+        })
+      }
+
       return NextResponse.json({
         success: true,
         isChannel: true,
+        persistedToDatabase: true,
         channel: channelResult.channel,
         playlists: channelResult.playlists,
         courses: channelResult.courses,
@@ -77,8 +95,19 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // PERSIST DIRECTLY TO POSTGRESQL / SUPABASE DATABASE ON SERVER
+    const dbResult = await persistCoursePackageToDatabase({
+      course: result.course,
+      modules: result.modules,
+      lessons: result.lessons,
+      playlist: result.playlist,
+      adminEmail: auth.userEmail,
+    })
+
     return NextResponse.json({
       success: true,
+      persistedToDatabase: dbResult.success,
+      persistedCounts: dbResult.persistedCounts,
       playlist: result.playlist,
       course: result.course,
       modules: result.modules,

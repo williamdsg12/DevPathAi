@@ -71,7 +71,7 @@ export type UserJourneyState =
   | 'PATH_CONFIRMATION'
   | 'ACTIVE'
 
-export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'STUDENT'
+export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'CURATOR' | 'SUPPORT' | 'STUDENT'
 
 export interface SocialLinks {
   linkedin?: string
@@ -949,8 +949,29 @@ export interface ImportLog {
   videosImported: number
   videosUnavailable: number
   duplicatesIgnored: number
-  createdAt: string
   message?: string
+  createdAt: string
+}
+
+export type ContentState =
+  | 'descoberto'
+  | 'em_analise'
+  | 'aprovado'
+  | 'publicado'
+  | 'pausado'
+  | 'indisponivel'
+  | 'rejeitado'
+
+export interface CatalogAuditLog {
+  id: string
+  timestamp: string
+  action: 'create' | 'update' | 'delete' | 'publish' | 'archive' | 'deduplicate'
+  targetType: 'course' | 'module' | 'lesson' | 'playlist' | 'source'
+  targetId: string
+  targetTitle?: string
+  adminEmail: string
+  details: string
+  changes?: Record<string, { before: any; after: any }>
 }
 
 export interface IngestionReport {
@@ -1124,3 +1145,86 @@ export interface AIPlaygroundMessage {
   model?: string
   versionUsed?: string
 }
+
+// ============================================================================
+// REAL AI ENGINE & ORCHESTRATION TYPES
+// ============================================================================
+
+export interface AIKnowledgeItem {
+  id: string
+  title: string
+  content: string
+  category: string
+  tags: string[]
+  sourceUrl?: string
+  active: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface StudentEducationalMemory {
+  userId: string
+  persistentDifficulties: string[]
+  masteredConcepts: string[]
+  frequentMistakes: string[]
+  learningPreferences?: string
+  lastInteractionsSummary?: string
+  updatedAt: string
+}
+
+export type AIHintLevel = 1 | 2 | 3 | 4 | 5
+
+export const HINT_LEVEL_LABELS: Record<AIHintLevel, { title: string; desc: string }> = {
+  1: { title: 'Pequena Orientação', desc: 'Pergunta socrática ou reflexão sobre a lógica' },
+  2: { title: 'Explicação do Conceito', desc: 'Conceito teórico e analogia do dia a dia' },
+  3: { title: 'Estratégia Passo a Passo', desc: 'Roteiro de algoritmo sem código pronto' },
+  4: { title: 'Pseudocódigo / Esqueleto', desc: 'Estrutura sintática com lacunas para o aluno preencher' },
+  5: { title: 'Solução Completa Comentada', desc: 'Código final explicado linha por linha' },
+}
+
+export type AIToolType =
+  | 'search_web'
+  | 'search_knowledge'
+  | 'analyze_code'
+  | 'get_lesson_context'
+  | 'get_exercise_context'
+  | 'get_hint'
+  | 'get_student_memory'
+
+export interface AIOperationLog {
+  id: string
+  timestamp: string
+  userId?: string
+  studentLevel?: string
+  intent: string
+  promptVersionUsed: string
+  activeInstructionsCount: number
+  injectedKnowledgeTitles: string[]
+  toolsExecuted: AIToolType[]
+  webSearchQueries?: string[]
+  sourcesCited?: Array<{ title: string; url: string }>
+  latencyMs: number
+  tokensUsed: number
+  model: string
+  status: 'success' | 'fallback' | 'error'
+  userMessageSnippet: string
+  aiReplySnippet: string
+}
+
+export interface AIExecutionTrace {
+  intent: string
+  promptHierarchyLevels: {
+    level1_safety: string
+    level2_masterPrompt: string
+    level3_promptBlocks: string[]
+    level4_instructions: string[]
+    level5_knowledgeAndWeb: string[]
+    level6_studentContext: string
+    level7_userMessage: string
+  }
+  toolsUsed: Array<{ name: AIToolType; input: any; outputSummary: string }>
+  sourcesCited: Array<{ title: string; url: string }>
+  executionTimeMs: number
+  memoryExtracted?: string[]
+}
+

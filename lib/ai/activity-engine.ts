@@ -80,12 +80,17 @@ export class ActivityEngine {
     // Case C: Purely introductory or environment setup
     const isIntro =
       titleLower.includes('seja bem vindo') ||
+      titleLower.includes('seja bem-vindo') ||
+      titleLower.includes('bem-vindo') ||
+      titleLower.includes('bem vindo') ||
       titleLower.includes('apresentação') ||
       titleLower.includes('apresentacao') ||
       titleLower.includes('o que é') ||
       titleLower.includes('o que e') ||
-      titleLower.includes('introdução ao curso') ||
-      titleLower.includes('introducao ao curso') ||
+      titleLower.includes('visão geral') ||
+      titleLower.includes('visao geral') ||
+      titleLower.includes('introdução') ||
+      titleLower.includes('introducao') ||
       titleLower.includes('instalação') ||
       titleLower.includes('instalacao') ||
       titleLower.includes('configurando o ambiente') ||
