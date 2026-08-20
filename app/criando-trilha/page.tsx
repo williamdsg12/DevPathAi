@@ -30,11 +30,21 @@ import { useAppStore } from '@/lib/store'
 import { LEVEL_LABELS, type SkillLevel } from '@/lib/types'
 
 const steps = [
-  'Analisando suas respostas do onboarding e objetivos profissionais...',
-  'Avaliando seu desempenho no teste diagnóstico de nivelamento...',
-  'Consultando o catálogo educacional com conteúdos reais do YouTube...',
-  'Estruturando sua árvore sequencial de pré-requisitos individualizada...',
-  'Preparando seu primeiro módulo e aula de introdução...',
+  'Analisando seu perfil e histórico de aprendizagem...',
+  'Identificando seu nível atual com base no diagnóstico...',
+  'Definindo objetivos profissionais e foco de carreira...',
+  'Selecionando conteúdos reais verificados no catálogo...',
+  'Estruturando módulos pedagógicos e árvore de pré-requisitos...',
+  'Criando sua trilha personalizada e liberando a primeira aula...',
+]
+
+const checklistItems = [
+  'analisando seu perfil',
+  'identificando seu nível',
+  'definindo objetivos',
+  'selecionando conteúdos',
+  'estruturando módulos',
+  'criando sua trilha',
 ]
 
 export default function PathGenerationPage() {
@@ -57,7 +67,7 @@ export default function PathGenerationPage() {
     if (currentStepIdx < steps.length - 1) {
       const timer = setTimeout(() => {
         setCurrentStepIdx((idx) => idx + 1)
-      }, 900)
+      }, 800)
       return () => clearTimeout(timer)
     } else if (currentStepIdx === steps.length - 1 && isGenerating) {
       const timer = setTimeout(() => {
@@ -130,12 +140,37 @@ export default function PathGenerationPage() {
             </div>
 
             <div className="space-y-3 max-w-md mx-auto">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground">
-                Criando sua Trilha de Formação
+              <h2 className="text-xl sm:text-2xl font-black text-foreground">
+                A IA está criando seu caminho.
               </h2>
-              <p className="text-sm text-muted-foreground min-h-[48px] flex items-center justify-center">
+              <p className="text-xs sm:text-sm text-muted-foreground min-h-[40px] flex items-center justify-center">
                 {steps[currentStepIdx]}
               </p>
+            </div>
+
+            {/* Checklist processing animation */}
+            <div className="max-w-xs mx-auto text-left space-y-2 text-xs font-medium py-2">
+              {checklistItems.map((item, idx) => {
+                const isDone = idx <= currentStepIdx
+                const isCurrent = idx === currentStepIdx
+                return (
+                  <div
+                    key={item}
+                    className={`flex items-center gap-2.5 transition-all duration-300 ${
+                      isDone ? 'text-foreground' : 'text-muted-foreground/50'
+                    }`}
+                  >
+                    {isDone ? (
+                      <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+                    ) : (
+                      <span className="size-4 rounded-full border border-muted-foreground/30 shrink-0" />
+                    )}
+                    <span className={isCurrent ? 'font-bold text-primary' : ''}>
+                      {item}
+                    </span>
+                  </div>
+                )
+              })}
             </div>
 
             <div className="max-w-md mx-auto space-y-2">

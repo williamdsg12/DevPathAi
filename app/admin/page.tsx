@@ -153,9 +153,14 @@ export default function AdminPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <Link href="/admin/ai">
+              <Button size="sm" className="gap-2 font-bold text-xs bg-violet-600 hover:bg-violet-500 text-white shadow-lg shadow-violet-950/50">
+                <Brain className="size-3.5" /> Inteligência Artificial
+              </Button>
+            </Link>
             <Link href="/admin/youtube">
               <Button size="sm" className="gap-2 font-bold text-xs bg-red-600 hover:bg-red-700 text-white">
-                <YoutubeIcon className="size-3.5" /> Gerenciar Fontes & YouTube
+                <YoutubeIcon className="size-3.5" /> Fontes & YouTube
               </Button>
             </Link>
             <Button
@@ -163,10 +168,10 @@ export default function AdminPage() {
               variant="outline"
               onClick={handleTriggerRecalculate}
               disabled={isRecalculating}
-              className="gap-2 text-xs font-semibold"
+              className="gap-2 text-xs font-semibold border-white/10"
             >
               <RefreshCw className={`size-3.5 ${isRecalculating ? 'animate-spin' : ''}`} />
-              Auditar / Recalcular Trilha
+              Auditar Trilha
             </Button>
           </div>
         </div>

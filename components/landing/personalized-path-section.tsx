@@ -11,6 +11,7 @@ import {
   GraduationCap,
   Layers,
   ListChecks,
+  Lock,
   Map,
   Repeat,
   Sparkles,
@@ -137,6 +138,63 @@ export function PersonalizedPathSection() {
                 style={{ scaleX: pathFill }}
                 className="h-full origin-left bg-gradient-to-r from-violet-500 via-purple-500 to-emerald-400 rounded-full"
               />
+            </div>
+
+            {/* AI Decision Pipeline Funnel Visual */}
+            <div className="w-full max-w-4xl mx-auto rounded-3xl border border-violet-500/30 bg-[#0f0e1a]/90 p-5 sm:p-7 shadow-2xl backdrop-blur-xl mt-6">
+              <div className="text-center space-y-1 mb-6">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-violet-400">
+                  Como a Inteligência Artificial Constrói Sua Trilha
+                </span>
+                <p className="text-xs text-zinc-400">
+                  A IA analisa seu momento individual e gera uma progressão pedagógica adaptativa
+                </p>
+              </div>
+
+              {/* Steps Funnel */}
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 text-center">
+                <div className="p-3 rounded-2xl border border-white/10 bg-white/[0.03] space-y-1">
+                  <div className="text-[10px] font-mono font-bold text-violet-400">01</div>
+                  <div className="text-xs font-bold text-white">Nível Atual</div>
+                  <div className="text-[10px] text-zinc-400">Diagnóstico real</div>
+                </div>
+                <div className="p-3 rounded-2xl border border-white/10 bg-white/[0.03] space-y-1">
+                  <div className="text-[10px] font-mono font-bold text-purple-400">02</div>
+                  <div className="text-xs font-bold text-white">Objetivo</div>
+                  <div className="text-[10px] text-zinc-400">Cargo & Carreira</div>
+                </div>
+                <div className="p-3 rounded-2xl border border-white/10 bg-white/[0.03] space-y-1">
+                  <div className="text-[10px] font-mono font-bold text-indigo-400">03</div>
+                  <div className="text-xs font-bold text-white">Tempo Disponível</div>
+                  <div className="text-[10px] text-zinc-400">Horas por dia</div>
+                </div>
+                <div className="p-3 rounded-2xl border border-white/10 bg-white/[0.03] space-y-1">
+                  <div className="text-[10px] font-mono font-bold text-blue-400">04</div>
+                  <div className="text-xs font-bold text-white">Perfil Dev</div>
+                  <div className="text-[10px] text-zinc-400">Histórico & Estilo</div>
+                </div>
+                <div className="col-span-2 sm:col-span-1 p-3 rounded-2xl border border-emerald-500/40 bg-emerald-950/30 space-y-1">
+                  <div className="text-[10px] font-mono font-bold text-emerald-400">05</div>
+                  <div className="text-xs font-bold text-emerald-300">Trilha Única</div>
+                  <div className="text-[10px] text-emerald-400/80">Roadmap Prático</div>
+                </div>
+              </div>
+
+              {/* Status Legend Bar */}
+              <div className="mt-6 pt-4 border-t border-white/10 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs">
+                <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+                  <CheckCircle2 className="size-3.5" /> Conteúdo concluído
+                </div>
+                <div className="flex items-center gap-1.5 text-violet-400 font-semibold">
+                  <span className="size-2.5 rounded-full bg-violet-400 animate-pulse" /> Conteúdo atual
+                </div>
+                <div className="flex items-center gap-1.5 text-sky-400 font-semibold">
+                  <span className="size-2.5 rounded-full border border-sky-400" /> Próximo conteúdo
+                </div>
+                <div className="flex items-center gap-1.5 text-zinc-500 font-semibold">
+                  <Lock className="size-3.5" /> Conteúdo bloqueado
+                </div>
+              </div>
             </div>
           </div>
 

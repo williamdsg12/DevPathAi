@@ -428,12 +428,12 @@ export default function ModuleAssessmentPage({ params }: { params: Promise<{ mod
                     </div>
                     <div>
                       <h2 className="text-xl font-bold">
-                        {passed ? 'Parabéns! Módulo Concluído com Sucesso!' : 'Você Não Atingiu a Nota Mínima'}
+                        {passed ? 'Parabéns! Módulo Concluído com Sucesso!' : 'Você precisa revisar este conteúdo antes de avançar.'}
                       </h2>
                       <p className="text-xs text-muted-foreground">
                         {passed
                           ? 'O próximo módulo da sua trilha foi desbloqueado automaticamente!'
-                          : 'A nota de corte é 70%. A IA montou um plano de recuperação para você.'}
+                          : 'A nota de corte mínima é 70%. Revise os tópicos, tire dúvidas com o mentor ou faça uma nova tentativa.'}
                       </p>
                     </div>
                   </div>
@@ -578,15 +578,21 @@ export default function ModuleAssessmentPage({ params }: { params: Promise<{ mod
                       ) : null}
                     </div>
 
-                    <div className="flex items-center justify-between pt-2">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
                       <Link href={`/aulas/${currentModule.lessonIds[0] || 'l-logica-1'}`}>
-                        <Button variant="outline" className="gap-2 text-xs">
-                          <Brain className="size-3.5 text-primary" /> Revisar Aulas
+                        <Button variant="outline" className="w-full sm:w-auto gap-2 text-xs border-white/10 text-zinc-300 rounded-xl">
+                          <Brain className="size-3.5 text-violet-400" /> Revisar Conteúdo
                         </Button>
                       </Link>
 
-                      <Button onClick={handleRetake} className="gap-2 font-bold shadow-lg shadow-primary/20">
-                        <RotateCcw className="size-4" /> Fazer Nova Tentativa
+                      <Link href="/mentor">
+                        <Button variant="secondary" className="w-full sm:w-auto gap-2 text-xs bg-violet-950/60 border border-violet-500/30 text-violet-300 rounded-xl">
+                          <Sparkles className="size-3.5 text-violet-400" /> Pedir Ajuda à IA
+                        </Button>
+                      </Link>
+
+                      <Button onClick={handleRetake} className="w-full sm:w-auto gap-2 font-bold shadow-lg shadow-violet-600/25 bg-violet-600 hover:bg-violet-500 text-white rounded-xl">
+                        <RotateCcw className="size-4" /> Tentar Novamente
                       </Button>
                     </div>
                   </div>

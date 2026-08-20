@@ -988,3 +988,139 @@ export interface ValidationIssue {
   message: string
   details?: Record<string, any>
 }
+
+// ============================================================================
+// AI INFRASTRUCTURE & MANAGEMENT DOMAIN MODELS
+// ============================================================================
+
+export type AIModelProvider = 'gemini' | 'openai' | 'anthropic' | 'deepseek'
+
+export type AIInstructionCategory =
+  | 'Comportamento'
+  | 'Pedagogia'
+  | 'Programação'
+  | 'Avaliação'
+  | 'Exercícios'
+  | 'Trilhas'
+  | 'Carreira'
+  | 'Código'
+  | 'Segurança'
+  | 'Personalidade'
+  | 'Tom de voz'
+  | 'Regras'
+  | 'Sistema'
+  | 'Outros'
+
+export type AIInstructionPriority = 'alta' | 'media' | 'baixa'
+
+export interface AIInstruction {
+  id: string
+  title: string
+  description: string
+  content: string
+  category: AIInstructionCategory | string
+  priority: AIInstructionPriority
+  active: boolean
+  version: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type AIPromptBlockKey =
+  | 'IDENTIDADE'
+  | 'OBJETIVO'
+  | 'PERSONALIDADE'
+  | 'REGRAS'
+  | 'CONHECIMENTO'
+  | 'PEDAGOGIA'
+  | 'AVALIAÇÃO'
+  | 'TRILHAS'
+  | 'EXERCÍCIOS'
+  | 'CÓDIGO'
+  | 'CARREIRA'
+  | 'RESTRIÇÕES'
+  | 'INSTRUÇÕES_PERSONALIZADAS'
+
+export interface AIPromptBlock {
+  id: string
+  key: AIPromptBlockKey
+  title: string
+  description: string
+  content: string
+  enabled: boolean
+  order: number
+}
+
+export interface AIAgentConfig {
+  id: string
+  name: string
+  description: string
+  avatar: string
+  status: 'active' | 'inactive' | 'draft'
+  provider: AIModelProvider
+  model: string
+  temperature: number
+  maxTokens: number
+  defaultLanguage: string
+  initialGreeting: string
+  systemPromptBase: string
+  additionalInstructions: string
+  rules: string[]
+  knowledgeSources: string[]
+  timeoutMs: number
+  fallbackMode: boolean
+  safetyLevel: 'baixa' | 'media' | 'alta'
+  lastTrainedAt?: string
+  publishedVersion: string
+  draftVersion: string
+  totalInteractions: number
+  totalTokensUsed: number
+  updatedAt: string
+}
+
+export interface AIPromptVersion {
+  id: string
+  versionNumber: string
+  title: string
+  author: string
+  changeDescription: string
+  status: 'publicada' | 'rascunho' | 'arquivada'
+  compiledPrompt: string
+  configSnapshot: Partial<AIAgentConfig>
+  instructionsSnapshot: AIInstruction[]
+  blocksSnapshot: AIPromptBlock[]
+  createdAt: string
+  publishedAt?: string
+}
+
+export interface AIAuditLog {
+  id: string
+  timestamp: string
+  adminUser: string
+  action: string
+  details: string
+  version?: string
+  category: 'config' | 'instruction' | 'version' | 'publish' | 'test'
+}
+
+export interface AIPlaygroundPersona {
+  id: 'iniciante' | 'basico' | 'intermediario' | 'avancado' | 'admin'
+  label: string
+  description: string
+  userLevel: SkillLevel
+  currentModule: string
+  currentLesson: string
+  mistakesContext: string[]
+  careerGoal: string
+}
+
+export interface AIPlaygroundMessage {
+  id: string
+  role: 'user' | 'assistant' | 'system'
+  content: string
+  timestamp: string
+  tokens?: number
+  latencyMs?: number
+  model?: string
+  versionUsed?: string
+}

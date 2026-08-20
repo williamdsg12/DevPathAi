@@ -309,36 +309,45 @@ export default function CodeLabPage() {
                   <span className="text-[10px] font-mono text-zinc-500">Live Editor</span>
                 </div>
 
-                <div className="flex-1 min-h-[380px] p-0 bg-[#0c0b14]">
-                  <TabsContent value="html" className="m-0 h-full">
-                    <textarea
-                      value={htmlCode}
-                      onChange={(e) => setHtmlCode(e.target.value)}
-                      placeholder="<!-- Insira seu código HTML aqui -->"
-                      className="size-full resize-none border-0 bg-transparent p-5 font-mono text-xs leading-relaxed text-zinc-200 focus:outline-none focus:ring-0 min-h-[380px] selection:bg-violet-600"
-                      spellCheck={false}
-                    />
-                  </TabsContent>
+                <div className="flex-1 min-h-[380px] p-0 bg-[#0c0b14] flex">
+                  {/* Line Numbers Gutter */}
+                  <div className="select-none py-5 px-3 bg-black/40 border-r border-white/5 font-mono text-[11px] text-zinc-600 text-right leading-relaxed shrink-0 min-w-[2.5rem]">
+                    {Array.from({ length: Math.max(15, (activeTab === 'html' ? htmlCode : activeTab === 'css' ? cssCode : jsCode).split('\n').length) }, (_, i) => (
+                      <div key={i + 1}>{i + 1}</div>
+                    ))}
+                  </div>
 
-                  <TabsContent value="css" className="m-0 h-full">
-                    <textarea
-                      value={cssCode}
-                      onChange={(e) => setCssCode(e.target.value)}
-                      placeholder="/* Insira seu CSS aqui */"
-                      className="size-full resize-none border-0 bg-transparent p-5 font-mono text-xs leading-relaxed text-zinc-200 focus:outline-none focus:ring-0 min-h-[380px] selection:bg-violet-600"
-                      spellCheck={false}
-                    />
-                  </TabsContent>
+                  <div className="flex-1 h-full">
+                    <TabsContent value="html" className="m-0 h-full">
+                      <textarea
+                        value={htmlCode}
+                        onChange={(e) => setHtmlCode(e.target.value)}
+                        placeholder="<!-- Insira seu código HTML aqui -->"
+                        className="size-full resize-none border-0 bg-transparent p-5 font-mono text-xs leading-relaxed text-zinc-200 focus:outline-none focus:ring-0 min-h-[380px] selection:bg-violet-600"
+                        spellCheck={false}
+                      />
+                    </TabsContent>
 
-                  <TabsContent value="js" className="m-0 h-full">
-                    <textarea
-                      value={jsCode}
-                      onChange={(e) => setJsCode(e.target.value)}
-                      placeholder="// Insira seu JavaScript aqui"
-                      className="size-full resize-none border-0 bg-transparent p-5 font-mono text-xs leading-relaxed text-zinc-200 focus:outline-none focus:ring-0 min-h-[380px] selection:bg-violet-600"
-                      spellCheck={false}
-                    />
-                  </TabsContent>
+                    <TabsContent value="css" className="m-0 h-full">
+                      <textarea
+                        value={cssCode}
+                        onChange={(e) => setCssCode(e.target.value)}
+                        placeholder="/* Insira seu CSS aqui */"
+                        className="size-full resize-none border-0 bg-transparent p-5 font-mono text-xs leading-relaxed text-zinc-200 focus:outline-none focus:ring-0 min-h-[380px] selection:bg-violet-600"
+                        spellCheck={false}
+                      />
+                    </TabsContent>
+
+                    <TabsContent value="js" className="m-0 h-full">
+                      <textarea
+                        value={jsCode}
+                        onChange={(e) => setJsCode(e.target.value)}
+                        placeholder="// Insira seu JavaScript aqui"
+                        className="size-full resize-none border-0 bg-transparent p-5 font-mono text-xs leading-relaxed text-zinc-200 focus:outline-none focus:ring-0 min-h-[380px] selection:bg-violet-600"
+                        spellCheck={false}
+                      />
+                    </TabsContent>
+                  </div>
                 </div>
               </Tabs>
             </Card>

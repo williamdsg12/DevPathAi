@@ -121,25 +121,24 @@ export function HeroSection() {
       <GradientBarsBackground />
       <NetworkGraphCanvas />
 
-      {/* Floating Code Snippet Card (Left Desktop Ambient) */}
-      <div className="hidden xl:block absolute left-8 top-32 z-20 pointer-events-none">
+      {/* Floating Mini Code Badges (Subtle ambient stickers on the lateral edges) */}
+      <div className="hidden xl:block absolute left-3 lg:left-6 top-32 z-0 pointer-events-none opacity-70 scale-75 xl:scale-80 origin-top-left">
         <FloatingCodeCard language="typescript" />
       </div>
 
-      {/* Floating Code Snippet Card (Right Desktop Ambient) */}
-      <div className="hidden xl:block absolute right-8 top-44 z-20 pointer-events-none">
+      <div className="hidden xl:block absolute right-3 lg:right-6 top-44 z-0 pointer-events-none opacity-70 scale-75 xl:scale-80 origin-top-right">
         <FloatingCodeCard language="python" />
       </div>
 
       {/* Sticky Cinematic Viewport Frame */}
-      <div className="sticky top-16 sm:top-20 z-10 flex min-h-[calc(100vh-4.5rem)] flex-col items-center justify-start overflow-hidden px-3 sm:px-6 py-2 sm:py-4">
+      <div className="sticky top-16 sm:top-20 z-10 flex min-h-[calc(100vh-4.5rem)] flex-col items-center justify-start overflow-hidden px-4 sm:px-6 py-2 sm:py-4">
         {/* Title Content with Scroll Parallax */}
         <motion.div
           style={{
             y: headerY,
             opacity: headerOpacity,
           }}
-          className="w-full max-w-5xl mx-auto text-center shrink-0 z-20 space-y-4 sm:space-y-5 pt-2"
+          className="relative w-full max-w-4xl mx-auto text-center shrink-0 z-20 space-y-4 sm:space-y-5 pt-2"
         >
           {/* Pill Badge */}
           <Link
@@ -154,10 +153,10 @@ export function HeroSection() {
           </Link>
 
           {/* Main Headline with Typewriter dynamic effect */}
-          <h1 className="text-balance font-sans text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.1]">
+          <h1 className="text-balance font-sans text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.15]">
             Pare de estudar programação{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-purple-300 to-indigo-300">
-              {currentText}
+              {currentText || 'com a metodologia DevPath AI.'}
             </span>
             <span className="inline-block w-1 sm:w-1.5 h-7 sm:h-11 bg-violet-400 align-middle ml-1 animate-pulse" />
           </h1>

@@ -99,7 +99,20 @@ import type {
   UserTechnologyRecord,
   YouTubePlaylist,
   YouTubeVideo,
+  AIAgentConfig,
+  AIAuditLog,
+  AIInstruction,
+  AIPromptBlock,
+  AIPromptBlockKey,
+  AIPromptVersion,
 } from './types'
+import {
+  INITIAL_AI_BLOCKS,
+  INITIAL_AI_CONFIG,
+  INITIAL_AI_INSTRUCTIONS,
+  INITIAL_AI_VERSIONS,
+  compilePrompt,
+} from './ai/prompt-compiler'
 
 const STORAGE_KEY = 'devpath-ai-state-v11-clean'
 
@@ -151,6 +164,12 @@ interface PersistedState {
   customLessons: Lesson[]
   technologySources: TechnologySource[]
   importLogs: ImportLog[]
+  // AI Central Infrastructure & Training Management
+  aiConfig: AIAgentConfig
+  aiInstructions: AIInstruction[]
+  aiPromptBlocks: AIPromptBlock[]
+  aiVersions: AIPromptVersion[]
+  aiLogs: AIAuditLog[]
 }
 
 function createInitialAchievements(): Achievement[] {
@@ -259,6 +278,21 @@ function createCleanInitialState(): PersistedState {
     customLessons: defaultOfficialLessons,
     technologySources: defaultTechnologySources,
     importLogs: [],
+    aiConfig: INITIAL_AI_CONFIG,
+    aiInstructions: INITIAL_AI_INSTRUCTIONS,
+    aiPromptBlocks: INITIAL_AI_BLOCKS,
+    aiVersions: INITIAL_AI_VERSIONS,
+    aiLogs: [
+      {
+        id: 'log-init',
+        timestamp: new Date().toISOString(),
+        adminUser: 'Administrador',
+        action: 'Inicialização do Módulo de IA',
+        details: 'Infraestrutura da IA inicializada com versão v1.0 e 4 instruções padrão.',
+        version: 'v1.0',
+        category: 'config',
+      },
+    ],
   }
 }
 
@@ -415,6 +449,19 @@ export interface AppStoreValue extends PersistedState {
   level: number
   currentModuleId: string | null
   nextPendingLessonId: string | null
+  // AI Infrastructure & Training Management
+  compiledPrompt: string
+  updateAIConfig: (partial: Partial<AIAgentConfig>) => void
+  addAIInstruction: (instruction: Omit<AIInstruction, 'id' | 'createdAt' | 'updatedAt' | 'version'>) => void
+  updateAIInstruction: (id: string, partial: Partial<AIInstruction>) => void
+  deleteAIInstruction: (id: string) => void
+  toggleAIInstruction: (id: string) => void
+  updatePromptBlock: (key: AIPromptBlockKey, content: string, enabled?: boolean) => void
+  togglePromptBlock: (key: AIPromptBlockKey) => void
+  publishAIVersion: (changeDescription: string) => void
+  restoreAIVersion: (versionNumber: string) => void
+  toggleAIAgentStatus: () => void
+  recordAIAudit: (action: string, details: string, category?: AIAuditLog['category']) => void
 }
 
 const AppStoreContext = createContext<AppStoreValue | null>(null)
@@ -2730,6 +2777,233 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     [state.customLessons, state.profile, state.completedLessons, state.completedActivities, state.activities, state.lessonProgressMap]
   )
 
+  // =========================================================================
+  // AI INFRASTRUCTURE & TRAINING MANAGEMENT ACTIONS
+  // =========================================================================
+
+  const compiledPrompt = useMemo(() => {
+    const config = state.aiConfig || INITIAL_AI_CONFIG
+    const blocks = state.aiPromptBlocks || INITIAL_AI_BLOCKS
+    const instructions = state.aiInstructions || INITIAL_AI_INSTRUCTIONS
+    return compilePrompt(config, blocks, instructions)
+  }, [state.aiConfig, state.aiPromptBlocks, state.aiInstructions])
+
+  const recordAIAudit = useCallback(
+    (action: string, details: string, category: AIAuditLog['category'] = 'config') => {
+      const newLog: AIAuditLog = {
+        id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        timestamp: new Date().toISOString(),
+        adminUser: state.profile?.name || 'Administrador',
+        action,
+        details,
+        version: state.aiConfig?.publishedVersion || 'v1.0',
+        category,
+      }
+      setState((prev) => ({
+        ...prev,
+        aiLogs: [newLog, ...(prev.aiLogs || [])].slice(0, 100),
+      }))
+    },
+    [state.profile?.name, state.aiConfig?.publishedVersion]
+  )
+
+  const updateAIConfig = useCallback(
+    (partial: Partial<AIAgentConfig>) => {
+      setState((prev) => {
+        const updatedConfig: AIAgentConfig = {
+          ...(prev.aiConfig || INITIAL_AI_CONFIG),
+          ...partial,
+          updatedAt: new Date().toISOString(),
+        }
+        return {
+          ...prev,
+          aiConfig: updatedConfig,
+        }
+      })
+      recordAIAudit('Atualização de Configurações da IA', `Campos atualizados: ${Object.keys(partial).join(', ')}`, 'config')
+    },
+    [recordAIAudit]
+  )
+
+  const addAIInstruction = useCallback(
+    (instruction: Omit<AIInstruction, 'id' | 'createdAt' | 'updatedAt' | 'version'>) => {
+      const newInst: AIInstruction = {
+        ...instruction,
+        id: `inst-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        version: '1.0',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+      setState((prev) => ({
+        ...prev,
+        aiInstructions: [...(prev.aiInstructions || INITIAL_AI_INSTRUCTIONS), newInst],
+        aiConfig: {
+          ...(prev.aiConfig || INITIAL_AI_CONFIG),
+          lastTrainedAt: new Date().toISOString(),
+        },
+      }))
+      recordAIAudit('Nova Instrução de Treinamento', `Instrução criada: "${newInst.title}" [${newInst.category}]`, 'instruction')
+    },
+    [recordAIAudit]
+  )
+
+  const updateAIInstruction = useCallback(
+    (id: string, partial: Partial<AIInstruction>) => {
+      setState((prev) => ({
+        ...prev,
+        aiInstructions: (prev.aiInstructions || INITIAL_AI_INSTRUCTIONS).map((inst) =>
+          inst.id === id ? { ...inst, ...partial, updatedAt: new Date().toISOString() } : inst
+        ),
+        aiConfig: {
+          ...(prev.aiConfig || INITIAL_AI_CONFIG),
+          lastTrainedAt: new Date().toISOString(),
+        },
+      }))
+      recordAIAudit('Edição de Instrução', `Instrução ID ${id} atualizada.`, 'instruction')
+    },
+    [recordAIAudit]
+  )
+
+  const deleteAIInstruction = useCallback(
+    (id: string) => {
+      setState((prev) => ({
+        ...prev,
+        aiInstructions: (prev.aiInstructions || INITIAL_AI_INSTRUCTIONS).filter((inst) => inst.id !== id),
+        aiConfig: {
+          ...(prev.aiConfig || INITIAL_AI_CONFIG),
+          lastTrainedAt: new Date().toISOString(),
+        },
+      }))
+      recordAIAudit('Exclusão de Instrução', `Instrução ID ${id} foi removida.`, 'instruction')
+    },
+    [recordAIAudit]
+  )
+
+  const toggleAIInstruction = useCallback(
+    (id: string) => {
+      setState((prev) => ({
+        ...prev,
+        aiInstructions: (prev.aiInstructions || INITIAL_AI_INSTRUCTIONS).map((inst) =>
+          inst.id === id ? { ...inst, active: !inst.active, updatedAt: new Date().toISOString() } : inst
+        ),
+      }))
+      recordAIAudit('Alternância de Status de Instrução', `Status da instrução ID ${id} alterado.`, 'instruction')
+    },
+    [recordAIAudit]
+  )
+
+  const updatePromptBlock = useCallback(
+    (key: AIPromptBlockKey, content: string, enabled?: boolean) => {
+      setState((prev) => ({
+        ...prev,
+        aiPromptBlocks: (prev.aiPromptBlocks || INITIAL_AI_BLOCKS).map((b) =>
+          b.key === key ? { ...b, content, enabled: typeof enabled === 'boolean' ? enabled : b.enabled } : b
+        ),
+      }))
+      recordAIAudit('Atualização de Bloco de Prompt', `Bloco ${key} atualizado no Construtor.`, 'config')
+    },
+    [recordAIAudit]
+  )
+
+  const togglePromptBlock = useCallback(
+    (key: AIPromptBlockKey) => {
+      setState((prev) => ({
+        ...prev,
+        aiPromptBlocks: (prev.aiPromptBlocks || INITIAL_AI_BLOCKS).map((b) =>
+          b.key === key ? { ...b, enabled: !b.enabled } : b
+        ),
+      }))
+      recordAIAudit('Alternância de Bloco de Prompt', `Bloco ${key} ativado/desativado.`, 'config')
+    },
+    [recordAIAudit]
+  )
+
+  const publishAIVersion = useCallback(
+    (changeDescription: string) => {
+      setState((prev) => {
+        const currentVersions = prev.aiVersions || INITIAL_AI_VERSIONS
+        const newVersionNumber = `v1.${currentVersions.length}`
+        const compiled = compilePrompt(
+          prev.aiConfig || INITIAL_AI_CONFIG,
+          prev.aiPromptBlocks || INITIAL_AI_BLOCKS,
+          prev.aiInstructions || INITIAL_AI_INSTRUCTIONS
+        )
+
+        const archivedVersions = currentVersions.map((v) =>
+          v.status === 'publicada' ? { ...v, status: 'arquivada' as const } : v
+        )
+
+        const newVersion: AIPromptVersion = {
+          id: `ver-${Date.now()}`,
+          versionNumber: newVersionNumber,
+          title: `Versão ${newVersionNumber}`,
+          author: prev.profile?.name || 'Administrador',
+          changeDescription: changeDescription || 'Publicação de novas diretrizes e treinamento da IA.',
+          status: 'publicada',
+          compiledPrompt: compiled,
+          configSnapshot: { ...(prev.aiConfig || INITIAL_AI_CONFIG) },
+          instructionsSnapshot: [...(prev.aiInstructions || INITIAL_AI_INSTRUCTIONS)],
+          blocksSnapshot: [...(prev.aiPromptBlocks || INITIAL_AI_BLOCKS)],
+          createdAt: new Date().toISOString(),
+          publishedAt: new Date().toISOString(),
+        }
+
+        const updatedConfig: AIAgentConfig = {
+          ...(prev.aiConfig || INITIAL_AI_CONFIG),
+          publishedVersion: newVersionNumber,
+          draftVersion: `v1.${currentVersions.length + 1}-draft`,
+          updatedAt: new Date().toISOString(),
+        }
+
+        return {
+          ...prev,
+          aiConfig: updatedConfig,
+          aiVersions: [newVersion, ...archivedVersions],
+        }
+      })
+      recordAIAudit('Publicação de Nova Versão da IA', `Nova versão publicada: ${changeDescription}`, 'publish')
+    },
+    [recordAIAudit]
+  )
+
+  const restoreAIVersion = useCallback(
+    (versionNumber: string) => {
+      setState((prev) => {
+        const targetVersion = prev.aiVersions?.find((v) => v.id === versionNumber || v.versionNumber === versionNumber)
+        if (!targetVersion) return prev
+
+        return {
+          ...prev,
+          aiConfig: {
+            ...(prev.aiConfig || INITIAL_AI_CONFIG),
+            ...targetVersion.configSnapshot,
+            updatedAt: new Date().toISOString(),
+          },
+          aiInstructions: targetVersion.instructionsSnapshot || prev.aiInstructions,
+          aiPromptBlocks: targetVersion.blocksSnapshot || prev.aiPromptBlocks,
+        }
+      })
+      recordAIAudit('Restauração de Versão', `Restaurada configuração da versão ${versionNumber}.`, 'version')
+    },
+    [recordAIAudit]
+  )
+
+  const toggleAIAgentStatus = useCallback(() => {
+    setState((prev) => {
+      const current = prev.aiConfig?.status || 'active'
+      const nextStatus = current === 'active' ? 'inactive' : 'active'
+      return {
+        ...prev,
+        aiConfig: {
+          ...(prev.aiConfig || INITIAL_AI_CONFIG),
+          status: nextStatus,
+          updatedAt: new Date().toISOString(),
+        },
+      }
+    })
+    recordAIAudit('Alternância de Status da IA', `Status da IA alterado.`, 'config')
+  }, [recordAIAudit])
+
   const value: AppStoreValue = {
     ...state,
     ready,
@@ -2827,6 +3101,19 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     level,
     currentModuleId,
     nextPendingLessonId,
+    // AI Infrastructure Actions
+    compiledPrompt,
+    updateAIConfig,
+    addAIInstruction,
+    updateAIInstruction,
+    deleteAIInstruction,
+    toggleAIInstruction,
+    updatePromptBlock,
+    togglePromptBlock,
+    publishAIVersion,
+    restoreAIVersion,
+    toggleAIAgentStatus,
+    recordAIAudit,
   }
 
   return <AppStoreContext.Provider value={value}>{children}</AppStoreContext.Provider>

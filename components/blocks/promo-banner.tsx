@@ -37,7 +37,7 @@ export function PromoBanner({ dismissible = true }: PromoBannerProps) {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <Link href="/cursos">
+          <Link href="/planos">
             <Button
               size="sm"
               className="h-7 rounded-lg bg-lime-400 hover:bg-lime-300 text-black font-black text-[11px] px-3 gap-1 shadow-md shadow-lime-500/20 border border-lime-300/40 cursor-pointer"

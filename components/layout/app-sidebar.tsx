@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Code2,
+  CreditCard,
   FolderGit2,
   GraduationCap,
   LayoutDashboard,
@@ -66,7 +67,9 @@ const navSections: { title: string; items: NavItem[] }[] = [
     title: 'CONTA',
     items: [
       { href: '/perfil', label: 'Meu Perfil', icon: User },
+      { href: '/planos', label: 'Assinatura', icon: CreditCard, badge: 'PRO' },
       { href: '/configuracoes', label: 'Configurações', icon: Settings },
+      { href: '/admin/ai', label: 'Inteligência Artificial', icon: Brain, badge: 'IA', adminOnly: true },
       { href: '/cursos/importar', label: 'Importar YouTube', icon: YoutubeIcon, adminOnly: true },
       { href: '/admin', label: 'Painel Admin', icon: ShieldCheck, adminOnly: true },
     ],

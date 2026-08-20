@@ -81,77 +81,10 @@ export default function DashboardPage() {
     .filter((a) => a.moduleId === currentModule?.id && !completedExercises.includes(a.id))
     .slice(0, 3)
 
-  // Canonical Journey Phases derived dynamically from catalog & store progression
-  const canonicalPhaseConfig = [
-    {
-      phaseNumber: 1,
-      moduleId: 'mod-logica',
-      title: 'Lógica de Programação',
-      subtitle: '17 aulas de Algoritmos com Gustavo Guanabara',
-      items: '• 17 Aulas • Code Lab • Testes',
-    },
-    {
-      phaseNumber: 2,
-      moduleId: 'mod-algoritmos',
-      title: 'Estruturas de Dados',
-      subtitle: 'Complexidade Big-O, matrizes, pilhas e filas',
-      items: '• 5 Aulas • Algoritmos • Fixação',
-    },
-    {
-      phaseNumber: 3,
-      moduleId: 'mod-git',
-      title: 'Git & GitHub Profissional',
-      subtitle: 'Branches, commits semânticos e Pull Requests',
-      items: '• 8 Aulas • GitHub • Branches',
-    },
-    {
-      phaseNumber: 4,
-      moduleId: 'mod-html',
-      title: 'HTML5 Semântico',
-      subtitle: 'Semântica web, SEO e acessibilidade',
-      items: '• 10 Aulas • Semântica • Formulários',
-    },
-    {
-      phaseNumber: 5,
-      moduleId: 'mod-css',
-      title: 'CSS3, Flexbox & Grid',
-      subtitle: 'Layouts responsivos e Mobile-First',
-      items: '• 8 Aulas • Flexbox • CSS Grid',
-    },
-    {
-      phaseNumber: 6,
-      moduleId: 'mod-js',
-      title: 'JavaScript Moderno (ES6+)',
-      subtitle: '16 aulas oficiais: DOM, eventos e APIs',
-      items: '• 16 Aulas • DOM • Fetch API',
-    },
-    {
-      phaseNumber: 7,
-      moduleId: 'mod-react',
-      title: 'React 19 & TypeScript',
-      subtitle: 'Componentes reativos, hooks e SPAs',
-      items: '• 8 Aulas • Hooks • Componentes',
-    },
-    {
-      phaseNumber: 8,
-      moduleId: 'mod-node',
-      title: 'Node.js & APIs RESTful',
-      subtitle: 'Servidores HTTP, MVC e autenticação JWT',
-      items: '• 8 Aulas • Express • JWT Auth',
-    },
-    {
-      phaseNumber: 9,
-      moduleId: 'mod-db',
-      title: 'Bancos de Dados & SQL',
-      subtitle: 'Modelagem relacional, CRUD e consultas JOIN',
-      items: '• 10 Aulas • CRUD • Consultas SQL',
-    },
-  ]
-
-  const journeyPhases = canonicalPhaseConfig.map((p, idx) => {
-    const mod = allModules.find((m) => m.id === p.moduleId) || allModules[idx]
-    const rawStatus = mod ? moduleStatus(mod.id) : 'locked'
-    const isUnlocked = mod ? isModuleUnlocked(mod.id) : false
+  // Dynamic Journey Phases derived directly from real store modules
+  const journeyPhases = allModules.map((mod, idx) => {
+    const rawStatus = moduleStatus(mod.id)
+    const isUnlocked = isModuleUnlocked(mod.id)
 
     let status: 'completed' | 'in_progress' | 'locked' = 'locked'
     let badge = 'Bloqueado'
@@ -159,7 +92,7 @@ export default function DashboardPage() {
     if (rawStatus === 'completed') {
       status = 'completed'
       badge = 'Concluído'
-    } else if (rawStatus === 'in-progress' || (isUnlocked && (idx === 0 || mod?.id === currentModuleId || rawStatus === 'available'))) {
+    } else if (rawStatus === 'in-progress' || (isUnlocked && (idx === 0 || mod.id === currentModuleId || rawStatus === 'available'))) {
       status = 'in_progress'
       badge = 'AGORA'
     } else {
@@ -168,15 +101,18 @@ export default function DashboardPage() {
     }
 
     const pendingLessonId =
-      mod?.lessonIds.find((id) => !completedLessons.includes(id)) ||
-      mod?.lessonIds[0] ||
+      mod.lessonIds.find((id) => !completedLessons.includes(id)) ||
+      mod.lessonIds[0] ||
       'l-logica-1'
 
     return {
-      ...p,
+      phaseNumber: idx + 1,
+      moduleId: mod.id,
+      title: mod.title,
+      subtitle: mod.description,
+      items: `• ${mod.lessonIds.length} Aulas com Vídeo • Prática • Avaliação`,
       status,
       badge,
-      moduleId: mod?.id || p.moduleId,
       targetLessonId: pendingLessonId,
     }
   })
