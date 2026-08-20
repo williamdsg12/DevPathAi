@@ -197,7 +197,7 @@ export default function CoursesPage() {
             </Button>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredCourses.map((course) => {
               const courseModules = allModules.filter(
                 (m) => m.courseId === course.id || m.phase === course.category || (course.playlistId && m.id.includes(course.id))

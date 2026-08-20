@@ -62,10 +62,10 @@ export function CourseCarousel({
   if (!courses || courses.length === 0) return null
 
   return (
-    <section className="relative group/carousel py-2 select-none" aria-labelledby={`heading-${id}`}>
+    <section className="relative group/carousel py-1 select-none" aria-labelledby={`heading-${id}`}>
       {/* Category Header */}
-      <div className="flex items-center justify-between px-4 sm:px-6 md:px-8 mb-3">
-        <div className="flex items-center gap-2.5">
+      <div className="flex items-center justify-between px-1 sm:px-2 mb-2.5">
+        <div className="flex items-center gap-2">
           <h2 id={`heading-${id}`} className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
             {title}
           </h2>
@@ -101,7 +101,7 @@ export function CourseCarousel({
         {/* Scrollable Cards Track */}
         <div
           ref={containerRef}
-          className="flex gap-4 overflow-x-auto overflow-y-hidden px-4 sm:px-6 md:px-8 pb-3 pt-1 scrollbar-none scroll-smooth snap-x snap-mandatory"
+          className="flex gap-3 sm:gap-4 overflow-x-auto overflow-y-hidden px-1 sm:px-2 pb-3 pt-1 scrollbar-none scroll-smooth snap-x snap-mandatory"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {courses.map((course) => {

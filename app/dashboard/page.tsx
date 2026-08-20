@@ -162,7 +162,7 @@ export default function DashboardPage() {
         )}
 
         {/* 3. MINHA JORNADA HIGHLIGHT BANNER */}
-        <div className="mx-4 sm:mx-6 md:mx-8 p-6 rounded-3xl bg-gradient-to-r from-violet-950/60 via-[#121020] to-[#121020] border border-violet-500/30 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-violet-950/60 via-[#121020] to-[#121020] border border-violet-500/30 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-xl">
             <div className="flex items-center gap-2">
               <Badge className="bg-violet-600 text-white text-[10px] font-mono font-bold">
@@ -241,7 +241,7 @@ export default function DashboardPage() {
         )}
 
         {/* 8. DESAFIOS & PROJETOS PRÁTICOS CAROUSEL */}
-        <div className="mx-4 sm:mx-6 md:mx-8 space-y-4 pt-4 border-t border-white/5">
+        <div className="space-y-4 pt-4 border-t border-white/5">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">

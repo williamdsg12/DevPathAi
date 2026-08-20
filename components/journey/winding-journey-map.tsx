@@ -181,7 +181,7 @@ export function WindingJourneyMap({
               {/* Curved Pathway Connector Line */}
               {idx > 0 && (
                 <div
-                  className={`absolute -top-12 h-12 w-1 transition-colors ${
+                  className={`absolute -top-12 h-12 w-1 left-1/2 -translate-x-1/2 transition-colors sm:translate-x-0 ${
                     isDone || isCurrentActive
                       ? 'bg-gradient-to-b from-violet-500 to-violet-600 shadow-[0_0_10px_rgba(139,92,246,0.5)]'
                       : 'bg-white/10'

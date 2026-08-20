@@ -1,10 +1,9 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
-import { Play, Clock, BookOpen, Sparkles, CheckCircle2, ChevronRight, Info, ImageOff } from 'lucide-react'
+import { Play, Clock, BookOpen, ChevronRight, Info } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
 import { getYouTubeThumbnailCascade } from '@/lib/youtube/thumbnail-helper'
 import type { Course } from '@/lib/types'
 
@@ -41,9 +40,9 @@ export function StreamingCourseCard({
   }
 
   return (
-    <div className="group relative flex-none w-[260px] sm:w-[290px] md:w-[320px] rounded-2xl overflow-hidden bg-[#121020] border border-white/10 hover:border-violet-500/50 transition-all duration-300 hover:scale-[1.03] hover:shadow-2xl hover:shadow-violet-950/40 select-none flex flex-col justify-between">
-      {/* Thumbnail Container with Ambient Overlay */}
-      <div className="relative aspect-[16/9] w-full overflow-hidden bg-black/80">
+    <div className="group relative flex-none w-[240px] sm:w-[280px] md:w-[320px] rounded-2xl overflow-hidden bg-[#121020] border border-white/10 hover:border-violet-500/50 transition-all duration-300 hover:scale-[1.02] sm:hover:scale-[1.03] hover:shadow-2xl hover:shadow-violet-950/40 select-none flex flex-col justify-between">
+      {/* Thumbnail Container with Touch Support */}
+      <Link href={playUrl} className="relative aspect-[16/9] w-full overflow-hidden bg-black/80 block cursor-pointer">
         {/* Loading Skeleton */}
         {!imgLoaded && !imgError && currentSrc && (
           <div className="absolute inset-0 bg-white/5 animate-pulse" />
@@ -61,7 +60,6 @@ export function StreamingCourseCard({
             }`}
           />
         ) : (
-          /* Honest Professional Placeholder — Not an ugly grey box */
           <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-violet-950/40 to-black p-4 text-center border-b border-white/5">
             <div className="size-10 rounded-xl bg-violet-600/20 border border-violet-500/30 grid place-items-center mb-2">
               <BookOpen className="size-5 text-violet-400" />
@@ -87,16 +85,12 @@ export function StreamingCourseCard({
           </span>
         </div>
 
-        {/* Center Hover Play Button */}
-        <Link
-          href={playUrl}
-          className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/40 backdrop-blur-[2px]"
-          aria-label={`Estudar curso ${course.title}`}
-        >
-          <div className="size-12 rounded-full bg-violet-600 hover:bg-violet-500 text-white grid place-items-center shadow-xl shadow-violet-950/80 transition-transform duration-200 hover:scale-110">
-            <Play className="size-5 fill-white ml-0.5" />
+        {/* Center Play Button Overlay (Visible on Hover and Touch Active) */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/40 backdrop-blur-[2px] pointer-events-none">
+          <div className="size-11 sm:size-12 rounded-full bg-violet-600 text-white grid place-items-center shadow-xl shadow-violet-950/80 transition-transform duration-200 group-hover:scale-110">
+            <Play className="size-4 sm:size-5 fill-white ml-0.5" />
           </div>
-        </Link>
+        </div>
 
         {/* Bottom Progress Bar if started */}
         {isStarted && (
@@ -109,24 +103,26 @@ export function StreamingCourseCard({
             </div>
           </div>
         )}
-      </div>
+      </Link>
 
       {/* Card Info Section */}
-      <div className="p-3.5 space-y-2 flex-1 flex flex-col justify-between">
+      <div className="p-3 sm:p-3.5 space-y-2 flex-1 flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between text-[11px] text-zinc-400 mb-1">
-            <span className="font-medium text-zinc-300 truncate max-w-[170px]">
+            <span className="font-medium text-zinc-300 truncate max-w-[150px] sm:max-w-[180px]">
               {course.channelTitle || 'DevPath Oficial'}
             </span>
-            <div className="flex items-center gap-1 font-mono text-[10px] text-zinc-400">
+            <div className="flex items-center gap-1 font-mono text-[10px] text-zinc-400 shrink-0">
               <Clock className="size-3 text-zinc-400" />
               <span>{course.totalHours || 1}h</span>
             </div>
           </div>
 
-          <h3 className="font-bold text-white text-xs sm:text-sm line-clamp-1 group-hover:text-violet-300 transition-colors">
-            {course.title}
-          </h3>
+          <Link href={playUrl} className="block group-hover:text-violet-300 transition-colors">
+            <h3 className="font-bold text-white text-xs sm:text-sm line-clamp-1">
+              {course.title}
+            </h3>
+          </Link>
 
           <p className="text-[11px] text-zinc-400 line-clamp-2 leading-relaxed mt-0.5">
             {course.description || `Formação completa e estruturada em ${course.technology}.`}
@@ -148,8 +144,9 @@ export function StreamingCourseCard({
                   e.stopPropagation()
                   onOpenDetails(course)
                 }}
-                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
                 title="Mais Informações"
+                aria-label={`Ver detalhes do curso ${course.title}`}
               >
                 <Info className="size-3.5" />
               </button>
@@ -157,7 +154,7 @@ export function StreamingCourseCard({
             <Link href={playUrl}>
               <button
                 type="button"
-                className="flex items-center gap-1 text-[11px] font-bold text-violet-400 hover:text-violet-300 group-hover:translate-x-0.5 transition-transform"
+                className="flex items-center gap-1 text-[11px] font-bold text-violet-400 hover:text-violet-300 group-hover:translate-x-0.5 transition-transform cursor-pointer p-1"
               >
                 <span>{isStarted ? 'Continuar' : 'Acessar'}</span>
                 <ChevronRight className="size-3" />

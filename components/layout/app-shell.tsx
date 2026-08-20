@@ -20,11 +20,11 @@ export function AppShell({
         <AppSidebar />
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      {/* Main Content Area with Adaptive Padding & Ultrawide Support */}
+      <div className="flex flex-1 flex-col overflow-hidden min-w-0">
         <AppHeader title={title} subtitle={subtitle} />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scrollbar-thin">
-          <div className="mx-auto max-w-6xl">{children}</div>
+        <main className="flex-1 overflow-y-auto p-3 sm:p-5 lg:p-6 xl:p-8 scrollbar-thin">
+          <div className="mx-auto max-w-[1600px] w-full">{children}</div>
         </main>
       </div>
     </div>
